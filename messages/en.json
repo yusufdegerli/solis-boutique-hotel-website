@@ -1,0 +1,93 @@
+{
+  "Navbar": {
+    "home": "Home",
+    "hotels": "Our Hotels",
+    "contact": "Contact",
+    "book": "Book Now"
+  },
+  "Hero": {
+    "subtitle": "Rediscover",
+    "subtitleHighlight": "Luxury",
+    "description": "Unforgettable memories, impeccable service, and unique locations. Your dream vacation starts here.",
+    "explore": "Explore Hotels"
+  },
+  "Home": {
+    "collection": "Solis Collection",
+    "discoverTitle": "Discover Our Hotels",
+    "discoverDesc": "A privileged world in our hotels in unique locations, where every detail is considered for your comfort.",
+    "features": {
+      "service": "5-Star Service",
+      "serviceDesc": "World-class accommodation.",
+      "architecture": "Awarded Architecture",
+      "architectureDesc": "Meeting of aesthetics and comfort.",
+      "security": "Safe Vacation",
+      "securityDesc": "Top-level hygiene standards.",
+      "satisfaction": "100% Satisfaction",
+      "satisfactionDesc": "Your happiness is our priority."
+    },
+    "ctaTitle": "An Unforgettable Vacation Awaits",
+    "ctaDesc": "Book your place now to take advantage of early booking opportunities."
+  },
+  "Footer": {
+    "desc": "Where comfort meets luxury. We are waiting for you for an unforgettable accommodation experience.",
+    "quickLinks": "Quick Links",
+    "about": "About Us",
+    "rooms": "Rooms",
+    "spa": "Spa & Wellness",
+    "contact": "Contact",
+    "address": "Head Office: Levent Mah. Büyükdere Cad. No:1, Istanbul",
+    "newsletter": "Newsletter",
+    "newsletterDesc": "Subscribe to our newsletter to be informed about special offers.",
+    "placeholder": "Your email address",
+    "subscribe": "Subscribe",
+    "rights": "All rights reserved."
+  },
+  "Contact": {
+    "title": "Contact",
+    "desc": "Contact us for your questions, opinions, or reservation requests. Our team will get back to you as soon as possible.",
+    "contactInfo": "Get in Touch",
+    "addressTitle": "Address",
+    "phoneTitle": "Phone",
+    "phoneDesc": "Weekdays 09:00 - 18:00",
+    "emailTitle": "Email",
+    "formTitle": "Send a Message",
+    "name": "First Name",
+    "surname": "Last Name",
+    "email": "Email",
+    "message": "Your Message",
+    "send": "Send"
+  },
+  "Rooms": {
+    "title": "Accommodation",
+    "desc": "The perfect harmony of comfort and luxury. Feel the warmth of your home in our specially designed rooms.",
+    "night": "Per Night",
+    "book": "Book Now"
+  },
+  "Services": {
+    "title": "Exclusive Services",
+    "desc": "We offer not just accommodation, but a privileged experience that suits your lifestyle.",
+    "moreInfo": "Get Info",
+    "vipTitle": "Waiting is Not in Our Vocabulary.",
+    "vipSubtitle": "VIP Transfer Privilege",
+    "vipDesc": "Start feeling the Solis privilege from the moment you land. A comfortable and safe journey away from traffic stress awaits you with our private chauffeured luxury vehicles.",
+    "feature1": "24/7 Greeting Service",
+    "feature2": "Mercedes S-Class & V-Class Options",
+    "feature3": "Free Wi-Fi and Refreshments",
+    "bookTransfer": "Book Transfer"
+  },
+  "Blog": {
+    "title": "Travel Diary",
+    "desc": "News from the world of Solis, travel tips, and routes waiting to be discovered.",
+    "readMore": "Read More"
+  },
+  "History": {
+    "tag": "City Where Two Continents Meet",
+    "title": "ISTANBUL",
+    "quote": "\"Istanbul, the city of poets, emperors, and dreamers. A legendary metropolis that hides a secret in every layer of history, uniting the past and future in the blue waters of the Bosphorus.\"",
+    "section1Title": "Capital of Empires",
+    "section1Desc": "A magnificent journey from Byzantium founded in the 7th century BC to Constantinople, the 'New Rome' of the Roman Empire, and to the Ottoman's Dersaadet. Istanbul has been the capital of three great empires for 1600 years, witnessing sieges, victories, and cultural revolutions that changed the course of history.",
+    "section1Extra": "Prayers echoing in the dome of Hagia Sophia, state secrets whispered in the corridors of Topkapi Palace, and time lost in the labyrinths of the Grand Bazaar... Istanbul is not just a city, but a living open-air museum.",
+    "section2Title": "Discover Istanbul with Solis",
+    "section2Desc": "While staying at our Solis City hotel, you will be at the very heart of this magical history. Our private concierge team is ready to make your Istanbul experience unforgettable with events specially prepared for you, such as the 'Historical Peninsula Tour' or 'Sunset Boat Tour on the Bosphorus'."
+  }
+}
