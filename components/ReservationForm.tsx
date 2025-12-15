@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Calendar, Users, Hotel } from "lucide-react";
-import { hotels } from "@/lib/data";
+import { Calendar, Users, Hotel as HotelIcon } from "lucide-react";
+import { Hotel } from "@/lib/data";
 
-export default function ReservationForm({ preSelectedHotelId }: { preSelectedHotelId?: string }) {
+export default function ReservationForm({ preSelectedHotelId, hotels }: { preSelectedHotelId?: string, hotels: Hotel[] }) {
   const [selectedHotel, setSelectedHotel] = useState(preSelectedHotelId || "");
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
@@ -43,7 +43,7 @@ export default function ReservationForm({ preSelectedHotelId }: { preSelectedHot
     <form onSubmit={handleSubmit} className="bg-white p-6 sm:p-8 rounded-2xl shadow-xl border border-gray-100 space-y-6">
       <div className="space-y-4">
         <h3 className="text-xl font-semibold text-[var(--off-black)] mb-6 flex items-center gap-2">
-          <Hotel className="w-5 h-5 text-[var(--gold)]" />
+          <HotelIcon className="w-5 h-5 text-[var(--gold)]" />
           Rezervasyon Detayları
         </h3>
 

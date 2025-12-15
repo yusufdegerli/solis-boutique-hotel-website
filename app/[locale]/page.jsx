@@ -1,12 +1,11 @@
-import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
 import HotelCard from "@/components/HotelCard";
 import Footer from "@/components/Footer";
-import { getHotels } from "@/src/services/hotelService";
+import { getHotels } from "@/lib/data";
 import { Star, Award, ShieldCheck, HeartHandshake } from "lucide-react";
 import { getTranslations } from 'next-intl/server';
 
-export default async function Home({ params }: { params: Promise<{ locale: string }> }) {
+export default async function Home({ params }) {
   const { locale } = await params;
   const t = await getTranslations('Home');
   const tNav = await getTranslations('Navbar');

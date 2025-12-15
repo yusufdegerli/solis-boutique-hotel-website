@@ -1,12 +1,13 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { rooms } from "@/lib/data";
+import { getRooms } from "@/src/services/hotelService";
 import Image from "next/image";
 import Link from "next/link";
-import { Users, Maximize2, CreditCard } from "lucide-react";
+import { Users, Maximize2 } from "lucide-react";
 
 export default async function RoomsPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
+  const rooms = await getRooms();
 
   return (
     <main className="min-h-screen bg-[var(--off-white)]">

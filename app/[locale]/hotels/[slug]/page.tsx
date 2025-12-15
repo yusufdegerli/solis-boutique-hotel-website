@@ -1,4 +1,4 @@
-import { hotels } from "@/lib/data";
+import { getHotels, getHotelBySlug } from "@/src/services/hotelService";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { notFound } from "next/navigation";
@@ -9,6 +9,7 @@ import { MapPin, Star, CheckCircle, Phone, Mail, Map, BedDouble, PieChart, Info 
 export async function generateStaticParams() {
   const locales = ['en', 'tr', 'ar', 'hu', 'ro'];
   const params = [];
+  const hotels = await getHotels();
 
   for (const locale of locales) {
     for (const hotel of hotels) {
@@ -20,7 +21,7 @@ export async function generateStaticParams() {
 
 export default async function HotelDetail({ params }: { params: Promise<{ slug: string, locale: string }> }) {
   const { slug, locale } = await params;
-  const hotel = hotels.find((h) => h.slug === slug);
+  const hotel = await getHotelBySlug(slug);
 
   if (!hotel) {
     notFound();
