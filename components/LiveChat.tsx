@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { MessageSquare, X, Send, Globe, Loader2, Minimize2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { usePathname } from "next/navigation";
 
 interface Message {
   id: string;
@@ -14,6 +15,7 @@ interface Message {
 }
 
 export default function LiveChat({ locale }: { locale: string }) {
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [inputText, setInputText] = useState("");
@@ -35,6 +37,10 @@ export default function LiveChat({ locale }: { locale: string }) {
   useEffect(() => {
     scrollToBottom();
   }, [messages, isOpen]);
+
+  if (pathname?.includes("/admin")) {
+    return null;
+  }
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();

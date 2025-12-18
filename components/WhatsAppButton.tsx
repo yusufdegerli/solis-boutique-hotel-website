@@ -2,8 +2,15 @@
 
 import { MessageCircle } from "lucide-react";
 import { motion } from "framer-motion";
+import { usePathname } from "next/navigation";
 
 export default function WhatsAppButton() {
+  const pathname = usePathname();
+
+  if (pathname?.includes("/admin")) {
+    return null;
+  }
+
   return (
     <motion.a
       href="https://wa.me/902125550000"

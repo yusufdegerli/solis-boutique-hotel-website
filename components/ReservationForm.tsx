@@ -109,8 +109,11 @@ export default function ReservationForm({ preSelectedHotelId, hotels }: { preSel
               type="number"
               min="1"
               max="10"
-              value={guests}
-              onChange={(e) => setGuests(parseInt(e.target.value))}
+              value={guests || ""}
+              onChange={(e) => {
+                const val = parseInt(e.target.value);
+                setGuests(isNaN(val) ? 0 : val);
+              }}
               required
               className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[var(--gold)] focus:border-transparent outline-none transition-all text-gray-700"
             />
