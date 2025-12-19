@@ -29,7 +29,18 @@ Ensure your `.env.local` file contains the following keys:
 ```env
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 ```
+
+### Updates - 19 December 2025
+**Reservation System & Database Schema Alignment**
+*   **Database Schema Updates**: Aligned the app with the new `Reservation_Information` schema (UUID IDs, `room_id` linkage, `customer_name`, and the `custome_email` typo in the DB).
+*   **Server Actions**: Implemented `createBookingServer` as a Next.js Server Action to handle database insertions.
+*   **Security (RLS Bypass)**: Integrated `SUPABASE_SERVICE_ROLE_KEY` support to bypass Row Level Security (RLS) issues during booking creation.
+*   **Room Selection**: Enhanced `ReservationForm` to include a dynamic room selection dropdown that filters based on the selected hotel.
+*   **Price Calculation**: Added server-side logic to calculate `total_price` based on stay duration and room rates.
+*   **Database Seeding**: Created an API route (`/api/seed`) to automatically populate the database with default hotel and room data for testing.
+*   **Admin Dashboard**: Updated the admin panel to display and manage bookings using the new schema fields (`customer_name`, `room_status`, `room_id`).
 
 ---
 
@@ -38,28 +49,20 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 ### Genel Bakış
 Bu güncelleme ile uygulama, statik (hardcoded) veri yapısından **Supabase** destekli dinamik bir yapıya geçirildi. Otel ve oda verileri artık doğrudan veritabanından çekiliyor, bu sayede içerik yönetimi kolaylaştı ve gerçek zamanlı veri akışı sağlandı.
 
-### Yapılan Temel Değişiklikler
-
-1.  **Supabase Entegrasyonu**
-    *   Veri çekme işlemleri için `src/services/hotelService.ts` servisi oluşturuldu.
-    *   `getHotels`, `getHotelBySlug` ve `getRooms` fonksiyonları yazıldı.
-    *   Veritabanında eksik alan olması durumunda arayüzün bozulmaması için hata yakalama ve "placeholder" (varsayılan değer) mantığı eklendi.
-    *   `lib/supabaseClient.ts` dosyasına ortam değişkeni (env var) kontrolü eklendi.
-
-2.  **Veri Migrasyonu**
-    *   `lib/data.ts` düzenlendi: Statik `hotels` ve `rooms` dizileri silindi.
-    *   Tip güvenliğini korumak için TypeScript arayüzleri (`Hotel`, `Room` vb.) `lib/data.ts` içinde bırakıldı.
-    *   Proje genelindeki kullanılmayan `.js` ve `.jsx` dosyaları temizlendi.
-
-3.  **Bileşen ve Sayfa Güncellemeleri**
-    *   **Ana Sayfa (`app/[locale]/page.tsx`):** Artık otel verilerini `getHotels()` kullanarak asenkron olarak çekiyor.
-    *   **Otel Detay (`app/[locale]/hotels/[slug]/page.tsx`):** İlgili otelin verisini `getHotelBySlug()` ile dinamik olarak alıyor.
-    *   **Odalar Sayfası (`app/[locale]/rooms/page.tsx`):** `getRooms()` fonksiyonunu kullanacak şekilde asenkron yapıya dönüştürüldü.
-    *   **Rezervasyon Formu (`components/ReservationForm.tsx`):** Statik veri importu yerine, veriyi prop olarak alacak şekilde güncellendi.
-
 ### Kurulum Gereksinimleri
 `.env.local` dosyanızda aşağıdaki anahtarların bulunduğundan emin olun:
 ```env
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 ```
+
+### Güncellemeler - 19 Aralık 2025
+**Rezervasyon Sistemi ve Veritabanı Şeması Uyumluluğu**
+*   **Veritabanı Şeması Güncellemesi**: Uygulama, yeni `Reservation_Information` şemasına (UUID, `room_id` bağlantısı, `customer_name` ve veritabanındaki `custome_email` yazım hatası) tam uyumlu hale getirildi.
+*   **Server Actions**: Veritabanı kayıt işlemleri için Next.js Server Action (`createBookingServer`) yapısına geçildi.
+*   **Güvenlik (RLS Bypass)**: Rezervasyon sırasında oluşan RLS (Satır Düzeyinde Güvenlik) hatalarını aşmak için `SUPABASE_SERVICE_ROLE_KEY` desteği eklendi.
+*   **Oda Seçimi Özelliği**: Rezervasyon formuna, seçilen otele göre odaları listeleyen dinamik bir "Oda Seçimi" alanı eklendi.
+*   **Fiyat Hesaplama**: Konaklama süresi ve oda fiyatı üzerinden otomatik `total_price` (toplam tutar) hesaplama mantığı eklendi.
+*   **Veritabanı Tohumlama (Seeding)**: Test işlemleri için veritabanını varsayılan otel ve oda verileriyle dolduran `/api/seed` API rotası oluşturuldu.
+*   **Admin Paneli Güncellemesi**: Yönetim paneli, yeni şema alanlarını (`customer_name`, `room_status`, `room_id`) gösterecek ve yönetecek şekilde güncellendi.
