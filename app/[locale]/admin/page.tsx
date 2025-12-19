@@ -110,9 +110,9 @@ export default function AdminDashboard() {
       }
       setIsModalOpen(false);
       fetchData(); // Refresh data
-    } catch (err) {
-      console.error(err);
-      setError('İşlem başarısız oldu.');
+    } catch (err: any) {
+      console.error('Submit Error:', JSON.stringify(err, null, 2));
+      setError(`İşlem başarısız oldu: ${err.message || JSON.stringify(err)}`);
     } finally {
       setLoading(false);
     }
@@ -346,6 +346,7 @@ export default function AdminDashboard() {
                   <thead className="bg-gray-50 text-gray-500 text-sm border-b border-gray-100">
                     <tr>
                       <th className="p-4 font-medium">Oda Tipi</th>
+                      <th className="p-4 font-medium">Adet</th>
                       <th className="p-4 font-medium">Kapasite</th>
                       <th className="p-4 font-medium">Fiyat (Gecelik)</th>
                       <th className="p-4 font-medium text-right">İşlemler</th>
@@ -356,8 +357,12 @@ export default function AdminDashboard() {
                       <tr key={room.id} className="hover:bg-gray-50 transition-colors">
                         <td className="p-4">
                           <p className="font-semibold text-gray-900">{room.name}</p>
-                          <p className="text-xs text-gray-400 truncate max-w-xs">{room.description}</p>
+                          <p className="text-[10px] text-[var(--gold)] font-bold uppercase tracking-wider">
+                             {hotels.find(h => h.id === room.hotelId)?.name || 'Bilinmeyen Otel'}
+                          </p>
+                          <p className="text-xs text-gray-400 truncate max-w-xs mt-1">{room.description}</p>
                         </td>
+                        <td className="p-4 text-gray-600 font-bold">{room.quantity}</td>
                         <td className="p-4 text-gray-600">{room.capacity}</td>
                         <td className="p-4 font-medium text-[var(--gold)]">{room.price}₺</td>
                         <td className="p-4 text-right">
@@ -462,11 +467,35 @@ export default function AdminDashboard() {
               {activeTab === 'rooms' && (
                 <>
                   <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Bağlı Olduğu Otel</label>
+                    <select 
+                      value={formData.hotelId || ''} 
+                      onChange={(e) => setFormData({...formData, hotelId: e.target.value})}
+                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[var(--gold)] outline-none"
+                      required
+                    >
+                      <option value="">Otel Seçiniz</option>
+                      {hotels.map(h => (
+                        <option key={h.id} value={h.id}>{h.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Oda Tipi</label>
                     <input 
                       type="text" 
                       value={formData.name || ''} 
                       onChange={(e) => setFormData({...formData, name: e.target.value})}
+                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[var(--gold)] outline-none"
+                      required 
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Stok Adedi</label>
+                    <input 
+                      type="number" 
+                      value={formData.quantity || ''} 
+                      onChange={(e) => setFormData({...formData, quantity: parseInt(e.target.value)})}
                       className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[var(--gold)] outline-none"
                       required 
                     />

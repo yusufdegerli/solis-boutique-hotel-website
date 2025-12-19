@@ -36,6 +36,7 @@ export interface Room {
   size: string;
   capacity: string;
   price: number;
+  quantity: number;
   image: string;
 }
 

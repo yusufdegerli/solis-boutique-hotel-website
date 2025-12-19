@@ -47,21 +47,24 @@ export async function GET() {
         type_name: 'Deluxe Oda',
         description: 'Deniz manzaralı, geniş balkonlu lüks oda.',
         base_price: 3500,
-        capacity: 2
+        capacity: 2,
+        quantity: 10
       },
       {
         hotel_id: hotelId,
         type_name: 'Suit Oda',
         description: 'Panoramik manzaralı, özel jakuzili suit.',
         base_price: 5500,
-        capacity: 4
+        capacity: 4,
+        quantity: 5
       },
       {
         hotel_id: hotelId,
         type_name: 'Standart Oda',
         description: 'Şehir manzaralı, konforlu oda.',
         base_price: 2500,
-        capacity: 2
+        capacity: 2,
+        quantity: 20
       }
     ];
 

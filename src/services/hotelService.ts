@@ -98,12 +98,16 @@ export const getRooms = async (): Promise<Room[]> => {
 };
 
 export const createRoom = async (room: Partial<Room>) => {
+  if ((room.price ?? 0) < 0) throw new Error("Fiyat negatif olamaz.");
+  if ((room.quantity ?? 0) < 0) throw new Error("Stok adedi negatif olamaz.");
+
   const dbRoom = {
+    hotel_id: room.hotelId ? parseInt(room.hotelId) : null,
     type_name: room.name,
     description: room.description,
     base_price: room.price,
     capacity: parseInt(room.capacity?.split(' ')[0] || '2'),
-    // image_url: room.image // If DB has this column
+    quantity: room.quantity || 10
   };
 
   const { data, error } = await supabase
@@ -111,16 +115,24 @@ export const createRoom = async (room: Partial<Room>) => {
     .insert([dbRoom])
     .select();
 
-  if (error) throw error;
+  if (error) {
+    console.error('Create Room Error:', JSON.stringify(error, null, 2));
+    throw error;
+  }
   return data;
 };
 
 export const updateRoom = async (id: string, room: Partial<Room>) => {
+  if (room.price !== undefined && room.price < 0) throw new Error("Fiyat negatif olamaz.");
+  if (room.quantity !== undefined && room.quantity < 0) throw new Error("Stok adedi negatif olamaz.");
+
   const dbRoom: any = {};
+  if (room.hotelId) dbRoom.hotel_id = parseInt(room.hotelId);
   if (room.name) dbRoom.type_name = room.name;
   if (room.description) dbRoom.description = room.description;
   if (room.price) dbRoom.base_price = room.price;
   if (room.capacity) dbRoom.capacity = parseInt(room.capacity?.split(' ')[0] || '2');
+  if (room.quantity !== undefined) dbRoom.quantity = room.quantity;
 
   const { data, error } = await supabase
     .from('Rooms_Information')
@@ -128,7 +140,10 @@ export const updateRoom = async (id: string, room: Partial<Room>) => {
     .eq('id', id)
     .select();
 
-  if (error) throw error;
+  if (error) {
+    console.error('Update Room Error:', JSON.stringify(error, null, 2));
+    throw error;
+  }
   return data;
 };
 
@@ -182,6 +197,7 @@ function mapDbRoomToModel(room: any): Room {
     size: "35m²",
     capacity: `${room.capacity || 2} Yetişkin`,
     price: room.base_price || 0,
+    quantity: room.quantity || 0,
     image: "https://images.unsplash.com/photo-1611892440504-42a792e24d32?auto=format&fit=crop&w=800&q=80"
   };
 }
@@ -191,12 +207,13 @@ function mapDbRoomToModel(room: any): Room {
 export interface Booking {
   id: string; // UUID
   room_id: number;
+  customer_id?: any; // Linked customer ID
   customer_name: string;
   customer_email: string;
   check_in: string;
   check_out: string;
   total_price: number;
-  room_status: 'pending' | 'confirmed' | 'cancelled'; // reservation_status enum
+  room_status: 'pending' | 'confirmed' | 'cancelled' | 'checked_in' | 'checked_out'; // reservation_status enum
   // Frontend helpers (not in DB)
   hotel_id?: number; 
   guests_count?: number; 
@@ -255,7 +272,6 @@ export const createBooking = async (booking: Partial<Booking>) => {
   const totalPrice = days * (room.base_price || 0);
 
   // 4. Construct Payload matching 'Reservation_Information' schema
-  // Note: customer_email will be mapped to 'custome_email' (DB typo) in the Server Action
   const payload = {
     room_id: room.id,
     customer_name: booking.guest_name || booking.customer_name,
