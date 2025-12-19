@@ -4,13 +4,17 @@ import { Hotel, Room } from "@/lib/data";
 // --- HOTELS ---
 
 export const getHotels = async (): Promise<Hotel[]> => {
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    console.error('Supabase env variables missing in getHotels');
+  }
+
   const { data, error } = await supabase
     .from('Hotel_Information_Table')
     .select('*')
     .order('id', { ascending: true });
 
   if (error) {
-    console.error('Error fetching hotels:', error);
+    console.error('Error fetching hotels:', JSON.stringify(error, null, 2));
     return [];
   }
 
@@ -86,7 +90,7 @@ export const getRooms = async (): Promise<Room[]> => {
     .order('id', { ascending: true });
 
   if (error) {
-    console.error('Error fetching rooms:', error);
+    console.error('Error fetching rooms:', JSON.stringify(error, null, 2));
     return [];
   }
 
@@ -172,6 +176,7 @@ function mapDbHotelToModel(hotel: any): Hotel {
 function mapDbRoomToModel(room: any): Room {
   return {
     id: room.id.toString(),
+    hotelId: room.hotel_id?.toString(), // Map DB hotel_id to model
     name: room.type_name,
     description: room.description || "Konforlu ve ferah bir oda.",
     size: "35m²",
@@ -180,3 +185,107 @@ function mapDbRoomToModel(room: any): Room {
     image: "https://images.unsplash.com/photo-1611892440504-42a792e24d32?auto=format&fit=crop&w=800&q=80"
   };
 }
+
+// --- BOOKINGS ---
+
+export interface Booking {
+  id: string; // UUID
+  room_id: number;
+  customer_name: string;
+  customer_email: string;
+  check_in: string;
+  check_out: string;
+  total_price: number;
+  room_status: 'pending' | 'confirmed' | 'cancelled'; // reservation_status enum
+  // Frontend helpers (not in DB)
+  hotel_id?: number; 
+  guests_count?: number; 
+  email?: string; // alias for customer_email from form
+  guest_name?: string; // alias for customer_name from form
+}
+
+export const getBookings = async (): Promise<Booking[]> => {
+  const { data, error } = await supabase
+    .from('Reservation_Information')
+    .select('*')
+    .order('check_in', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching bookings:', error);
+    return [];
+  }
+
+  // Map DB columns to our Interface if needed, or just return as is if matches
+  return data as Booking[];
+};
+
+import { createBookingServer } from "@/src/actions/bookingActions";
+
+// ... existing imports ...
+
+// ... existing code ...
+
+export const createBooking = async (booking: Partial<Booking>) => {
+  console.log('Creating booking with input:', booking);
+
+  // 1. Validate Inputs
+  if (!booking.room_id || !booking.check_in || !booking.check_out) {
+    throw new Error("Eksik bilgi: Oda ve tarihler gereklidir.");
+  }
+
+  // 2. Get Room Details for Pricing
+  const { data: room, error: roomError } = await supabase
+    .from('Rooms_Information')
+    .select('id, base_price')
+    .eq('id', booking.room_id)
+    .single();
+
+  if (roomError || !room) {
+    console.error('Error fetching room details:', roomError);
+    throw new Error("Seçilen oda bilgisi veritabanından alınamadı.");
+  }
+
+  // 3. Calculate Total Price
+  const checkInDate = new Date(booking.check_in!);
+  const checkOutDate = new Date(booking.check_out!);
+  const diffTime = Math.abs(checkOutDate.getTime() - checkInDate.getTime());
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+  const days = diffDays > 0 ? diffDays : 1; // Minimum 1 night
+  
+  const totalPrice = days * (room.base_price || 0);
+
+  // 4. Construct Payload matching 'Reservation_Information' schema
+  // Note: customer_email will be mapped to 'custome_email' (DB typo) in the Server Action
+  const payload = {
+    room_id: room.id,
+    customer_name: booking.guest_name || booking.customer_name,
+    customer_email: booking.email || booking.customer_email || "no-email@provided.com", 
+    check_in: booking.check_in,
+    check_out: booking.check_out,
+    total_price: totalPrice,
+    room_status: 'pending' 
+  };
+
+  console.log('Delegating to Server Action with payload:', payload);
+
+  // 5. Call Server Action
+  const result = await createBookingServer(payload);
+
+  if (!result.success) {
+    console.error('Server Action Failed:', result.error);
+    throw new Error(result.error);
+  }
+  
+  return result.data;
+};
+
+export const updateBookingStatus = async (id: string, status: string) => {
+  const { data, error } = await supabase
+    .from('Reservation_Information')
+    .update({ room_status: status })
+    .eq('id', id)
+    .select();
+
+  if (error) throw error;
+  return data;
+};

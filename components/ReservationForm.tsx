@@ -1,22 +1,78 @@
 "use client";
 
-import { useState } from "react";
-import { Calendar, Users, Hotel as HotelIcon } from "lucide-react";
-import { Hotel } from "@/lib/data";
+import { useState, useEffect, useMemo } from "react";
+import { Calendar, Users, Hotel as HotelIcon, Loader2, BedDouble } from "lucide-react";
+import { Hotel, Room } from "@/lib/data";
+import { createBooking } from "@/src/services/hotelService";
 
-export default function ReservationForm({ preSelectedHotelId, hotels }: { preSelectedHotelId?: string, hotels: Hotel[] }) {
+export default function ReservationForm({ 
+  preSelectedHotelId, 
+  hotels,
+  allRooms 
+}: { 
+  preSelectedHotelId?: string, 
+  hotels: Hotel[],
+  allRooms: Room[]
+}) {
   const [selectedHotel, setSelectedHotel] = useState(preSelectedHotelId || "");
+  const [selectedRoom, setSelectedRoom] = useState("");
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
   const [guests, setGuests] = useState(1);
+  const [guestName, setGuestName] = useState(""); 
+  const [customerEmail, setCustomerEmail] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Filter rooms based on selected hotel
+  const availableRooms = useMemo(() => {
+    if (!selectedHotel) return [];
+    const filtered = allRooms.filter(room => room.hotelId === selectedHotel);
+    // Fallback: If no rooms found for specific hotel, show ALL rooms (for demo/empty DB cases)
+    return filtered.length > 0 ? filtered : allRooms;
+  }, [selectedHotel, allRooms]);
+
+  // Reset selected room when hotel changes
+  useEffect(() => {
+    setSelectedRoom("");
+  }, [selectedHotel]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate API call
-    setTimeout(() => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      if (!selectedRoom) throw new Error("Lütfen bir oda seçiniz.");
+
+      await createBooking({
+        hotel_id: parseInt(selectedHotel), // Kept for legacy/logging
+        room_id: parseInt(selectedRoom),
+        guest_name: guestName || "Misafir",
+        email: customerEmail,
+        check_in: checkIn,
+        check_out: checkOut,
+        guests_count: guests,
+        status: 'pending'
+      });
       setIsSubmitted(true);
-    }, 1000);
+    } catch (err: any) {
+      console.error('Reservation Error:', err);
+      let errorMessage = "Rezervasyon oluşturulurken bir hata meydana geldi.";
+      
+      if (err?.message) {
+        errorMessage += ` (${err.message})`;
+      } else if (typeof err === 'string') {
+        errorMessage += ` (${err})`;
+      } else {
+        errorMessage += ` (${JSON.stringify(err)})`;
+      }
+
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (isSubmitted) {
@@ -30,7 +86,7 @@ export default function ReservationForm({ preSelectedHotelId, hotels }: { preSel
           Talebiniz başarıyla bize ulaştı. Müşteri temsilcimiz en kısa sürede sizinle iletişime geçecektir.
         </p>
         <button 
-          onClick={() => setIsSubmitted(false)}
+          onClick={() => { setIsSubmitted(false); setGuestName(""); setCustomerEmail(""); setCheckIn(""); setCheckOut(""); setSelectedRoom(""); }}
           className="text-green-700 font-medium hover:underline mt-4 block mx-auto"
         >
           Yeni Rezervasyon Yap
@@ -46,6 +102,38 @@ export default function ReservationForm({ preSelectedHotelId, hotels }: { preSel
           <HotelIcon className="w-5 h-5 text-[var(--gold)]" />
           Rezervasyon Detayları
         </h3>
+
+        {error && (
+          <div className="p-3 bg-red-50 text-red-600 text-sm rounded-lg">
+            {error}
+          </div>
+        )}
+
+        {/* Guest Name & Email */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">Ad Soyad</label>
+                <input
+                type="text"
+                value={guestName}
+                onChange={(e) => setGuestName(e.target.value)}
+                required
+                placeholder="Adınız Soyadınız"
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[var(--gold)] focus:border-transparent outline-none transition-all text-gray-700"
+                />
+            </div>
+            <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">E-posta</label>
+                <input
+                type="email"
+                value={customerEmail}
+                onChange={(e) => setCustomerEmail(e.target.value)}
+                required
+                placeholder="ornek@email.com"
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[var(--gold)] focus:border-transparent outline-none transition-all text-gray-700"
+                />
+            </div>
+        </div>
 
         {/* Hotel Selection */}
         <div className="space-y-2">
@@ -68,6 +156,35 @@ export default function ReservationForm({ preSelectedHotelId, hotels }: { preSel
               <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
             </div>
           </div>
+        </div>
+
+        {/* Room Selection */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-gray-700">Oda Seçimi</label>
+          <div className="relative">
+            <select
+              value={selectedRoom}
+              onChange={(e) => setSelectedRoom(e.target.value)}
+              required
+              disabled={!selectedHotel}
+              className="w-full pl-4 pr-10 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[var(--gold)] focus:border-transparent outline-none transition-all appearance-none text-gray-700 disabled:bg-gray-100 disabled:text-gray-400"
+            >
+              <option value="" disabled>
+                {!selectedHotel ? "Önce otel seçiniz" : "Lütfen bir oda seçin"}
+              </option>
+              {availableRooms.map((room) => (
+                <option key={room.id} value={room.id}>
+                  {room.name} ({room.price}₺) - {room.capacity}
+                </option>
+              ))}
+            </select>
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+              <BedDouble className="w-4 h-4 text-gray-500" />
+            </div>
+          </div>
+          {selectedHotel && availableRooms.length === 0 && (
+             <p className="text-xs text-red-500 mt-1">Bu otel için henüz oda tanımlanmamış. (Demo: Varsayılan odalar listeleniyor olabilir)</p>
+          )}
         </div>
 
         {/* Dates Grid */}
@@ -124,9 +241,17 @@ export default function ReservationForm({ preSelectedHotelId, hotels }: { preSel
 
       <button
         type="submit"
-        className="w-full bg-[var(--gold)] text-white font-bold py-4 rounded-lg hover:bg-yellow-600 transition-colors shadow-md hover:shadow-lg transform active:scale-95 duration-200"
+        disabled={isLoading}
+        className="w-full bg-[var(--gold)] text-white font-bold py-4 rounded-lg hover:bg-yellow-600 transition-colors shadow-md hover:shadow-lg transform active:scale-95 duration-200 flex items-center justify-center gap-2"
       >
-        Uygunluk Kontrol Et
+        {isLoading ? (
+          <>
+            <Loader2 className="w-5 h-5 animate-spin" />
+            İşleniyor...
+          </>
+        ) : (
+          "Rezervasyon Yap"
+        )}
       </button>
     </form>
   );

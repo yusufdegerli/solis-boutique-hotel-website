@@ -13,7 +13,12 @@ import {
   X,
   Search,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Activity,
+  Calendar,
+  User,
+  LogIn,
+  LogOut
 } from 'lucide-react';
 import { 
   getHotels, 
@@ -23,14 +28,19 @@ import {
   deleteHotel, 
   createRoom, 
   updateRoom, 
-  deleteRoom 
+  deleteRoom,
+  getBookings,
+  updateBookingStatus,
+  Booking
 } from '@/src/services/hotelService';
 import { Hotel, Room } from '@/lib/data';
+import { supabase } from '@/lib/supabaseClient';
 
 export default function AdminDashboard() {
-  const [activeTab, setActiveTab] = useState<'hotels' | 'rooms' | 'campaigns'>('hotels');
+  const [activeTab, setActiveTab] = useState<'live' | 'hotels' | 'rooms' | 'campaigns'>('live');
   const [hotels, setHotels] = useState<Hotel[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
+  const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -41,14 +51,32 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     fetchData();
+
+    // Realtime Subscription
+    const channel = supabase
+      .channel('realtime bookings')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'Reservation_Information' }, (payload) => {
+        console.log('Change received!', payload);
+        if (payload.eventType === 'INSERT') {
+          setBookings((prev) => [payload.new as Booking, ...prev]);
+        } else if (payload.eventType === 'UPDATE') {
+          setBookings((prev) => prev.map(b => b.id === payload.new.id ? payload.new as Booking : b));
+        }
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [hotelsData, roomsData] = await Promise.all([getHotels(), getRooms()]);
+      const [hotelsData, roomsData, bookingsData] = await Promise.all([getHotels(), getRooms(), getBookings()]);
       setHotels(hotelsData);
       setRooms(roomsData);
+      setBookings(bookingsData);
     } catch (err) {
       setError('Veriler yüklenirken bir hata oluştu.');
       console.error(err);
@@ -106,6 +134,17 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleStatusChange = async (id: string, newStatus: string) => {
+    try {
+        await updateBookingStatus(id, newStatus);
+        // State update handled by Realtime subscription, but optimistic update is good too
+        setBookings(prev => prev.map(b => b.id === id ? { ...b, room_status: newStatus as any } : b));
+    } catch (err) {
+        console.error(err);
+        alert("Durum güncellenemedi.");
+    }
+  };
+
   // --- RENDER HELPERS ---
 
   const SidebarItem = ({ id, icon: Icon, label }: { id: any, icon: any, label: string }) => (
@@ -131,6 +170,7 @@ export default function AdminDashboard() {
           <p className="text-xs text-gray-400 mt-1">Yönetim Paneli</p>
         </div>
         <nav className="p-4 space-y-2">
+          <SidebarItem id="live" icon={Activity} label="Canlı Durum" />
           <SidebarItem id="hotels" icon={HotelIcon} label="Oteller" />
           <SidebarItem id="rooms" icon={BedDouble} label="Odalar" />
           <SidebarItem id="campaigns" icon={Tags} label="Kampanyalar" />
@@ -142,13 +182,16 @@ export default function AdminDashboard() {
         <header className="flex justify-between items-center mb-8">
           <div>
             <h2 className="text-3xl font-bold text-gray-800 font-serif">
+              {activeTab === 'live' && 'Canlı Otel Durumu'}
               {activeTab === 'hotels' && 'Otel Yönetimi'}
               {activeTab === 'rooms' && 'Oda & Fiyat Yönetimi'}
               {activeTab === 'campaigns' && 'Kampanyalar & İndirimler'}
             </h2>
-            <p className="text-gray-500 mt-1">İçeriklerinizi buradan yönetebilirsiniz.</p>
+            <p className="text-gray-500 mt-1">
+                {activeTab === 'live' ? 'Anlık misafir ve rezervasyon takibi.' : 'İçeriklerinizi buradan yönetebilirsiniz.'}
+            </p>
           </div>
-          {activeTab !== 'campaigns' && (
+          {activeTab !== 'campaigns' && activeTab !== 'live' && (
             <button 
               onClick={() => handleOpenModal('add')}
               className="flex items-center gap-2 bg-[var(--off-black)] text-white px-5 py-2.5 rounded-lg hover:bg-black transition-colors shadow-lg"
@@ -175,6 +218,103 @@ export default function AdminDashboard() {
         ) : (
           <div className="space-y-6">
             
+            {/* LIVE STATUS TAB */}
+            {activeTab === 'live' && (
+                <div className="space-y-8">
+                    {/* Active Guests Card */}
+                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                        <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                            <User className="w-5 h-5 text-green-600" />
+                            Şu An Otelde Olanlar
+                        </h3>
+                        {bookings.filter(b => b.room_status === 'checked_in').length === 0 ? (
+                             <p className="text-gray-400 text-sm italic">Şu an giriş yapmış misafir bulunmuyor.</p>
+                        ) : (
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                {bookings.filter(b => b.room_status === 'checked_in').map(booking => {
+                                    const room = rooms.find(r => r.id === booking.room_id.toString());
+                                    const locationInfo = room ? `Oda: ${room.name}` : `Oda ID: ${booking.room_id}`;
+                                    
+                                    return (
+                                        <div key={booking.id} className="border border-green-100 bg-green-50/50 p-4 rounded-lg flex justify-between items-center">
+                                            <div>
+                                                <p className="font-bold text-gray-800">{booking.customer_name}</p>
+                                                <p className="text-sm text-gray-500">{locationInfo}</p>
+                                                <p className="text-xs text-gray-400 mt-1">Çıkış: {booking.check_out}</p>
+                                            </div>
+                                            <button 
+                                                onClick={() => handleStatusChange(booking.id, 'checked_out')}
+                                                className="bg-white text-red-600 px-3 py-1.5 rounded border border-red-200 hover:bg-red-50 text-sm font-medium flex items-center gap-1"
+                                            >
+                                                <LogOut className="w-4 h-4" /> Çıkış Yap
+                                            </button>
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Pending Reservations */}
+                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                        <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                            <Calendar className="w-5 h-5 text-[var(--gold)]" />
+                            Bekleyen / Yaklaşan Rezervasyonlar
+                        </h3>
+                         <div className="overflow-x-auto">
+                            <table className="w-full text-left">
+                                <thead className="bg-gray-50 text-gray-500 text-sm">
+                                    <tr>
+                                        <th className="p-3">Misafir</th>
+                                        <th className="p-3">Oda</th>
+                                        <th className="p-3">Giriş/Çıkış</th>
+                                        <th className="p-3">Durum</th>
+                                        <th className="p-3 text-right">İşlem</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100 text-sm">
+                                    {bookings.filter(b => b.room_status === 'pending' || b.room_status === 'confirmed').map(booking => {
+                                         const room = rooms.find(r => r.id === booking.room_id.toString());
+                                         const roomName = room ? room.name : `Oda #${booking.room_id}`;
+                                         
+                                         return (
+                                            <tr key={booking.id} className="hover:bg-gray-50">
+                                                <td className="p-3 font-medium text-gray-900">{booking.customer_name}</td>
+                                                <td className="p-3 text-gray-600">{roomName}</td>
+                                                <td className="p-3 text-gray-500">
+                                                    {booking.check_in} <span className="text-gray-300">/</span> {booking.check_out}
+                                                </td>
+                                                <td className="p-3">
+                                                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${booking.room_status === 'confirmed' ? 'bg-blue-100 text-blue-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                                                        {booking.room_status === 'confirmed' ? 'Onaylı' : 'Bekliyor'}
+                                                    </span>
+                                                </td>
+                                                <td className="p-3 text-right flex justify-end gap-2">
+                                                    {booking.room_status === 'pending' && (
+                                                        <button onClick={() => handleStatusChange(booking.id, 'confirmed')} className="text-blue-600 hover:bg-blue-50 px-2 py-1 rounded">Onayla</button>
+                                                    )}
+                                                    <button 
+                                                        onClick={() => handleStatusChange(booking.id, 'checked_in')}
+                                                        className="bg-[var(--off-black)] text-white px-3 py-1.5 rounded hover:bg-black flex items-center gap-1 ml-auto"
+                                                    >
+                                                        <LogIn className="w-3 h-3" /> Giriş
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                         )
+                                    })}
+                                    {bookings.filter(b => b.room_status === 'pending' || b.room_status === 'confirmed').length === 0 && (
+                                        <tr>
+                                            <td colSpan={5} className="p-4 text-center text-gray-400 italic">Bekleyen rezervasyon yok.</td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                         </div>
+                    </div>
+                </div>
+            )}
+
             {/* HOTELS LIST */}
             {activeTab === 'hotels' && (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">

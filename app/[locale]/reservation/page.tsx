@@ -1,7 +1,7 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ReservationForm from "@/components/ReservationForm";
-import { getHotels } from "@/src/services/hotelService";
+import { getHotels, getRooms } from "@/src/services/hotelService";
 
 export default async function ReservationPage({ 
   searchParams, 
@@ -13,7 +13,7 @@ export default async function ReservationPage({
   const resolvedSearchParams = await searchParams;
   const { locale } = await params;
   const hotelId = resolvedSearchParams.hotel;
-  const hotels = await getHotels();
+  const [hotels, rooms] = await Promise.all([getHotels(), getRooms()]);
 
   return (
     <main className="bg-gray-50 min-h-screen flex flex-col">
@@ -24,7 +24,7 @@ export default async function ReservationPage({
           <p className="text-gray-600">Solis ayrıcalıklarıyla dolu bir tatil sizi bekliyor.</p>
         </div>
         
-        <ReservationForm preSelectedHotelId={hotelId} hotels={hotels} />
+        <ReservationForm preSelectedHotelId={hotelId} hotels={hotels} allRooms={rooms} />
       </div>
       <Footer />
     </main>

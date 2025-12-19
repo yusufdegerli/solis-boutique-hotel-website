@@ -30,6 +30,7 @@ export interface Hotel {
 // New Rooms Data
 export interface Room {
   id: string;
+  hotelId?: string; // Added to link room to hotel
   name: string;
   description: string;
   size: string;
