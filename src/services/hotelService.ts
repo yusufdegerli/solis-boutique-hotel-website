@@ -163,26 +163,26 @@ function mapDbHotelToModel(hotel: any): Hotel {
     id: hotel.id.toString(),
     name: hotel.name,
     slug: hotel.slug,
-    tagline: "Unutulmaz Bir Konaklama Deneyimi",
+    tagline: hotel.tagline || "Unutulmaz Bir Konaklama Deneyimi",
     description: hotel.description,
-    pricePerNight: 3500, // Default if not in DB
-    rating: 9.5,
-    reviews: 500,
+    pricePerNight: hotel.stats?.min_price || 3500, // Use stats if available, else default
+    rating: Number(hotel.rating) || 9.0,
+    reviews: hotel.reviews_count || 0,
     image: hotel.image_url || "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80",
     location: hotel.address,
-    coordinates: {
+    coordinates: hotel.coordinates || {
       lat: 41.0082,
       lng: 28.9784
     },
-    stats: {
-      totalRooms: 100,
-      availability: 20,
-      suiteCount: 10
+    stats: hotel.stats || {
+      totalRooms: 20,
+      availability: 10,
+      suiteCount: 5
     },
-    features: ["Ücretsiz Wi-Fi", "Spa", "Spor Salonu", "Restoran"],
+    features: hotel.features || ["Ücretsiz Wi-Fi", "Spa", "Spor Salonu", "Restoran"],
     contact: {
-      phone: "+90 212 555 0123",
-      email: "info@solis.com",
+      phone: hotel.phone || "+90 212 555 0123",
+      email: hotel.email || "info@solis.com",
       address: hotel.address
     }
   };
@@ -194,11 +194,11 @@ function mapDbRoomToModel(room: any): Room {
     hotelId: room.hotel_id?.toString(), // Map DB hotel_id to model
     name: room.type_name,
     description: room.description || "Konforlu ve ferah bir oda.",
-    size: "35m²",
+    size: room.size || "35m²",
     capacity: `${room.capacity || 2} Yetişkin`,
     price: room.base_price || 0,
     quantity: room.quantity || 0,
-    image: "https://images.unsplash.com/photo-1611892440504-42a792e24d32?auto=format&fit=crop&w=800&q=80"
+    image: room.image_url || "https://images.unsplash.com/photo-1611892440504-42a792e24d32?auto=format&fit=crop&w=800&q=80"
   };
 }
 
@@ -245,46 +245,27 @@ import { createBookingServer } from "@/src/actions/bookingActions";
 export const createBooking = async (booking: Partial<Booking>) => {
   console.log('Creating booking with input:', booking);
 
-  // 1. Validate Inputs
+  // 1. Validate Basic Inputs (Minimal client-side check)
   if (!booking.room_id || !booking.check_in || !booking.check_out) {
     throw new Error("Eksik bilgi: Oda ve tarihler gereklidir.");
   }
 
-  // 2. Get Room Details for Pricing
-  const { data: room, error: roomError } = await supabase
-    .from('Rooms_Information')
-    .select('id, base_price')
-    .eq('id', booking.room_id)
-    .single();
-
-  if (roomError || !room) {
-    console.error('Error fetching room details:', roomError);
-    throw new Error("Seçilen oda bilgisi veritabanından alınamadı.");
-  }
-
-  // 3. Calculate Total Price
-  const checkInDate = new Date(booking.check_in!);
-  const checkOutDate = new Date(booking.check_out!);
-  const diffTime = Math.abs(checkOutDate.getTime() - checkInDate.getTime());
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-  const days = diffDays > 0 ? diffDays : 1; // Minimum 1 night
-  
-  const totalPrice = days * (room.base_price || 0);
-
-  // 4. Construct Payload matching 'Reservation_Information' schema
+  // 2. Construct Payload
+  // We send raw data to the server. The server calculates the price securely.
   const payload = {
-    room_id: room.id,
+    room_id: booking.room_id,
     customer_name: booking.guest_name || booking.customer_name,
     customer_email: booking.email || booking.customer_email || "no-email@provided.com", 
     check_in: booking.check_in,
     check_out: booking.check_out,
-    total_price: totalPrice,
+    // total_price: REMOVED (Calculated on server)
+    guests_count: booking.guests_count || 1,
     room_status: 'pending' 
   };
 
   console.log('Delegating to Server Action with payload:', payload);
 
-  // 5. Call Server Action
+  // 3. Call Server Action
   const result = await createBookingServer(payload);
 
   if (!result.success) {
