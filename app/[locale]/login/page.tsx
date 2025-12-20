@@ -1,22 +1,34 @@
 'use client';
 
 import { useTransition, useState } from 'react';
-import { login } from './actions';
-import { Lock } from 'lucide-react';
+import { login, resetPassword } from './actions';
+import { Lock, KeyRound, ArrowLeft } from 'lucide-react';
 
 export default function LoginPage() {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [mode, setMode] = useState<'login' | 'reset'>('login');
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
+    setSuccess(null);
     const formData = new FormData(event.currentTarget);
     
     startTransition(async () => {
-      const result = await login(formData);
-      if (result?.error) {
-        setError(result.error);
+      if (mode === 'login') {
+        const result = await login(formData);
+        if (result?.error) {
+          setError(result.error);
+        }
+      } else {
+        const result = await resetPassword(formData);
+        if (result?.error) {
+          setError(result.error);
+        } else {
+          setSuccess('Şifre sıfırlama bağlantısı e-posta adresinize gönderildi.');
+        }
       }
     });
   };
@@ -26,11 +38,15 @@ export default function LoginPage() {
       <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-2xl shadow-xl">
         <div className="text-center">
           <div className="mx-auto h-16 w-16 bg-[var(--gold)] rounded-full flex items-center justify-center mb-4">
-            <Lock className="h-8 w-8 text-white" />
+            {mode === 'login' ? <Lock className="h-8 w-8 text-white" /> : <KeyRound className="h-8 w-8 text-white" />}
           </div>
-          <h2 className="text-3xl font-bold text-gray-900 font-serif">Yönetici Girişi</h2>
+          <h2 className="text-3xl font-bold text-gray-900 font-serif">
+            {mode === 'login' ? 'Yönetici Girişi' : 'Şifre Sıfırlama'}
+          </h2>
           <p className="mt-2 text-sm text-gray-600">
-            Devam etmek için lütfen giriş yapın
+            {mode === 'login' 
+              ? 'Devam etmek için lütfen giriş yapın' 
+              : 'E-posta adresinize sıfırlama bağlantısı gönderilecektir.'}
           </p>
         </div>
         
@@ -48,18 +64,20 @@ export default function LoginPage() {
                 placeholder="Email Adresi"
               />
             </div>
-            <div>
-              <label htmlFor="password" className="sr-only">Şifre</label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                required
-                className="appearance-none relative block w-full px-3 py-4 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-[var(--gold)] focus:border-[var(--gold)] focus:z-10 sm:text-sm transition-all"
-                placeholder="Şifre"
-              />
-            </div>
+            {mode === 'login' && (
+              <div>
+                <label htmlFor="password" className="sr-only">Şifre</label>
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                  className="appearance-none relative block w-full px-3 py-4 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-[var(--gold)] focus:border-[var(--gold)] focus:z-10 sm:text-sm transition-all"
+                  placeholder="Şifre"
+                />
+              </div>
+            )}
           </div>
 
           {error && (
@@ -68,13 +86,33 @@ export default function LoginPage() {
             </div>
           )}
 
-          <div>
+          {success && (
+            <div className="text-green-600 text-sm text-center bg-green-50 p-3 rounded-lg border border-green-100">
+              {success}
+            </div>
+          )}
+
+          <div className="flex flex-col gap-3">
             <button
               type="submit"
               disabled={isPending}
               className="group relative w-full flex justify-center py-4 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-[var(--off-black)] hover:bg-black focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--gold)] transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
             >
-              {isPending ? 'Giriş Yapılıyor...' : 'Giriş Yap'}
+              {isPending 
+                ? 'İşlem Yapılıyor...' 
+                : (mode === 'login' ? 'Giriş Yap' : 'Bağlantı Gönder')}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setMode(mode === 'login' ? 'reset' : 'login');
+                setError(null);
+                setSuccess(null);
+              }}
+              className="text-sm text-gray-600 hover:text-[var(--gold)] transition-colors"
+            >
+              {mode === 'login' ? 'Şifremi Unuttum' : 'Giriş Ekranına Dön'}
             </button>
           </div>
         </form>

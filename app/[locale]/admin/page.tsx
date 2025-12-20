@@ -35,6 +35,7 @@ import {
 } from '@/src/services/hotelService';
 import { Hotel, Room } from '@/lib/data';
 import { supabase } from '@/lib/supabaseClient';
+import { logout } from '../login/actions';
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<'live' | 'hotels' | 'rooms' | 'campaigns'>('live');
@@ -169,11 +170,23 @@ export default function AdminDashboard() {
           <h1 className="text-2xl font-serif font-bold text-[var(--off-black)]">Solis Admin</h1>
           <p className="text-xs text-gray-400 mt-1">Yönetim Paneli</p>
         </div>
-        <nav className="p-4 space-y-2">
-          <SidebarItem id="live" icon={Activity} label="Canlı Durum" />
-          <SidebarItem id="hotels" icon={HotelIcon} label="Oteller" />
-          <SidebarItem id="rooms" icon={BedDouble} label="Odalar" />
-          <SidebarItem id="campaigns" icon={Tags} label="Kampanyalar" />
+        <nav className="p-4 flex flex-col h-[calc(100vh-120px)]">
+          <div className="space-y-2 flex-1">
+            <SidebarItem id="live" icon={Activity} label="Canlı Durum" />
+            <SidebarItem id="hotels" icon={HotelIcon} label="Oteller" />
+            <SidebarItem id="rooms" icon={BedDouble} label="Odalar" />
+            <SidebarItem id="campaigns" icon={Tags} label="Kampanyalar" />
+          </div>
+          
+          <div className="pt-4 border-t border-gray-100">
+            <button
+              onClick={() => logout()}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 transition-all font-medium"
+            >
+              <LogOut className="w-5 h-5" />
+              <span>Çıkış Yap</span>
+            </button>
+          </div>
         </nav>
       </aside>
 

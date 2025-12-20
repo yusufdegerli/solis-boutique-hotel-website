@@ -11,22 +11,46 @@ const intlMiddleware = createMiddleware({
 });
 
 export default async function middleware(request: NextRequest) {
-  // 1. Supabase session update and check
-  // This updates the session cookie if needed
+  const path = request.nextUrl.pathname;
+  const LOCALES = ['en', 'tr', 'ar', 'hu', 'ro'];
+
+  // 1. Force locale prefix for known routes if missing
+  const firstSegment = path.split('/')[1];
+  if (!LOCALES.includes(firstSegment) && (path === '/admin' || path === '/login' || path.startsWith('/admin/'))) {
+    const url = new URL(`/tr${path}`, request.url);
+    return NextResponse.redirect(url);
+  }
+
+  // 2. Supabase session update and check
   const { response, user } = await updateSession(request);
 
-  // 2. Protected Route Logic
-  // Check if the path includes /admin
-  const path = request.nextUrl.pathname;
+  // 3. Protected Route Logic
   const isProtectedRoute = path.includes('/admin');
+
+  // Helper to get valid locale from path or default to 'tr'
+  const getLocale = () => {
+    return LOCALES.includes(firstSegment) ? firstSegment : 'tr';
+  };
 
   if (isProtectedRoute && !user) {
     // Redirect to login if accessing admin without user
-    // We try to keep the locale if present, or default to tr
-    const locale = request.nextUrl.pathname.split('/')[1] || 'tr';
+    const locale = getLocale();
     const loginUrl = new URL(`/${locale}/login`, request.url);
     return NextResponse.redirect(loginUrl);
   }
+
+  // --- ADMIN AUTHORIZATION CHECK ---
+  const ADMIN_EMAILS = ['yusufdgrl72@gmail.com'];
+  
+  if (isProtectedRoute && user) {
+    if (!user.email || !ADMIN_EMAILS.includes(user.email)) {
+       // User is logged in but NOT authorized
+       const locale = getLocale();
+       const homeUrl = new URL(`/${locale}`, request.url);
+       return NextResponse.redirect(homeUrl);
+    }
+  }
+  // --------------------------------
 
   // 3. Run next-intl middleware
   // This handles redirects, locale detection etc.
