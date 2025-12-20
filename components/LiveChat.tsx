@@ -15,7 +15,6 @@ interface Message {
 }
 
 export default function LiveChat({ locale }: { locale: string }) {
-  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [inputText, setInputText] = useState("");
@@ -38,7 +37,11 @@ export default function LiveChat({ locale }: { locale: string }) {
     scrollToBottom();
   }, [messages, isOpen]);
 
-  if (pathname?.includes("/admin")) {
+  const pathname = usePathname();
+
+  const isHiddenPage = pathname?.includes("/admin") || pathname?.includes("/login") || pathname?.includes("/update-password");
+
+  if (isHiddenPage) {
     return null;
   }
 

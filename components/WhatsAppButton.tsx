@@ -7,7 +7,9 @@ import { usePathname } from "next/navigation";
 export default function WhatsAppButton() {
   const pathname = usePathname();
 
-  if (pathname?.includes("/admin")) {
+  const isHiddenPage = pathname?.includes("/admin") || pathname?.includes("/login") || pathname?.includes("/update-password");
+
+  if (isHiddenPage) {
     return null;
   }
 
