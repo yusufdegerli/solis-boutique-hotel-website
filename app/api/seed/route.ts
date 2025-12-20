@@ -1,7 +1,16 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabaseClient';
 
-export async function GET() {
+export async function GET(request: Request) {
+  // --- SECURITY CHECK ---
+  const { searchParams } = new URL(request.url);
+  const secret = searchParams.get('secret');
+
+  if (secret !== process.env.SEED_SECRET) {
+    return NextResponse.json({ error: 'Unauthorized: Invalid or missing seed secret.' }, { status: 401 });
+  }
+  // ----------------------
+
   try {
     // 1. Check/Create Hotel
     let { data: hotels } = await supabase.from('Hotel_Information_Table').select('id, name').limit(1);
