@@ -1,12 +1,17 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { blogPosts } from "@/lib/data";
+import { getBlogPosts } from "@/src/services/contentService";
 import Image from "next/image";
 import Link from "next/link";
 import { Calendar, ArrowRight } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 export default async function BlogPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
+  const [blogPosts, t] = await Promise.all([
+    getBlogPosts(),
+    getTranslations('Blog')
+  ]);
 
   return (
     <main className="min-h-screen bg-[var(--off-white)]">
@@ -22,9 +27,9 @@ export default async function BlogPage({ params }: { params: Promise<{ locale: s
           />
         </div>
         <div className="relative z-10">
-            <h1 className="text-5xl font-bold mb-4 font-serif">Seyahat Günlüğü</h1>
+            <h1 className="text-5xl font-bold mb-4 font-serif">{t('title')}</h1>
             <p className="text-gray-300 max-w-2xl mx-auto px-4 font-light font-sans tracking-wide">
-              Solis dünyasından haberler, seyahat ipuçları ve keşfedilmeyi bekleyen rotalar.
+              {t('desc')}
             </p>
         </div>
       </div>
@@ -56,7 +61,7 @@ export default async function BlogPage({ params }: { params: Promise<{ locale: s
                     href="#" 
                     className="inline-flex items-center gap-2 text-[var(--gold)] font-bold text-sm uppercase tracking-wider hover:gap-3 transition-all mt-auto"
                 >
-                    Devamını Oku <ArrowRight className="w-4 h-4" />
+                    {t('readMore')} <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
             </article>

@@ -1,12 +1,17 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { services } from "@/lib/data";
+import { getServices } from "@/src/services/contentService";
 import Image from "next/image";
 import Link from "next/link";
 import { Car, Map, Bell, ChevronRight } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 export default async function ServicesPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
+  const [services, t] = await Promise.all([
+    getServices(),
+    getTranslations('Services')
+  ]);
 
   // Icon mapping
   const getIcon = (iconName: string) => {
@@ -32,9 +37,9 @@ export default async function ServicesPage({ params }: { params: Promise<{ local
           />
         </div>
         <div className="relative z-10">
-            <h1 className="text-5xl font-bold mb-4 font-serif">Özel Hizmetler</h1>
+            <h1 className="text-5xl font-bold mb-4 font-serif">{t('title')}</h1>
             <p className="text-gray-300 max-w-2xl mx-auto px-4 font-light font-sans tracking-wide">
-              Sadece konaklama değil, yaşam tarzınıza uygun ayrıcalıklı bir deneyim sunuyoruz.
+              {t('desc')}
             </p>
         </div>
       </div>
@@ -54,7 +59,7 @@ export default async function ServicesPage({ params }: { params: Promise<{ local
                 href={`/${locale}/contact`}
                 className="inline-flex items-center justify-center w-full py-4 border border-gray-200 text-[var(--off-black)] font-serif font-bold hover:bg-[var(--off-black)] hover:text-white transition-all duration-300 rounded-sm"
               >
-                Bilgi Al <ChevronRight className="w-4 h-4 ml-2" />
+                {t('moreInfo')} <ChevronRight className="w-4 h-4 ml-2" />
               </Link>
             </div>
           ))}
@@ -70,21 +75,21 @@ export default async function ServicesPage({ params }: { params: Promise<{ local
                     className="object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent flex items-center p-12">
-                    <h3 className="text-4xl font-serif font-bold text-white max-w-xs">Sizi Bekletmek Bizim Lügatımızda Yok.</h3>
+                    <h3 className="text-4xl font-serif font-bold text-white max-w-xs">{t('vipTitle')}</h3>
                 </div>
             </div>
             <div className="md:w-1/2 p-12 md:p-16 flex flex-col justify-center bg-[var(--off-black)] text-white">
-                <h4 className="text-2xl font-serif font-bold text-[var(--gold)] mb-6">VIP Transfer Ayrıcalığı</h4>
+                <h4 className="text-2xl font-serif font-bold text-[var(--gold)] mb-6">{t('vipSubtitle')}</h4>
                 <p className="text-gray-300 font-sans leading-relaxed mb-8">
-                    Havaalanına indiğiniz andan itibaren Solis ayrıcalığını hissetmeye başlayın. Özel şoförlü lüks araçlarımızla, trafik stresinden uzak, konforlu ve güvenli bir yolculuk sizi bekliyor.
+                    {t('vipDesc')}
                 </p>
                 <ul className="space-y-4 font-sans text-gray-400 mb-10">
-                    <li className="flex items-center gap-3"><span className="w-2 h-2 bg-[var(--gold)] rounded-full"></span> 7/24 Karşılama Hizmeti</li>
-                    <li className="flex items-center gap-3"><span className="w-2 h-2 bg-[var(--gold)] rounded-full"></span> Mercedes S-Class & V-Class Seçenekleri</li>
-                    <li className="flex items-center gap-3"><span className="w-2 h-2 bg-[var(--gold)] rounded-full"></span> Ücretsiz Wi-Fi ve İçecek İkramı</li>
+                    <li className="flex items-center gap-3"><span className="w-2 h-2 bg-[var(--gold)] rounded-full"></span> {t('feature1')}</li>
+                    <li className="flex items-center gap-3"><span className="w-2 h-2 bg-[var(--gold)] rounded-full"></span> {t('feature2')}</li>
+                    <li className="flex items-center gap-3"><span className="w-2 h-2 bg-[var(--gold)] rounded-full"></span> {t('feature3')}</li>
                 </ul>
                 <Link href={`/${locale}/reservation`} className="self-start px-8 py-4 bg-[var(--gold)] text-white font-serif font-bold uppercase tracking-widest hover:bg-white hover:text-[var(--off-black)] transition-all">
-                    Transfer Ayarla
+                    {t('bookTransfer')}
                 </Link>
             </div>
         </div>
