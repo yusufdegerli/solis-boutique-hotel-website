@@ -55,7 +55,10 @@
     "surname": "Last Name",
     "email": "Email",
     "message": "Your Message",
-    "send": "Send"
+    "send": "Send",
+    "addressDetail": "Levent Mah. Büyükdere Cad. No:1, 34330 Besiktas/Istanbul",
+    "phoneNumber": "+90 212 555 0000",
+    "emailAddress": "info@solishotels.com"
   },
   "Rooms": {
     "title": "Accommodation",
@@ -113,6 +116,14 @@
     "processing": "Processing...",
     "errorNoRoom": "Please select a room.",
     "errorGeneric": "An error occurred while creating the reservation.",
-    "noRoomsDefined": "No rooms defined for this hotel yet."
+    "noRoomsDefined": "No rooms defined for this hotel yet.",
+    "errorHotelRequired": "Please select a hotel.",
+    "errorRoomRequired": "Please select a room.",
+    "errorNameRequired": "Name must be at least 2 characters.",
+    "errorEmailInvalid": "Please enter a valid email address.",
+    "errorDatePast": "Check-in date cannot be in the past.",
+    "errorDateOrder": "Check-out date must be after check-in date.",
+    "errorGuestsMin": "At least 1 guest is required.",
+    "errorGuestsMax": "Maximum 10 guests are allowed."
   }
 }

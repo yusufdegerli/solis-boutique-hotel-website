@@ -33,7 +33,7 @@ export default async function ContactPage({ params }: { params: Promise<{ locale
                 </div>
                 <div>
                   <h3 className="font-semibold text-gray-900 text-lg mb-1 font-serif">{t('addressTitle')}</h3>
-                  <p className="text-gray-600 leading-relaxed font-sans">Levent Mah. Büyükdere Cad. No:1, 34330 Beşiktaş/İstanbul</p>
+                  <p className="text-gray-600 leading-relaxed font-sans">{t('addressDetail')}</p>
                 </div>
               </div>
 
@@ -43,7 +43,7 @@ export default async function ContactPage({ params }: { params: Promise<{ locale
                 </div>
                 <div>
                   <h3 className="font-semibold text-gray-900 text-lg mb-1 font-serif">{t('phoneTitle')}</h3>
-                  <p className="text-gray-600 font-sans" dir="ltr">+90 212 555 0000</p>
+                  <p className="text-gray-600 font-sans" dir="ltr">{t('phoneNumber')}</p>
                   <p className="text-gray-500 text-sm font-sans">{t('phoneDesc')}</p>
                 </div>
               </div>
@@ -54,7 +54,7 @@ export default async function ContactPage({ params }: { params: Promise<{ locale
                 </div>
                 <div>
                   <h3 className="font-semibold text-gray-900 text-lg mb-1 font-serif">{t('emailTitle')}</h3>
-                  <p className="text-gray-600 font-sans">info@solishotels.com</p>
+                  <p className="text-gray-600 font-sans">{t('emailAddress')}</p>
                 </div>
               </div>
             </div>

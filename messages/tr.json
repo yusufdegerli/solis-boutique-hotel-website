@@ -55,7 +55,10 @@
     "surname": "Soyadınız",
     "email": "E-posta",
     "message": "Mesajınız",
-    "send": "Gönder"
+    "send": "Gönder",
+    "addressDetail": "Levent Mah. Büyükdere Cad. No:1, 34330 Beşiktaş/İstanbul",
+    "phoneNumber": "+90 212 555 0000",
+    "emailAddress": "info@solishotels.com"
   },
   "Rooms": {
     "title": "Konaklama",
@@ -113,6 +116,14 @@
     "processing": "İşleniyor...",
     "errorNoRoom": "Lütfen bir oda seçiniz.",
     "errorGeneric": "Rezervasyon oluşturulurken bir hata meydana geldi.",
-    "noRoomsDefined": "Bu otel için henüz oda tanımlanmamış."
+    "noRoomsDefined": "Bu otel için henüz oda tanımlanmamış.",
+    "errorHotelRequired": "Lütfen bir otel seçiniz.",
+    "errorRoomRequired": "Lütfen bir oda seçiniz.",
+    "errorNameRequired": "İsim en az 2 karakter olmalıdır.",
+    "errorEmailInvalid": "Geçerli bir e-posta adresi giriniz.",
+    "errorDatePast": "Giriş tarihi geçmişte olamaz.",
+    "errorDateOrder": "Çıkış tarihi giriş tarihinden sonra olmalıdır.",
+    "errorGuestsMin": "En az 1 misafir olmalıdır.",
+    "errorGuestsMax": "En fazla 10 misafir kabul edilmektedir."
   }
 }
