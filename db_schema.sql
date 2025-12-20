@@ -40,19 +40,16 @@ ALTER TABLE "public"."Hotel_Information_Table" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "public"."Rooms_Information" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "public"."Reservation_Information" ENABLE ROW LEVEL SECURITY;
 
--- Create Policies (Allow public access for demo purposes - SECURE THIS IN PRODUCTION)
+-- Create Policies (SECURE)
+
+-- Hotel: Public Read, Admin Write
 CREATE POLICY "Enable read access for all users" ON "public"."Hotel_Information_Table" FOR SELECT USING (true);
-CREATE POLICY "Enable insert access for all users" ON "public"."Hotel_Information_Table" FOR INSERT WITH CHECK (true);
-CREATE POLICY "Enable update access for all users" ON "public"."Hotel_Information_Table" FOR UPDATE USING (true);
-CREATE POLICY "Enable delete access for all users" ON "public"."Hotel_Information_Table" FOR DELETE USING (true);
+CREATE POLICY "Enable write access for authenticated users only" ON "public"."Hotel_Information_Table" FOR ALL USING (auth.role() = 'authenticated');
 
+-- Rooms: Public Read, Admin Write
 CREATE POLICY "Enable read access for all users" ON "public"."Rooms_Information" FOR SELECT USING (true);
-CREATE POLICY "Enable insert access for all users" ON "public"."Rooms_Information" FOR INSERT WITH CHECK (true);
-CREATE POLICY "Enable update access for all users" ON "public"."Rooms_Information" FOR UPDATE USING (true);
-CREATE POLICY "Enable delete access for all users" ON "public"."Rooms_Information" FOR DELETE USING (true);
+CREATE POLICY "Enable write access for authenticated users only" ON "public"."Rooms_Information" FOR ALL USING (auth.role() = 'authenticated');
 
-CREATE POLICY "Enable read access for all users" ON "public"."Reservation_Information" FOR SELECT USING (true);
-CREATE POLICY "Enable insert access for all users" ON "public"."Reservation_Information" FOR INSERT WITH CHECK (true);
-CREATE POLICY "Enable update access for all users" ON "public"."Reservation_Information" FOR UPDATE USING (true);
-CREATE POLICY "Enable delete access for all users" ON "public"."Reservation_Information" FOR DELETE USING (true);
+-- Reservations: Admin Only (Public creates via Server Action/Service Key)
+CREATE POLICY "Enable access for authenticated users only" ON "public"."Reservation_Information" FOR ALL USING (auth.role() = 'authenticated');
 
