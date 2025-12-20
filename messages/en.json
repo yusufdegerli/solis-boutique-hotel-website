@@ -89,5 +89,30 @@
     "section1Extra": "Prayers echoing in the dome of Hagia Sophia, state secrets whispered in the corridors of Topkapi Palace, and time lost in the labyrinths of the Grand Bazaar... Istanbul is not just a city, but a living open-air museum.",
     "section2Title": "Discover Istanbul with Solis",
     "section2Desc": "While staying at our Solis City hotel, you will be at the very heart of this magical history. Our private concierge team is ready to make your Istanbul experience unforgettable with events specially prepared for you, such as the 'Historical Peninsula Tour' or 'Sunset Boat Tour on the Bosphorus'."
+  },
+  "Reservation": {
+    "title": "Complete Your Reservation",
+    "subtitle": "A vacation full of Solis privileges awaits you.",
+    "successTitle": "Reservation Request Received!",
+    "successMessage": "Your request has successfully reached us. Our customer representative will contact you as soon as possible.",
+    "newBooking": "Make a New Reservation",
+    "detailsTitle": "Reservation Details",
+    "nameLabel": "Full Name",
+    "namePlaceholder": "Your Full Name",
+    "emailLabel": "Email",
+    "emailPlaceholder": "example@email.com",
+    "hotelLabel": "Hotel Selection",
+    "hotelSelectPlaceholder": "Please select a hotel",
+    "roomLabel": "Room Selection",
+    "roomSelectPlaceholder": "Please select a room",
+    "selectHotelFirst": "Select a hotel first",
+    "checkIn": "Check-in Date",
+    "checkOut": "Check-out Date",
+    "guests": "Number of Guests",
+    "submitButton": "Book Now",
+    "processing": "Processing...",
+    "errorNoRoom": "Please select a room.",
+    "errorGeneric": "An error occurred while creating the reservation.",
+    "noRoomsDefined": "No rooms defined for this hotel yet."
   }
 }

@@ -89,5 +89,30 @@
     "section1Extra": "Ayasofya'nın kubbesinde yankılanan dualar, Topkapı Sarayı'nın koridorlarında fısıldanan devlet sırları ve Kapalıçarşı'nın labirentlerinde kaybolan zaman... İstanbul sadece bir şehir değil, yaşayan bir açık hava müzesidir.",
     "section2Title": "Solis ile İstanbul'u Keşfedin",
     "section2Desc": "Solis City otelimizde konaklarken, bu büyülü tarihin tam kalbinde olacaksınız. Özel concierge ekibimiz, size özel hazırlanan \"Tarihi Yarımada Turu\" veya \"Boğaz'da Gün Batımı Tekne Gezisi\" gibi etkinliklerle İstanbul deneyiminizi unutulmaz kılmak için hazır."
+  },
+  "Reservation": {
+    "title": "Rezervasyonunuzu Tamamlayın",
+    "subtitle": "Solis ayrıcalıklarıyla dolu bir tatil sizi bekliyor.",
+    "successTitle": "Rezervasyon Talebi Alındı!",
+    "successMessage": "Talebiniz başarıyla bize ulaştı. Müşteri temsilcimiz en kısa sürede sizinle iletişime geçecektir.",
+    "newBooking": "Yeni Rezervasyon Yap",
+    "detailsTitle": "Rezervasyon Detayları",
+    "nameLabel": "Ad Soyad",
+    "namePlaceholder": "Adınız Soyadınız",
+    "emailLabel": "E-posta",
+    "emailPlaceholder": "ornek@email.com",
+    "hotelLabel": "Otel Seçimi",
+    "hotelSelectPlaceholder": "Lütfen bir otel seçin",
+    "roomLabel": "Oda Seçimi",
+    "roomSelectPlaceholder": "Lütfen bir oda seçin",
+    "selectHotelFirst": "Önce otel seçiniz",
+    "checkIn": "Giriş Tarihi",
+    "checkOut": "Çıkış Tarihi",
+    "guests": "Misafir Sayısı",
+    "submitButton": "Rezervasyon Yap",
+    "processing": "İşleniyor...",
+    "errorNoRoom": "Lütfen bir oda seçiniz.",
+    "errorGeneric": "Rezervasyon oluşturulurken bir hata meydana geldi.",
+    "noRoomsDefined": "Bu otel için henüz oda tanımlanmamış."
   }
 }

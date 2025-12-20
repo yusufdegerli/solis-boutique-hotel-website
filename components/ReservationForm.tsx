@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { Calendar, Users, Hotel as HotelIcon, Loader2, BedDouble } from "lucide-react";
 import { Hotel, Room } from "@/lib/data";
 import { createBooking } from "@/src/services/hotelService";
+import { useTranslations } from "next-intl";
 
 export default function ReservationForm({ 
   preSelectedHotelId, 
@@ -14,6 +15,7 @@ export default function ReservationForm({
   hotels: Hotel[],
   allRooms: Room[]
 }) {
+  const t = useTranslations("Reservation");
   const [selectedHotel, setSelectedHotel] = useState(preSelectedHotelId || "");
   const [selectedRoom, setSelectedRoom] = useState("");
   const [checkIn, setCheckIn] = useState("");
@@ -44,7 +46,7 @@ export default function ReservationForm({
     setError(null);
 
     try {
-      if (!selectedRoom) throw new Error("Lütfen bir oda seçiniz.");
+      if (!selectedRoom) throw new Error(t('errorNoRoom'));
 
       await createBooking({
         hotel_id: parseInt(selectedHotel), // Kept for legacy/logging
@@ -59,7 +61,7 @@ export default function ReservationForm({
       setIsSubmitted(true);
     } catch (err: any) {
       console.error('Reservation Error:', err);
-      let errorMessage = "Rezervasyon oluşturulurken bir hata meydana geldi.";
+      let errorMessage = t('errorGeneric');
       
       if (err?.message) {
         errorMessage += ` (${err.message})`;
@@ -81,15 +83,15 @@ export default function ReservationForm({
         <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto text-green-600">
           <Calendar className="w-8 h-8" />
         </div>
-        <h3 className="text-2xl font-bold text-green-800">Rezervasyon Talebi Alındı!</h3>
+        <h3 className="text-2xl font-bold text-green-800">{t('successTitle')}</h3>
         <p className="text-green-700">
-          Talebiniz başarıyla bize ulaştı. Müşteri temsilcimiz en kısa sürede sizinle iletişime geçecektir.
+          {t('successMessage')}
         </p>
         <button 
           onClick={() => { setIsSubmitted(false); setGuestName(""); setCustomerEmail(""); setCheckIn(""); setCheckOut(""); setSelectedRoom(""); }}
           className="text-green-700 font-medium hover:underline mt-4 block mx-auto"
         >
-          Yeni Rezervasyon Yap
+          {t('newBooking')}
         </button>
       </div>
     );
@@ -100,7 +102,7 @@ export default function ReservationForm({
       <div className="space-y-4">
         <h3 className="text-xl font-semibold text-[var(--off-black)] mb-6 flex items-center gap-2">
           <HotelIcon className="w-5 h-5 text-[var(--gold)]" />
-          Rezervasyon Detayları
+          {t('detailsTitle')}
         </h3>
 
         {error && (
@@ -112,24 +114,24 @@ export default function ReservationForm({
         {/* Guest Name & Email */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Ad Soyad</label>
+                <label className="text-sm font-medium text-gray-700">{t('nameLabel')}</label>
                 <input
                 type="text"
                 value={guestName}
                 onChange={(e) => setGuestName(e.target.value)}
                 required
-                placeholder="Adınız Soyadınız"
+                placeholder={t('namePlaceholder')}
                 className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[var(--gold)] focus:border-transparent outline-none transition-all text-gray-700"
                 />
             </div>
             <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">E-posta</label>
+                <label className="text-sm font-medium text-gray-700">{t('emailLabel')}</label>
                 <input
                 type="email"
                 value={customerEmail}
                 onChange={(e) => setCustomerEmail(e.target.value)}
                 required
-                placeholder="ornek@email.com"
+                placeholder={t('emailPlaceholder')}
                 className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[var(--gold)] focus:border-transparent outline-none transition-all text-gray-700"
                 />
             </div>
@@ -137,7 +139,7 @@ export default function ReservationForm({
 
         {/* Hotel Selection */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">Otel Seçimi</label>
+          <label className="text-sm font-medium text-gray-700">{t('hotelLabel')}</label>
           <div className="relative">
             <select
               value={selectedHotel}
@@ -145,7 +147,7 @@ export default function ReservationForm({
               required
               className="w-full pl-4 pr-10 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[var(--gold)] focus:border-transparent outline-none transition-all appearance-none text-gray-700"
             >
-              <option value="" disabled>Lütfen bir otel seçin</option>
+              <option value="" disabled>{t('hotelSelectPlaceholder')}</option>
               {hotels.map((hotel) => (
                 <option key={hotel.id} value={hotel.id}>
                   {hotel.name} - {hotel.location}
@@ -160,7 +162,7 @@ export default function ReservationForm({
 
         {/* Room Selection */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">Oda Seçimi</label>
+          <label className="text-sm font-medium text-gray-700">{t('roomLabel')}</label>
           <div className="relative">
             <select
               value={selectedRoom}
@@ -170,7 +172,7 @@ export default function ReservationForm({
               className="w-full pl-4 pr-10 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[var(--gold)] focus:border-transparent outline-none transition-all appearance-none text-gray-700 disabled:bg-gray-100 disabled:text-gray-400"
             >
               <option value="" disabled>
-                {!selectedHotel ? "Önce otel seçiniz" : "Lütfen bir oda seçin"}
+                {!selectedHotel ? t('selectHotelFirst') : t('roomSelectPlaceholder')}
               </option>
               {availableRooms.map((room) => (
                 <option key={room.id} value={room.id}>
@@ -183,14 +185,14 @@ export default function ReservationForm({
             </div>
           </div>
           {selectedHotel && availableRooms.length === 0 && (
-             <p className="text-xs text-red-500 mt-1">Bu otel için henüz oda tanımlanmamış. (Demo: Varsayılan odalar listeleniyor olabilir)</p>
+             <p className="text-xs text-red-500 mt-1">{t('noRoomsDefined')}</p>
           )}
         </div>
 
         {/* Dates Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Giriş Tarihi</label>
+            <label className="text-sm font-medium text-gray-700">{t('checkIn')}</label>
             <div className="relative">
               <input
                 type="date"
@@ -204,7 +206,7 @@ export default function ReservationForm({
           </div>
           
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Çıkış Tarihi</label>
+            <label className="text-sm font-medium text-gray-700">{t('checkOut')}</label>
             <div className="relative">
               <input
                 type="date"
@@ -220,7 +222,7 @@ export default function ReservationForm({
 
         {/* Guests */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">Misafir Sayısı</label>
+          <label className="text-sm font-medium text-gray-700">{t('guests')}</label>
           <div className="relative">
             <input
               type="number"
@@ -247,10 +249,10 @@ export default function ReservationForm({
         {isLoading ? (
           <>
             <Loader2 className="w-5 h-5 animate-spin" />
-            İşleniyor...
+            {t('processing')}
           </>
         ) : (
-          "Rezervasyon Yap"
+          t('submitButton')
         )}
       </button>
     </form>
