@@ -40,7 +40,8 @@ export default async function middleware(request: NextRequest) {
   }
 
   // --- ADMIN AUTHORIZATION CHECK ---
-  const ADMIN_EMAILS = ['yusufdgrl72@gmail.com'];
+  const adminEmailsEnv = process.env.ADMIN_EMAILS || '';
+  const ADMIN_EMAILS = adminEmailsEnv.split(',').map(email => email.trim()).filter(email => email.length > 0);
   
   if (isProtectedRoute && user) {
     if (!user.email || !ADMIN_EMAILS.includes(user.email)) {
