@@ -5,6 +5,8 @@ import { Calendar, Users, Hotel as HotelIcon, Loader2, BedDouble } from "lucide-
 import { Hotel, Room } from "@/lib/data";
 import { createBooking } from "@/src/services/hotelService";
 import { useTranslations } from "next-intl";
+import { bookingSchema } from "@/lib/validations/booking";
+import { ZodError } from "zod";
 
 export default function ReservationForm({ 
   preSelectedHotelId, 
@@ -45,13 +47,26 @@ export default function ReservationForm({
     setIsLoading(true);
     setError(null);
 
-    try {
-      if (!selectedRoom) throw new Error(t('errorNoRoom'));
+    // Prepare data for validation
+    const formData = {
+      hotel_id: selectedHotel,
+      room_id: selectedRoom,
+      customer_name: guestName,
+      customer_email: customerEmail,
+      check_in: checkIn,
+      check_out: checkOut,
+      guests_count: guests,
+    };
 
+    try {
+      // 1. Zod Validation
+      bookingSchema.parse(formData);
+
+      // 2. Submit if valid
       await createBooking({
-        hotel_id: parseInt(selectedHotel), // Kept for legacy/logging
+        hotel_id: parseInt(selectedHotel), 
         room_id: parseInt(selectedRoom),
-        guest_name: guestName || "Misafir",
+        guest_name: guestName,
         email: customerEmail,
         check_in: checkIn,
         check_out: checkOut,
@@ -61,14 +76,21 @@ export default function ReservationForm({
       setIsSubmitted(true);
     } catch (err: any) {
       console.error('Reservation Error:', err);
+      
+      // Handle Zod Validation Errors
+      if (err instanceof ZodError) {
+        // Get the first error message and translate it
+        const firstError = err.errors[0];
+        // We stored the translation key in the 'message' field of the schema
+        setError(t(firstError.message as any)); 
+        return;
+      }
+
       let errorMessage = t('errorGeneric');
       
       if (err?.message) {
+        // If it's a known server error string (which we might translate later), or just show raw if dev
         errorMessage += ` (${err.message})`;
-      } else if (typeof err === 'string') {
-        errorMessage += ` (${err})`;
-      } else {
-        errorMessage += ` (${JSON.stringify(err)})`;
       }
 
       setError(errorMessage);
