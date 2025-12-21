@@ -1,36 +1,89 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Solis Hotel Management System
 
-## Getting Started
+Solis Hotel is a modern, full-stack hotel management and reservation application built with **Next.js 15 (App Router)**, **TypeScript**, and **Supabase**. It features a multi-language public-facing website and a secure administration dashboard.
 
-First, run the development server:
+## 🚀 Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+### Public Website
+- **Dynamic Content:** Hotels, rooms, and services fetched dynamically from Supabase.
+- **Reservation System:** Real-time room availability, date validation, and secure booking process.
+- **Multi-language Support:** Full localization (i18n) for Turkish (TR), English (EN), Arabic (AR), Hungarian (HU), and Romanian (RO).
+- **Responsive Design:** Optimized for mobile, tablet, and desktop devices.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Admin Dashboard (`/admin`)
+- **Secure Authentication:** Protected routes accessible only to authorized personnel via email whitelist.
+- **Hotel & Room Management:** CRUD operations for hotels and rooms with **image upload** capabilities.
+- **Live Monitoring:** Real-time view of checked-in guests and pending reservations.
+- **Booking Management:** Confirm, cancel, or check-in/out guests efficiently.
+- **Campaign Management:** Interface for managing seasonal discounts (UI only).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🛠 Tech Stack
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **Framework:** [Next.js 15](https://nextjs.org/) (App Router, Server Actions)
+- **Language:** [TypeScript](https://www.typescriptlang.org/)
+- **Database:** [Supabase](https://supabase.com/) (PostgreSQL)
+- **Storage:** Supabase Storage (for hotel images)
+- **Styling:** [Tailwind CSS](https://tailwindcss.com/)
+- **Icons:** [Lucide React](https://lucide.dev/)
+- **Validation:** [Zod](https://zod.dev/)
+- **Internationalization:** [next-intl](https://next-intl-docs.vercel.app/)
 
-## Learn More
+## 📦 Installation
 
-To learn more about Next.js, take a look at the following resources:
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/your-username/solis-hotel.git
+    cd solis-hotel
+    ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+2.  **Install dependencies:**
+    ```bash
+    npm install
+    # or
+    yarn install
+    # or
+    pnpm install
+    ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+3.  **Environment Setup:**
+    Create a `.env.local` file in the root directory and add your Supabase credentials:
 
-## Deploy on Vercel
+    ```env
+    NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+    SUPABASE_SERVICE_ROLE_KEY=your_service_role_secret_key
+    ADMIN_EMAILS=admin@example.com,manager@example.com
+    NEXT_PUBLIC_SITE_URL=http://localhost:3000
+    ```
+    > **Note:** `SUPABASE_SERVICE_ROLE_KEY` is required for bypassing RLS during booking creation and password resets.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+4.  **Database Setup:**
+    - Create a new Supabase project.
+    - Run the provided SQL scripts in the Supabase SQL Editor to set up tables and policies:
+        - `db_schema.sql` (Base structure)
+        - `MASTER_DB_FIX.sql` (Booking logic & RLS fixes)
+        - `STORAGE_POLICIES_OPEN.sql` (Storage permissions)
+    - (Optional) Seed the database with initial data:
+      ```bash
+      npx tsx seed_db.ts
+      ```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+5.  **Run the development server:**
+    ```bash
+    npm run dev
+    ```
+    Open [http://localhost:3000](http://localhost:3000) with your browser.
+
+## 🔒 Security
+
+- **Row Level Security (RLS):** Database tables are protected. Only authenticated users (admins) can modify hotel/room data.
+- **Middleware Protection:** The `/admin` route is guarded by a middleware that checks both authentication status and the `ADMIN_EMAILS` whitelist.
+- **Server Actions:** Sensitive operations like booking creation run securely on the server.
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## 📄 License
+
+This project is open-source and available under the [MIT License](LICENSE).
