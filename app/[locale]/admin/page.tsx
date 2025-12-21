@@ -18,7 +18,8 @@ import {
   Calendar,
   User,
   LogIn,
-  LogOut
+  LogOut,
+  Image as ImageIcon
 } from 'lucide-react';
 import { 
   getHotels, 
@@ -59,7 +60,6 @@ export default function AdminDashboard() {
     const channel = supabase
       .channel('realtime bookings')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'Reservation_Information' }, (payload) => {
-        console.log('Change received!', payload);
         if (payload.eventType === 'INSERT') {
           setBookings((prev) => [payload.new as Booking, ...prev]);
         } else if (payload.eventType === 'UPDATE') {
@@ -72,6 +72,21 @@ export default function AdminDashboard() {
       supabase.removeChannel(channel);
     };
   }, []);
+
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const [hotelsData, roomsData, bookingsData] = await Promise.all([getHotels(), getRooms(), getBookings()]);
+      setHotels(hotelsData);
+      setRooms(roomsData);
+      setBookings(bookingsData);
+    } catch (err) {
+      setError('Veriler yüklenirken bir hata oluştu.');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
@@ -89,30 +104,50 @@ export default function AdminDashboard() {
     }
   };
 
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const [hotelsData, roomsData, bookingsData] = await Promise.all([getHotels(), getRooms(), getBookings()]);
-      setHotels(hotelsData);
-      setRooms(roomsData);
-      setBookings(bookingsData);
-    } catch (err) {
-      setError('Veriler yüklenirken bir hata oluştu.');
-      console.error(err);
-    } finally {
-      setLoading(false);
+  const handleRoomImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    
+    const currentImages = formData.images || [];
+    if (currentImages.length >= 5) {
+      alert("En fazla 5 fotoğraf yükleyebilirsiniz.");
+      return;
     }
+
+    setUploading(true);
+    try {
+      const file = e.target.files[0];
+      const url = await uploadImage(file);
+      setFormData((prev: any) => ({ 
+        ...prev, 
+        images: [...(prev.images || []), url] 
+      }));
+    } catch (err) {
+      console.error('Upload failed:', err);
+      alert('Resim yüklenirken bir hata oluştu.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const removeRoomImage = (indexToRemove: number) => {
+    setFormData((prev: any) => ({
+      ...prev,
+      images: prev.images.filter((_: any, idx: number) => idx !== indexToRemove)
+    }));
   };
 
   const handleOpenModal = (type: 'add' | 'edit', item?: any) => {
     setEditingItem(item || null);
-    setFormData(item ? { ...item } : {});
+    // Ensure images array exists for rooms
+    setFormData(item ? { ...item, images: item.images || (item.image ? [item.image] : []) } : { images: [] });
     setIsModalOpen(true);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError(null);
+
     try {
       if (activeTab === 'hotels') {
         if (editingItem) {
@@ -121,6 +156,15 @@ export default function AdminDashboard() {
           await createHotel(formData);
         }
       } else if (activeTab === 'rooms') {
+        // Validate Room Images
+        const images = formData.images || [];
+        if (images.length < 1) {
+          throw new Error("En az 1 fotoğraf yüklemelisiniz.");
+        }
+        if (images.length > 5) {
+          throw new Error("En fazla 5 fotoğraf yükleyebilirsiniz.");
+        }
+
         if (editingItem) {
           await updateRoom(editingItem.id, formData);
         } else {
@@ -156,7 +200,6 @@ export default function AdminDashboard() {
   const handleStatusChange = async (id: string, newStatus: string) => {
     try {
         await updateBookingStatus(id, newStatus);
-        // State update handled by Realtime subscription, but optimistic update is good too
         setBookings(prev => prev.map(b => b.id === id ? { ...b, room_status: newStatus as any } : b));
     } catch (err) {
         console.error(err);
@@ -377,6 +420,7 @@ export default function AdminDashboard() {
                   <thead className="bg-gray-50 text-gray-500 text-sm border-b border-gray-100">
                     <tr>
                       <th className="p-4 font-medium">Oda Tipi</th>
+                      <th className="p-4 font-medium">Fotoğraflar</th>
                       <th className="p-4 font-medium">Adet</th>
                       <th className="p-4 font-medium">Kapasite</th>
                       <th className="p-4 font-medium">Fiyat (Gecelik)</th>
@@ -392,6 +436,17 @@ export default function AdminDashboard() {
                              {hotels.find(h => h.id === room.hotelId)?.name || 'Bilinmeyen Otel'}
                           </p>
                           <p className="text-xs text-gray-400 truncate max-w-xs mt-1">{room.description}</p>
+                        </td>
+                        <td className="p-4">
+                           <div className="flex -space-x-2 overflow-hidden">
+                             {room.images && room.images.length > 0 ? (
+                               room.images.map((img, i) => (
+                                 <img key={i} className="inline-block h-8 w-8 rounded-full ring-2 ring-white object-cover" src={img} alt="" />
+                               ))
+                             ) : (
+                               <span className="text-xs text-gray-400">Görsel Yok</span>
+                             )}
+                           </div>
                         </td>
                         <td className="p-4 text-gray-600 font-bold">{room.quantity}</td>
                         <td className="p-4 text-gray-600">{room.capacity}</td>
@@ -444,7 +499,7 @@ export default function AdminDashboard() {
       {/* MODAL */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden max-h-[90vh] overflow-y-auto">
             <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
               <h3 className="font-bold text-lg text-gray-800">
                 {editingItem ? 'Düzenle' : 'Yeni Ekle'}
@@ -534,27 +589,46 @@ export default function AdminDashboard() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Stok Adedi</label>
-                    <input 
-                      type="number" 
-                      value={formData.quantity || ''} 
-                      onChange={(e) => setFormData({...formData, quantity: parseInt(e.target.value)})}
-                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[var(--gold)] outline-none"
-                      required 
-                    />
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Fotoğraflar (Min 1, Maks 5)</label>
+                    <div className="space-y-3">
+                        {/* Image Preview Grid */}
+                        <div className="grid grid-cols-5 gap-2">
+                            {formData.images && formData.images.map((img: string, idx: number) => (
+                                <div key={idx} className="relative aspect-square rounded-lg overflow-hidden border border-gray-200 group">
+                                    <img src={img} alt={`Oda Görseli ${idx}`} className="w-full h-full object-cover" />
+                                    <button 
+                                        type="button"
+                                        onClick={() => removeRoomImage(idx)}
+                                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    >
+                                        <X size={12} />
+                                    </button>
+                                </div>
+                            ))}
+                            {(!formData.images || formData.images.length < 5) && (
+                                <label className="border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-[var(--gold)] hover:bg-yellow-50 transition-colors aspect-square">
+                                    <Plus className="text-gray-400 mb-1" />
+                                    <span className="text-xs text-gray-500">Ekle</span>
+                                    <input type="file" accept="image/*" onChange={handleRoomImageUpload} className="hidden" />
+                                </label>
+                            )}
+                        </div>
+                        {uploading && <p className="text-xs text-[var(--gold)] animate-pulse">Yükleniyor...</p>}
+                    </div>
                   </div>
+
                   <div className="grid grid-cols-2 gap-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Fiyat (₺)</label>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Stok Adedi</label>
                         <input 
                           type="number" 
-                          value={formData.price || ''} 
-                          onChange={(e) => setFormData({...formData, price: e.target.value})}
+                          value={formData.quantity || ''} 
+                          onChange={(e) => setFormData({...formData, quantity: parseInt(e.target.value)})}
                           className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[var(--gold)] outline-none"
                           required 
                         />
-                    </div>
-                    <div>
+                      </div>
+                      <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Kapasite</label>
                         <input 
                           type="text" 
@@ -565,6 +639,18 @@ export default function AdminDashboard() {
                         />
                     </div>
                   </div>
+                  
+                  <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Fiyat (₺)</label>
+                      <input 
+                        type="number" 
+                        value={formData.price || ''} 
+                        onChange={(e) => setFormData({...formData, price: e.target.value})}
+                        className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[var(--gold)] outline-none"
+                        required 
+                      />
+                  </div>
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Açıklama</label>
                     <textarea 

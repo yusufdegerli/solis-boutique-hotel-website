@@ -127,7 +127,8 @@ export const createRoom = async (room: Partial<Room>) => {
     description: room.description,
     base_price: room.price,
     capacity: parseInt(room.capacity?.split(' ')[0] || '2'),
-    quantity: room.quantity || 10
+    quantity: room.quantity || 10,
+    images: room.images // Save array
   };
 
   const { data, error } = await supabase
@@ -153,6 +154,7 @@ export const updateRoom = async (id: string, room: Partial<Room>) => {
   if (room.price) dbRoom.base_price = room.price;
   if (room.capacity) dbRoom.capacity = parseInt(room.capacity?.split(' ')[0] || '2');
   if (room.quantity !== undefined) dbRoom.quantity = room.quantity;
+  if (room.images) dbRoom.images = room.images;
 
   const { data, error } = await supabase
     .from('Rooms_Information')
@@ -209,6 +211,11 @@ function mapDbHotelToModel(hotel: any): Hotel {
 }
 
 function mapDbRoomToModel(room: any): Room {
+  // Use 'images' array if exists, otherwise fallback to single 'image_url' wrap, otherwise default
+  const images = room.images && room.images.length > 0 
+    ? room.images 
+    : (room.image_url ? [room.image_url] : ["https://images.unsplash.com/photo-1611892440504-42a792e24d32?auto=format&fit=crop&w=800&q=80"]);
+
   return {
     id: room.id.toString(),
     hotelId: room.hotel_id?.toString(), // Map DB hotel_id to model
@@ -218,7 +225,8 @@ function mapDbRoomToModel(room: any): Room {
     capacity: `${room.capacity || 2} Yetişkin`,
     price: room.base_price || 0,
     quantity: room.quantity || 0,
-    image: room.image_url || "https://images.unsplash.com/photo-1611892440504-42a792e24d32?auto=format&fit=crop&w=800&q=80"
+    image: images[0], // Primary image for backward compatibility
+    images: images
   };
 }
 

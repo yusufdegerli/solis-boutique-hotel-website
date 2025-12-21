@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Users, Maximize2 } from "lucide-react";
 import { getTranslations } from "next-intl/server";
+import RoomImageSlider from "@/components/RoomImageSlider";
 
 export default async function RoomsPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
@@ -36,11 +37,9 @@ export default async function RoomsPage({ params }: { params: Promise<{ locale: 
           {rooms.map((room, index) => (
             <div key={room.id} className={`bg-white rounded-xl overflow-hidden shadow-xl flex flex-col md:flex-row h-full ${index % 2 === 1 ? 'md:flex-row-reverse' : ''}`}>
               <div className="md:w-1/2 relative min-h-[300px] md:min-h-[400px]">
-                <Image
-                  src={room.image}
-                  alt={room.name}
-                  fill
-                  className="object-cover hover:scale-105 transition-transform duration-700"
+                <RoomImageSlider 
+                  images={room.images && room.images.length > 0 ? room.images : [room.image]} 
+                  roomName={room.name} 
                 />
               </div>
               <div className="md:w-1/2 p-8 md:p-12 flex flex-col justify-center">

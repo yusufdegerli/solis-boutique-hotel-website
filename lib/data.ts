@@ -38,7 +38,8 @@ export interface Room {
   capacity: string;
   price: number;
   quantity: number;
-  image: string;
+  image: string; // Deprecated: Use images[0]
+  images: string[]; // New: Array of image URLs
 }
 
 export interface BlogPost {
