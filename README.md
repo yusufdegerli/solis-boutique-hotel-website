@@ -7,12 +7,15 @@ Solis Hotel is a modern, full-stack hotel management and reservation application
 ### Public Website
 - **Dynamic Content:** Hotels, rooms, and services fetched dynamically from Supabase.
 - **Reservation System:** Real-time room availability, date validation, and secure booking process.
+- **Room Gallery:** Interactive image slider for room details with auto-play functionality.
 - **Multi-language Support:** Full localization (i18n) for Turkish (TR), English (EN), Arabic (AR), Hungarian (HU), and Romanian (RO).
 - **Responsive Design:** Optimized for mobile, tablet, and desktop devices.
 
 ### Admin Dashboard (`/admin`)
 - **Secure Authentication:** Protected routes accessible only to authorized personnel via email whitelist.
-- **Hotel & Room Management:** CRUD operations for hotels and rooms with **image upload** capabilities.
+- **Hotel & Room Management:** 
+  - CRUD operations for hotels and rooms.
+  - **Multi-image Upload:** Support for uploading up to 5 images per room via Supabase Storage.
 - **Live Monitoring:** Real-time view of checked-in guests and pending reservations.
 - **Booking Management:** Confirm, cancel, or check-in/out guests efficiently.
 - **Campaign Management:** Interface for managing seasonal discounts (UI only).
@@ -63,6 +66,8 @@ Solis Hotel is a modern, full-stack hotel management and reservation application
         - `db_schema.sql` (Base structure)
         - `MASTER_DB_FIX.sql` (Booking logic & RLS fixes)
         - `STORAGE_POLICIES_OPEN.sql` (Storage permissions)
+        - `MIGRATE_ROOM_IMAGES.sql` (Multi-image support for rooms)
+        - `FIX_HOTEL_PERMISSIONS.sql` (Full admin access policies)
     - (Optional) Seed the database with initial data:
       ```bash
       npx tsx seed_db.ts

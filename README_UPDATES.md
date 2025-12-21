@@ -2,19 +2,24 @@
 
 ## 🇬🇧 English
 
-### Latest Updates - 21 December 2025 (Latest)
+### Latest Updates - 21 December 2025 (Release 2)
 
-**1. Booking System Stability**
+**1. Multi-Image Support for Rooms**
+- **Database:** Updated `Rooms_Information` schema to support an array of image URLs (`images` column).
+- **Admin Dashboard:** Enhanced the room management form to allow uploading **multiple images** (min 1, max 5). Added image preview and removal functionality.
+- **Frontend:** Implemented a new `RoomImageSlider` component for the rooms page, featuring auto-play, navigation arrows, and dot indicators.
+
+**2. Booking System Stability**
 - **Fix:** Resolved `invalid input syntax for type bigint` error by updating the database RPC function to handle both `UUID` and `BIGINT` types for reservation IDs.
 - **Validation:** Added server-side and client-side (Zod) validation to prevent booking dates in the past and ensure check-out is after check-in.
 - **UX:** The reservation form now dynamically disables invalid dates in the date picker.
 
-**2. Admin Dashboard Enhancements**
+**3. Admin Dashboard Enhancements**
 - **Image Upload:** Integrated **Supabase Storage**. Admins can now upload hotel and room images directly from the dashboard instead of pasting URLs.
 - **Storage Policies:** Configured RLS policies for the `hotel-images` bucket to allow public read access and authorized uploads.
 - **Security:** Tightened RLS policies for `Hotel_Information_Table` to ensure only authenticated admins can create or update records.
 
-**3. Codebase Cleanup**
+**4. Codebase Cleanup**
 - Consolidated scattered SQL migration scripts into `MASTER_DB_FIX.sql`.
 - Removed obsolete temporary files and scripts.
 
@@ -35,19 +40,24 @@
 
 ## 🇹🇷 Türkçe
 
-### Son Güncellemeler - 21 Aralık 2025 (En Yeni)
+### Son Güncellemeler - 21 Aralık 2025 (Sürüm 2)
 
-**1. Rezervasyon Sistemi Kararlılığı**
-- **Düzeltme:** Veritabanı fonksiyonu güncellenerek, rezervasyon ID'leri için `UUID` ve `BIGINT` türleri arasındaki uyumsuzluk (`invalid input syntax`) giderildi.
-- **Doğrulama:** Geçmişe yönelik tarih seçimini engelleyen ve çıkış tarihinin giriş tarihinden sonra olmasını zorunlu kılan sunucu ve istemci (Zod) taraflı kontroller eklendi.
+**1. Odalar İçin Çoklu Fotoğraf Desteği**
+- **Veritabanı:** `Rooms_Information` şeması, birden fazla resim URL'sini destekleyecek şekilde (`images` sütunu) güncellendi.
+- **Admin Paneli:** Oda yönetim formu, **çoklu fotoğraf yükleme** (en az 1, en çok 5) özelliğiyle geliştirildi. Önizleme ve silme özellikleri eklendi.
+- **Ön Yüz:** Odalar sayfası için otomatik kayan, ok tuşları ve nokta navigasyonu olan yeni bir `RoomImageSlider` (Galeri) bileşeni eklendi.
+
+**2. Rezervasyon Sistemi Kararlılığı**
+- **Düzeltme:** Veritabanı fonksiyonu güncellenerek, rezervasyon ID'leri için `UUID` ve `BIGINT` türleri arasındaki uyumsuzluk giderildi.
+- **Doğrulama:** Geçmişe yönelik tarih seçimini engelleyen ve çıkış tarihinin giriş tarihinden sonra olmasını zorunlu kılan kontroller eklendi.
 - **Kullanıcı Deneyimi:** Rezervasyon formundaki tarih seçici artık geçersiz tarihleri otomatik olarak engelliyor.
 
-**2. Admin Paneli Geliştirmeleri**
+**3. Admin Paneli Geliştirmeleri**
 - **Resim Yükleme:** **Supabase Storage** entegrasyonu tamamlandı. Yöneticiler artık URL kopyalamak yerine doğrudan bilgisayarlarından fotoğraf yükleyebiliyor.
-- **Depolama İzinleri:** `hotel-images` klasörü için herkese açık okuma ve yetkili yükleme izinleri (RLS) yapılandırıldı.
-- **Güvenlik:** `Hotel_Information_Table` için RLS kuralları sıkılaştırılarak, sadece giriş yapmış yöneticilerin kayıt oluşturabilmesi sağlandı.
+- **Depolama İzinleri:** `hotel-images` klasörü için herkese açık okuma ve yetkili yükleme izinleri yapılandırıldı.
+- **Güvenlik:** `Hotel_Information_Table` için RLS kuralları yeniden düzenlendi.
 
-**3. Kod Temizliği**
+**4. Kod Temizliği**
 - Dağınık haldeki SQL düzeltme dosyaları `MASTER_DB_FIX.sql` altında birleştirildi.
 - Gereksiz geçici dosyalar ve eski scriptler temizlendi.
 
