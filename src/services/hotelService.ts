@@ -81,6 +81,26 @@ export const deleteHotel = async (id: string) => {
   if (error) throw error;
 };
 
+// --- STORAGE ---
+
+export const uploadImage = async (file: File): Promise<string> => {
+  const fileName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.]/g, '')}`;
+  const { data, error } = await supabase.storage
+    .from('hotel-images')
+    .upload(fileName, file);
+
+  if (error) {
+    console.error('Upload Error:', error);
+    throw error;
+  }
+
+  const { data: { publicUrl } } = supabase.storage
+    .from('hotel-images')
+    .getPublicUrl(fileName);
+
+  return publicUrl;
+};
+
 // --- ROOMS ---
 
 export const getRooms = async (): Promise<Room[]> => {

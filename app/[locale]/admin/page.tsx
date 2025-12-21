@@ -31,7 +31,8 @@ import {
   deleteRoom,
   getBookings,
   updateBookingStatus,
-  Booking
+  Booking,
+  uploadImage
 } from '@/src/services/hotelService';
 import { Hotel, Room } from '@/lib/data';
 import { supabase } from '@/lib/supabaseClient';
@@ -43,6 +44,7 @@ export default function AdminDashboard() {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Modal State
@@ -70,6 +72,22 @@ export default function AdminDashboard() {
       supabase.removeChannel(channel);
     };
   }, []);
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    
+    setUploading(true);
+    try {
+      const file = e.target.files[0];
+      const url = await uploadImage(file);
+      setFormData((prev: any) => ({ ...prev, image: url }));
+    } catch (err) {
+      console.error('Upload failed:', err);
+      alert('Resim yüklenirken bir hata oluştu.');
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const fetchData = async () => {
     setLoading(true);
@@ -466,13 +484,25 @@ export default function AdminDashboard() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Resim URL</label>
-                    <input 
-                      type="text" 
-                      value={formData.image || ''} 
-                      onChange={(e) => setFormData({...formData, image: e.target.value})}
-                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[var(--gold)] outline-none"
-                    />
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Resim</label>
+                    <div className="flex flex-col gap-2">
+                        <input 
+                        type="text" 
+                        value={formData.image || ''} 
+                        onChange={(e) => setFormData({...formData, image: e.target.value})}
+                        className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[var(--gold)] outline-none"
+                        placeholder="https://... veya dosya yükleyin"
+                        />
+                        <div className="flex items-center gap-2">
+                            <input 
+                                type="file" 
+                                accept="image/*"
+                                onChange={handleImageUpload}
+                                className="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-yellow-50 file:text-[var(--gold)] hover:file:bg-yellow-100 cursor-pointer"
+                            />
+                            {uploading && <span className="text-xs text-gray-500 animate-pulse">Yükleniyor...</span>}
+                        </div>
+                    </div>
                   </div>
                 </>
               )}
