@@ -29,6 +29,9 @@ export default function ReservationForm({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Get today's date in YYYY-MM-DD format for min attributes
+  const today = new Date().toLocaleDateString('en-CA');
+
   // Filter rooms based on selected hotel
   const availableRooms = useMemo(() => {
     if (!selectedHotel) return [];
@@ -41,6 +44,16 @@ export default function ReservationForm({
   useEffect(() => {
     setSelectedRoom("");
   }, [selectedHotel]);
+
+  // Ensure check-out is after check-in when check-in changes
+  useEffect(() => {
+    if (checkIn && checkOut) {
+      if (checkIn >= checkOut) {
+        // Automatically reset check-out if it becomes invalid
+        setCheckOut(""); 
+      }
+    }
+  }, [checkIn]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,6 +75,11 @@ export default function ReservationForm({
       // 1. Zod Validation
       bookingSchema.parse(formData);
 
+      console.log('--- FORM SUBMISSION DEBUG ---');
+      console.log('Selected Room ID (State):', selectedRoom, 'Type:', typeof selectedRoom);
+      console.log('Selected Hotel ID (State):', selectedHotel, 'Type:', typeof selectedHotel);
+      console.log('Parsed Room ID:', parseInt(selectedRoom));
+
       // 2. Submit if valid
       await createBooking({
         hotel_id: parseInt(selectedHotel), 
@@ -71,7 +89,7 @@ export default function ReservationForm({
         check_in: checkIn,
         check_out: checkOut,
         guests_count: guests,
-        status: 'pending'
+        room_status: 'pending'
       });
       setIsSubmitted(true);
     } catch (err: any) {
@@ -79,11 +97,12 @@ export default function ReservationForm({
       
       // Handle Zod Validation Errors
       if (err instanceof ZodError) {
-        // Get the first error message and translate it
-        const firstError = err.errors[0];
-        // We stored the translation key in the 'message' field of the schema
-        setError(t(firstError.message as any)); 
-        return;
+        // Safe access to errors array
+        const firstError = err.errors?.[0];
+        if (firstError) {
+           setError(t(firstError.message as any)); 
+           return;
+        }
       }
 
       let errorMessage = t('errorGeneric');
@@ -218,6 +237,7 @@ export default function ReservationForm({
             <div className="relative">
               <input
                 type="date"
+                min={today}
                 value={checkIn}
                 onChange={(e) => setCheckIn(e.target.value)}
                 required
@@ -232,6 +252,7 @@ export default function ReservationForm({
             <div className="relative">
               <input
                 type="date"
+                min={checkIn ? new Date(new Date(checkIn).getTime() + 86400000).toISOString().split('T')[0] : today}
                 value={checkOut}
                 onChange={(e) => setCheckOut(e.target.value)}
                 required

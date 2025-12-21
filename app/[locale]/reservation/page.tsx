@@ -4,6 +4,8 @@ import ReservationForm from "@/components/ReservationForm";
 import { getHotels, getRooms } from "@/src/services/hotelService";
 import { getTranslations } from "next-intl/server";
 
+export const dynamic = "force-dynamic";
+
 export default async function ReservationPage({ 
   searchParams, 
   params 

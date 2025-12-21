@@ -12,7 +12,10 @@ const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, serviceKey || anonKey);
 
 export async function createBookingServer(bookingData: any) {
-  console.log('Server Action: Creating booking...');
+  console.log('--- SERVER ACTION START ---');
+  console.log('Received Payload:', JSON.stringify(bookingData, null, 2));
+  console.log('Type of room_id:', typeof bookingData.room_id);
+  console.log('Value of room_id:', bookingData.room_id);
   
   // Construct payload (ensure clean data)
   // Assuming the DB schema matches the one inferred:
