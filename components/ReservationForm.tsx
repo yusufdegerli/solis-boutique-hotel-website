@@ -25,6 +25,9 @@ export default function ReservationForm({
   const [guests, setGuests] = useState(1);
   const [guestName, setGuestName] = useState(""); 
   const [customerEmail, setCustomerEmail] = useState("");
+  const [customerPhone, setCustomerPhone] = useState(""); 
+  const [totalPrice, setTotalPrice] = useState<number | null>(null);
+  const [discount, setDiscount] = useState<number>(0);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -36,9 +39,39 @@ export default function ReservationForm({
   const availableRooms = useMemo(() => {
     if (!selectedHotel) return [];
     const filtered = allRooms.filter(room => room.hotelId === selectedHotel);
-    // Fallback: If no rooms found for specific hotel, show ALL rooms (for demo/empty DB cases)
     return filtered.length > 0 ? filtered : allRooms;
   }, [selectedHotel, allRooms]);
+
+  // Calculate Price Effect
+  useEffect(() => {
+    if (selectedRoom && checkIn && checkOut) {
+      const room = availableRooms.find(r => r.id === selectedRoom);
+      if (room) {
+        const start = new Date(checkIn);
+        const end = new Date(checkOut);
+        
+        if (end > start) {
+          const diffTime = Math.abs(end.getTime() - start.getTime());
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+          
+          const baseTotal = diffDays * room.price;
+          
+          // --- CAMPAIGN LOGIC (SIMULATED) ---
+          const discountRate = 0.15; 
+          const discountAmount = baseTotal * discountRate;
+          
+          setDiscount(discountAmount);
+          setTotalPrice(baseTotal - discountAmount);
+        } else {
+          setTotalPrice(null);
+          setDiscount(0);
+        }
+      }
+    } else {
+      setTotalPrice(null);
+      setDiscount(0);
+    }
+  }, [selectedRoom, checkIn, checkOut, availableRooms]);
 
   // Reset selected room when hotel changes
   useEffect(() => {
@@ -49,7 +82,6 @@ export default function ReservationForm({
   useEffect(() => {
     if (checkIn && checkOut) {
       if (checkIn >= checkOut) {
-        // Automatically reset check-out if it becomes invalid
         setCheckOut(""); 
       }
     }
@@ -60,58 +92,53 @@ export default function ReservationForm({
     setIsLoading(true);
     setError(null);
 
-    // Prepare data for validation
     const formData = {
       hotel_id: selectedHotel,
       room_id: selectedRoom,
       customer_name: guestName,
       customer_email: customerEmail,
+      customer_phone: customerPhone,
       check_in: checkIn,
       check_out: checkOut,
       guests_count: guests,
+      total_price: totalPrice || 0,
     };
 
     try {
-      // 1. Zod Validation
       bookingSchema.parse(formData);
 
-      console.log('--- FORM SUBMISSION DEBUG ---');
-      console.log('Selected Room ID (State):', selectedRoom, 'Type:', typeof selectedRoom);
-      console.log('Selected Hotel ID (State):', selectedHotel, 'Type:', typeof selectedHotel);
-      console.log('Parsed Room ID:', parseInt(selectedRoom));
-
-      // 2. Submit if valid
-      await createBooking({
+      const result = await createBooking({
         hotel_id: parseInt(selectedHotel), 
         room_id: parseInt(selectedRoom),
         guest_name: guestName,
         email: customerEmail,
+        phone: customerPhone,
         check_in: checkIn,
         check_out: checkOut,
         guests_count: guests,
+        total_price: totalPrice || 0,
         room_status: 'pending'
       });
+
+      if (!result.success) {
+        const msg = result.error || t('errorGeneric');
+        setError(msg);
+        return;
+      }
+
       setIsSubmitted(true);
     } catch (err: any) {
       console.error('Reservation Error:', err);
       
-      // Handle Zod Validation Errors
-      if (err instanceof ZodError) {
-        // Safe access to errors array
-        const firstError = err.errors?.[0];
-        if (firstError) {
+      if (err?.errors && Array.isArray(err.errors) && err.errors.length > 0) {
+        const firstError = err.errors[0];
+        if (firstError?.message) {
            setError(t(firstError.message as any)); 
            return;
         }
       }
 
-      let errorMessage = t('errorGeneric');
-      
-      if (err?.message) {
-        // If it's a known server error string (which we might translate later), or just show raw if dev
-        errorMessage += ` (${err.message})`;
-      }
-
+      const errorMessage = err?.message || t('errorGeneric');
       setError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -129,7 +156,7 @@ export default function ReservationForm({
           {t('successMessage')}
         </p>
         <button 
-          onClick={() => { setIsSubmitted(false); setGuestName(""); setCustomerEmail(""); setCheckIn(""); setCheckOut(""); setSelectedRoom(""); }}
+          onClick={() => { setIsSubmitted(false); setGuestName(""); setCustomerEmail(""); setCustomerPhone(""); setCheckIn(""); setCheckOut(""); setSelectedRoom(""); setTotalPrice(null); }}
           className="text-green-700 font-medium hover:underline mt-4 block mx-auto"
         >
           {t('newBooking')}
@@ -176,6 +203,18 @@ export default function ReservationForm({
                 className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[var(--gold)] focus:border-transparent outline-none transition-all text-gray-700"
                 />
             </div>
+        </div>
+        
+        {/* NEW: Phone Number Field */}
+        <div className="space-y-2">
+             <label className="text-sm font-medium text-gray-700">Telefon Numarası</label>
+             <input
+               type="tel"
+               value={customerPhone}
+               onChange={(e) => setCustomerPhone(e.target.value)}
+               placeholder="+90 555 123 45 67"
+               className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[var(--gold)] focus:border-transparent outline-none transition-all text-gray-700"
+             />
         </div>
 
         {/* Hotel Selection */}
@@ -282,6 +321,34 @@ export default function ReservationForm({
             <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           </div>
         </div>
+
+        {/* PRICE SUMMARY CARD */}
+        {totalPrice !== null && (
+            <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 animate-fadeIn">
+                <h4 className="text-lg font-bold text-gray-800 mb-2 border-b border-gray-200 pb-2">Ödeme Özeti</h4>
+                
+                {discount > 0 && (
+                    <div className="flex justify-between items-center text-sm text-gray-500 mb-1">
+                        <span>Oda Fiyatı (İndirimsiz):</span>
+                        <span className="line-through">{(totalPrice + discount).toLocaleString('tr-TR')} ₺</span>
+                    </div>
+                )}
+                
+                {discount > 0 && (
+                    <div className="flex justify-between items-center text-sm text-green-600 mb-1">
+                        <span>Sezon Sonu İndirimi (%15):</span>
+                        <span>-{discount.toLocaleString('tr-TR')} ₺</span>
+                    </div>
+                )}
+
+                <div className="flex justify-between items-center mt-2 pt-2 border-t border-gray-200">
+                    <span className="font-bold text-gray-900 text-lg">Toplam Tutar:</span>
+                    <span className="font-bold text-[var(--gold)] text-2xl">{totalPrice.toLocaleString('tr-TR')} ₺</span>
+                </div>
+                <p className="text-xs text-gray-400 mt-2 text-right">Vergiler dahildir.</p>
+            </div>
+        )}
+
       </div>
 
       <button

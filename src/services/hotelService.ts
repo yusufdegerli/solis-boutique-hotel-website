@@ -238,6 +238,7 @@ export interface Booking {
   customer_id?: any; // Linked customer ID
   customer_name: string;
   customer_email: string;
+  customer_phone?: string; // NEW: Phone number
   check_in: string;
   check_out: string;
   total_price: number;
@@ -247,6 +248,14 @@ export interface Booking {
   guests_count?: number; 
   email?: string; // alias for customer_email from form
   guest_name?: string; // alias for customer_name from form
+  phone?: string; // alias for customer_phone from form
+  // Extra fields for check-in/out
+  guest_id_number?: string;
+  guest_nationality?: string;
+  check_in_notes?: string;
+  extra_charges?: number;
+  damage_report?: string;
+  payment_status?: 'pending' | 'paid' | 'refunded';
 }
 
 export const getBookings = async (): Promise<Booking[]> => {
@@ -275,19 +284,19 @@ export const createBooking = async (booking: Partial<Booking>) => {
 
   // 1. Validate Basic Inputs (Minimal client-side check)
   if (!booking.room_id || !booking.check_in || !booking.check_out) {
-    throw new Error("Eksik bilgi: Oda ve tarihler gereklidir.");
+    return { success: false, error: "Eksik bilgi: Oda ve tarihler gereklidir." };
   }
 
   // 2. Construct Payload
-  // We send raw data to the server. The server calculates the price securely.
   const payload = {
     room_id: booking.room_id,
     customer_name: booking.guest_name || booking.customer_name,
-    customer_email: booking.email || booking.customer_email || "no-email@provided.com", 
+    customer_email: booking.email || booking.customer_email || "no-email@provided.com",
+    customer_phone: booking.phone || booking.customer_phone || "",
     check_in: booking.check_in,
     check_out: booking.check_out,
-    // total_price: REMOVED (Calculated on server)
     guests_count: booking.guests_count || 1,
+    total_price: booking.total_price, // NEW: Pass calculated price
     room_status: 'pending' 
   };
 
@@ -297,17 +306,28 @@ export const createBooking = async (booking: Partial<Booking>) => {
   const result = await createBookingServer(payload);
 
   if (!result.success) {
-    console.error('Server Action Failed:', result.error);
-    throw new Error(result.error);
+    // Return the error directly instead of throwing
+    return { success: false, error: result.error };
   }
   
-  return result.data;
+  return { success: true, data: result.data };
 };
 
-export const updateBookingStatus = async (id: string, status: string) => {
+export const updateBookingStatus = async (id: string, status: string, details?: Partial<Booking>) => {
+  const updatePayload: any = { room_status: status };
+  
+  if (details) {
+      if (details.guest_id_number !== undefined) updatePayload.guest_id_number = details.guest_id_number;
+      if (details.guest_nationality !== undefined) updatePayload.guest_nationality = details.guest_nationality;
+      if (details.check_in_notes !== undefined) updatePayload.check_in_notes = details.check_in_notes;
+      if (details.extra_charges !== undefined) updatePayload.extra_charges = details.extra_charges;
+      if (details.damage_report !== undefined) updatePayload.damage_report = details.damage_report;
+      if (details.payment_status !== undefined) updatePayload.payment_status = details.payment_status;
+  }
+
   const { data, error } = await supabase
     .from('Reservation_Information')
-    .update({ room_status: status })
+    .update(updatePayload)
     .eq('id', id)
     .select();
 
