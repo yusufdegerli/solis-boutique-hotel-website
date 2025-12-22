@@ -33,56 +33,31 @@ export async function logout() {
 export async function resetPassword(formData: FormData) {
   const email = formData.get('email') as string;
   const locale = await getLocale();
+  const supabase = await createClient();
   
-  // 1. Check if user exists (Requires Service Role Key)
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!serviceKey) {
-    console.error('Missing SUPABASE_SERVICE_ROLE_KEY');
-    return { error: 'Sistem hatası: Konfigürasyon eksik.' };
-  }
-
-  const adminSupabase = createAdminClient(supabaseUrl, serviceKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
-    }
-  });
-
-  // 1. Check if user exists efficiently
-  // We try to generate a link. If it fails, the user likely doesn't exist.
-  // This avoids fetching the entire user database (O(1) vs O(N)).
-  const { data: linkData, error: linkError } = await adminSupabase.auth.admin.generateLink({
-    type: 'recovery',
-    email: email,
-  });
-  
-  if (linkError || !linkData.user) {
-    // Security Note: In a strict security environment, you normally shouldn't 
-    // reveal if an email is registered. But we keep your logic here.
-    return { error: 'Bu mail adresi kayıtlı değil.' };
-  }
-
-  // 2. Send Reset Email
-  const supabase = await createClient(); // Use regular client for the reset request
   const origin = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
   const redirectUrl = `${origin}/auth/callback?next=/${locale}/update-password`;
   
   console.log('Attempting to send reset email to:', email);
-  console.log('Redirect URL:', redirectUrl);
 
-  const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+  // We do not check if the user exists explicitly to prevent user enumeration.
+  // Supabase's resetPasswordForEmail handles the flow.
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: redirectUrl,
   });
 
   if (error) {
-    console.error('Reset Password Error (Supabase):', JSON.stringify(error, null, 2));
-    return { error: error.message };
+    // Log the actual error for debugging securely
+    console.error('Reset Password Error (Supabase):', error.message);
+    
+    // If it's a strict rate limit, we might want to tell the user to wait.
+    if (error.status === 429) {
+      return { error: 'Çok fazla istek gönderildi. Lütfen biraz bekleyin.' };
+    }
   }
 
-  console.log('Reset email sent successfully. Data:', data);
-  return { success: true };
+  // Always return success to the UI to prevent email enumeration
+  return { success: true, message: 'Eğer bu e-posta adresi sistemde kayıtlıysa, şifre sıfırlama bağlantısı gönderilmiştir.' };
 }
 
 export async function updatePassword(formData: FormData) {
