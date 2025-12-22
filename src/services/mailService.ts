@@ -1,37 +1,22 @@
 import { Resend } from 'resend';
 
-export async function sendConfirmationEmail(email: string, customerName: string) {
-  const apiKey = process.env.RESEND_API_KEY;
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
 
-  if (!apiKey) {
-    console.warn('⚠️ RESEND_API_KEY eksik. E-posta gönderilemedi.');
+// Generic send email function
+export async function sendEmail(to: string, subject: string, html: string) {
+  if (!RESEND_API_KEY) {
+    console.warn('⚠️ RESEND_API_KEY eksik. E-posta gönderilemedi: ' + subject);
     return { success: false, error: 'API Key Missing' };
   }
 
-  const resend = new Resend(apiKey);
+  const resend = new Resend(RESEND_API_KEY);
 
   try {
     const { data, error } = await resend.emails.send({
-      from: 'Solis Hotel <onboarding@resend.dev>', // Prodüksiyonda kendi domaininizi kullanmalısınız
-      to: [email],
-      subject: 'Rezervasyonunuz Onaylandı! - Solis Hotel',
-      html: `
-        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e7eb; border-radius: 12px;">
-          <h2 style="color: #d4a373; text-align: center;">Solis Hotel'e Hoş Geldiniz</h2>
-          <p>Sayın <strong>${customerName}</strong>,</p>
-          <p>Solis Hotel'i tercih ettiğiniz için teşekkür ederiz. Rezervasyon işleminiz başarıyla onaylanmıştır.</p>
-          <p>Sizi otelimizde ağırlamak ve unutulmaz bir konaklama deneyimi sunmak için sabırsızlanıyoruz.</p>
-          
-          <div style="background-color: #f9fafb; padding: 15px; border-radius: 8px; margin: 20px 0;">
-            <p style="margin: 0; color: #4b5563;">Herhangi bir sorunuz veya özel isteğiniz olursa bizimle iletişime geçmekten çekinmeyin.</p>
-          </div>
-
-          <p style="text-align: center; color: #9ca3af; font-size: 12px; margin-top: 30px;">
-            Solis Hotel, İstanbul<br>
-            +90 212 555 0123
-          </p>
-        </div>
-      `,
+      from: 'Solis Hotel <onboarding@resend.dev>',
+      to: [to],
+      subject: subject,
+      html: html,
     });
 
     if (error) {
@@ -45,3 +30,72 @@ export async function sendConfirmationEmail(email: string, customerName: string)
     return { success: false, error: err };
   }
 }
+
+// Template generator based on status
+function getEmailTemplate(status: string, customerName: string, bookingId?: string) {
+  const styles = {
+    container: "font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e7eb; border-radius: 12px;",
+    header: "color: #d4a373; text-align: center;",
+    text: "color: #374151; line-height: 1.6;",
+    footer: "text-align: center; color: #9ca3af; font-size: 12px; margin-top: 30px;",
+    highlight: "font-weight: bold; color: #d4a373;"
+  };
+
+  let title = "Rezervasyon Durumu";
+  let message = "";
+
+  switch (status) {
+    case 'pending':
+      title = "Rezervasyon Talebiniz Alındı";
+      message = `Sayın <strong>${customerName}</strong>,<br><br>Rezervasyon talebiniz tarafımıza ulaşmıştır. Müsaitlik durumunu kontrol ettikten sonra size en kısa sürede onay veya bilgilendirme maili göndereceğiz.<br><br>Talep ID: #${bookingId}`;
+      break;
+    case 'confirmed':
+      title = "Rezervasyonunuz Onaylandı!";
+      message = `Sayın <strong>${customerName}</strong>,<br><br>Solis Hotel'i tercih ettiğiniz için teşekkür ederiz. Rezervasyon işleminiz başarıyla <strong>ONAYLANMIŞTIR</strong>.<br><br>Sizi otelimizde ağırlamak için sabırsızlanıyoruz.`;
+      break;
+    case 'cancelled':
+      title = "Rezervasyon İptali";
+      message = `Sayın <strong>${customerName}</strong>,<br><br>Rezervasyonunuz iptal edilmiştir. Eğer bu işlemi siz yapmadıysanız lütfen bizimle iletişime geçiniz.`;
+      break;
+    case 'completed':
+    case 'checked_out':
+      title = "Bizi Tercih Ettiğiniz İçin Teşekkürler";
+      message = `Sayın <strong>${customerName}</strong>,<br><br>Umarız konaklamanızdan memnun kalmışsınızdır. Sizi tekrar ağırlamaktan mutluluk duyarız.`;
+      break;
+    default:
+      message = `Sayın <strong>${customerName}</strong>,<br><br>Rezervasyon durumunuz güncellendi: <strong>${status.toUpperCase()}</strong>.`;
+  }
+
+  return `
+    <div style="${styles.container}">
+      <h2 style="${styles.header}">${title}</h2>
+      <p style="${styles.text}">${message}</p>
+      
+      <div style="background-color: #f9fafb; padding: 15px; border-radius: 8px; margin: 20px 0;">
+        <p style="margin: 0; color: #4b5563;">Herhangi bir sorunuz olursa yanıtlayabilirsiniz.</p>
+      </div>
+
+      <p style="${styles.footer}">
+        Solis Hotel, İstanbul<br>
+        +90 212 555 0123
+      </p>
+    </div>
+  `;
+}
+
+export async function sendBookingStatusEmail(email: string, customerName: string, status: string, bookingId?: string) {
+  const html = getEmailTemplate(status, customerName, bookingId);
+  // Extract title from HTML simply or define map
+  let subject = "Solis Hotel - Rezervasyon Bilgilendirme";
+  if (status === 'confirmed') subject = "Rezervasyonunuz Onaylandı! - Solis Hotel";
+  if (status === 'cancelled') subject = "Rezervasyon İptali - Solis Hotel";
+  if (status === 'pending') subject = "Rezervasyon Talebiniz Alındı - Solis Hotel";
+
+  return sendEmail(email, subject, html);
+}
+
+// Backward compatibility (optional, but good practice if other files use it)
+export async function sendConfirmationEmail(email: string, customerName: string) {
+  return sendBookingStatusEmail(email, customerName, 'confirmed');
+}
+

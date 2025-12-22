@@ -2,7 +2,8 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { z } from "zod";
-import { sendConfirmationEmail } from '@/src/services/mailService';
+import { sendBookingNotification } from '@/src/services/notificationService';
+import { sendConfirmationEmail } from '@/src/services/mailService'; // Keep for now or remove if unused later
 
 // Initialize Supabase client
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -13,6 +14,7 @@ const supabase = createClient(supabaseUrl, serviceKey || anonKey);
 
 // ... existing validation schema ...
 const serverBookingSchema = z.object({
+  hotel_id: z.coerce.number().optional(), // NEW
   room_id: z.coerce.number().positive(),
   customer_name: z.string().min(2, "İsim en az 2 karakter olmalıdır"),
   customer_email: z.string().email("Geçersiz e-posta adresi").or(z.literal("no-email@provided.com")),
@@ -38,6 +40,7 @@ export async function createBookingServer(bookingData: any) {
   
   // 1. Zod Validation
   const result = serverBookingSchema.safeParse({
+    hotel_id: bookingData.hotel_id, // NEW
     room_id: bookingData.room_id,
     customer_name: bookingData.customer_name,
     customer_email: bookingData.customer_email || "no-email@provided.com",
@@ -69,6 +72,7 @@ export async function createBookingServer(bookingData: any) {
   // --- ATOMIC BOOKING CREATION (Via RPC) ---
   try {
     const { data: rpcResult, error: rpcError } = await supabase.rpc('create_booking_safe', {
+      p_hotel_id: payload.hotel_id, // NEW
       p_room_id: payload.room_id,
       p_customer_name: payload.customer_name,
       p_customer_email: payload.customer_email,
@@ -88,7 +92,19 @@ export async function createBookingServer(bookingData: any) {
       return { success: false, error: rpcResult.error || 'Rezervasyon oluşturulamadı.' };
     }
 
-    return { success: true, data: [{ id: rpcResult.data }] };
+    // --- NOTIFICATION TRIGGER (NEW) ---
+    const bookingId = rpcResult.data;
+    const notificationPayload = {
+      id: bookingId,
+      customer_name: payload.customer_name,
+      customer_email: payload.customer_email,
+      customer_phone: payload.customer_phone
+    };
+    
+    // Send "Pending" notification
+    sendBookingNotification(notificationPayload, 'pending').catch(err => console.error('Notification Error:', err));
+    
+    return { success: true, data: [{ id: bookingId }] };
 
   } catch (err) {
     console.error('Unexpected error in createBookingServer:', err);
@@ -126,19 +142,14 @@ export async function updateBookingStatusServer(id: string, status: string, deta
        return { success: false, error: "Kayıt bulunamadı veya güncellenemedi." };
     }
 
-    // --- EMAIL NOTIFICATION LOGIC ---
-    // If status is confirmed, send email
-    if (status === 'confirmed') {
-        const booking = data[0];
-        if (booking.customer_email && booking.customer_email !== 'no-email@provided.com') {
-            // Send email asynchronously (don't await strictly if you don't want to block UI)
-            // But usually, awaiting ensures we know if it failed.
-            console.log(`Sending confirmation email to ${booking.customer_email}...`);
-            await sendConfirmationEmail(booking.customer_email, booking.customer_name);
-        } else {
-            console.log('No valid email for confirmation.');
-        }
-    }
+    // --- NOTIFICATION LOGIC ---
+    // Trigger notification for ANY status change that we care about
+    const booking = data[0];
+    // Check if status actually changed or if it's just an update of details? 
+    // The function argument 'status' is the target status.
+    
+    // Send notification (async)
+    sendBookingNotification(booking, status).catch(err => console.error('Update Notification Error:', err));
 
     return { success: true, data };
   } catch (err: any) {
