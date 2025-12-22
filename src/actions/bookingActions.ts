@@ -87,13 +87,16 @@ export async function createBookingServer(bookingData: any) {
       console.error('RPC Error:', rpcError);
       return { success: false, error: 'İşlem sırasında bir hata oluştu: ' + rpcError.message };
     }
+
+    // Handle RPC response (it might be an array or an object depending on .single() usage)
+    const resultData = Array.isArray(rpcResult) ? rpcResult[0] : rpcResult;
     
-    if (!rpcResult.success) {
-      return { success: false, error: rpcResult.error || 'Rezervasyon oluşturulamadı.' };
+    if (!resultData || !resultData.success) {
+      return { success: false, error: resultData?.error || 'Rezervasyon oluşturulamadı.' };
     }
 
     // --- NOTIFICATION TRIGGER (NEW) ---
-    const bookingId = rpcResult.data;
+    const bookingId = resultData.data;
     const notificationPayload = {
       id: bookingId,
       customer_name: payload.customer_name,
