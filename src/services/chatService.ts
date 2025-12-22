@@ -63,12 +63,25 @@ export async function getMessages(sessionId: string) {
     return data as ChatMessage[];
 }
 
-// Admin: Get all active sessions
+// Shared: Update customer name (for first message flow)
+export async function updateCustomerName(sessionId: string, name: string) {
+    const { error } = await supabase
+        .from('Chat_Sessions')
+        .update({ customer_name: name })
+        .eq('id', sessionId);
+    
+    if (error) throw error;
+}
+
+// Admin: Get all active sessions (Last 24 hours only)
 export async function getActiveSessions() {
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
     const { data, error } = await supabase
         .from('Chat_Sessions')
         .select('*')
         .eq('status', 'active')
+        .gt('last_message_at', twentyFourHoursAgo) // Only recent chats
         .order('last_message_at', { ascending: false });
 
     if (error) throw error;

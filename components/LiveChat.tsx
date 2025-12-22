@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { MessageSquare, X, Send, Globe, Loader2, Minimize2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePathname } from "next/navigation";
-import { startChatSession, sendMessage, getMessages, ChatMessage } from "@/src/services/chatService";
+import { startChatSession, sendMessage, getMessages, updateCustomerName, ChatMessage } from "@/src/services/chatService";
 import { createClient } from "@supabase/supabase-js";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -15,9 +15,13 @@ export default function LiveChat({ locale }: { locale: string }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [inputText, setInputText] = useState("");
-  const [isTyping, setIsTyping] = useState(false); // Can be used for "agent is typing" later
+  const [isTyping, setIsTyping] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [sessionId, setSessionId] = useState<string | null>(null);
+  
+  // New State for Name Flow
+  const [isNameSet, setIsNameSet] = useState(false);
+  const [isChatClosed, setIsChatClosed] = useState(false); // NEW
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
@@ -26,8 +30,11 @@ export default function LiveChat({ locale }: { locale: string }) {
   useEffect(() => {
     if (isOpen && !sessionId) {
         const storedSession = localStorage.getItem('solis_chat_session_id');
+        const storedName = localStorage.getItem('solis_chat_customer_name');
+
         if (storedSession) {
             setSessionId(storedSession);
+            setIsNameSet(!!storedName); 
             loadMessages(storedSession);
         } else {
             // Create new session
@@ -35,12 +42,17 @@ export default function LiveChat({ locale }: { locale: string }) {
                 if (session) {
                     setSessionId(session.id);
                     localStorage.setItem('solis_chat_session_id', session.id);
-                    // Add welcome message
+                    
+                    // Add initial prompt
+                    const initialMsg = locale === 'tr' 
+                        ? 'Merhaba! Size daha iyi yardımcı olabilmek için isminizi öğrenebilir miyim?' 
+                        : 'Hello! May I know your name to assist you better?';
+                    
                     setMessages([{
                         id: 0,
                         session_id: session.id,
-                        sender: 'admin', // System/Bot
-                        message: locale === 'tr' ? 'Merhaba! Size nasıl yardımcı olabilirim?' : 'Hello! How can I help you?',
+                        sender: 'admin',
+                        message: initialMsg,
                         created_at: new Date().toISOString()
                     }]);
                 }
@@ -53,8 +65,9 @@ export default function LiveChat({ locale }: { locale: string }) {
   useEffect(() => {
     if (!sessionId) return;
 
-    const channel = supabase
-        .channel(`chat:${sessionId}`)
+    // 1. Listen for new messages
+    const messageChannel = supabase
+        .channel(`chat-messages:${sessionId}`)
         .on('postgres_changes', { 
             event: 'INSERT', 
             schema: 'public', 
@@ -63,30 +76,58 @@ export default function LiveChat({ locale }: { locale: string }) {
         }, (payload) => {
             const newMsg = payload.new as ChatMessage;
             setMessages(prev => {
-                // Prevent duplicate if we added it optimistically (though we don't do that here yet)
                 if (prev.find(m => m.id === newMsg.id)) return prev;
                 return [...prev, newMsg];
             });
         })
         .subscribe();
 
+    // 2. Listen for session updates (e.g. status change)
+    const sessionChannel = supabase
+        .channel(`chat-session-update:${sessionId}`)
+        .on('postgres_changes', { 
+            event: 'UPDATE', 
+            schema: 'public', 
+            table: 'Chat_Sessions', 
+            filter: `id=eq.${sessionId}` 
+        }, (payload) => {
+            const updatedSession = payload.new as any;
+            if (updatedSession.status === 'closed') {
+                setIsChatClosed(true);
+                // Clear local storage so user can start new chat later if they refresh
+                localStorage.removeItem('solis_chat_session_id');
+                // Optional: localStorage.removeItem('solis_chat_customer_name');
+            }
+        })
+        .subscribe();
+
     return () => {
-        supabase.removeChannel(channel);
+        supabase.removeChannel(messageChannel);
+        supabase.removeChannel(sessionChannel);
     };
   }, [sessionId]);
 
   const loadMessages = async (id: string) => {
+      // Check session status first
+      const { data: session } = await supabase.from('Chat_Sessions').select('status').eq('id', id).single();
+      if (session && session.status === 'closed') {
+          setIsChatClosed(true);
+          localStorage.removeItem('solis_chat_session_id');
+          // Don't load messages if closed, or maybe load them read-only? 
+          // Let's load them read-only for history.
+      }
+
       try {
           const msgs = await getMessages(id);
           if (msgs && msgs.length > 0) {
             setMessages(msgs);
           } else {
-             // If no messages (maybe cleared db), show welcome
+             // Fallback if empty (shouldn't happen often)
              setMessages([{
                 id: 0,
                 session_id: id,
                 sender: 'admin',
-                message: locale === 'tr' ? 'Merhaba! Size nasıl yardımcı olabilirim?' : 'Hello! How can I help you?',
+                message: locale === 'tr' ? 'Tekrar Hoş Geldiniz!' : 'Welcome back!',
                 created_at: new Date().toISOString()
             }]);
           }
@@ -111,10 +152,34 @@ export default function LiveChat({ locale }: { locale: string }) {
     e.preventDefault();
     if (!inputText.trim() || !sessionId) return;
 
+    const text = inputText;
+    setInputText(""); // Clear input immediately
+
     try {
-        await sendMessage(sessionId, 'user', inputText);
-        setInputText("");
-        // Realtime will add the message to the list
+        if (!isNameSet) {
+            // First message is the NAME
+            await updateCustomerName(sessionId, text);
+            localStorage.setItem('solis_chat_customer_name', text);
+            setIsNameSet(true);
+
+            // Add user's name message visually (optional, or just system response)
+            // But let's send it as a message so admin sees "Ahmet" as the first message
+            await sendMessage(sessionId, 'user', text);
+
+            // Add system follow-up
+            const followUp = locale === 'tr' 
+                ? `Teşekkürler ${text}, size nasıl yardımcı olabilirim?` 
+                : `Thank you ${text}, how can I help you?`;
+            
+            // Artificial delay for bot feel
+            setTimeout(async () => {
+                await sendMessage(sessionId, 'admin', followUp);
+            }, 600);
+
+        } else {
+            // Normal message
+            await sendMessage(sessionId, 'user', text);
+        }
     } catch (err) {
         console.error('Send error:', err);
     }
@@ -182,22 +247,28 @@ export default function LiveChat({ locale }: { locale: string }) {
             </div>
 
             {/* Input Area */}
-            <form onSubmit={handleSend} className="p-4 bg-white border-t border-gray-100 flex gap-2">
-              <input
-                type="text"
-                value={inputText}
-                onChange={(e) => setInputText(e.target.value)}
-                placeholder={locale === 'tr' ? "Mesajınızı yazın..." : "Type your message..."}
-                className="flex-1 bg-gray-100 border-none rounded-full px-4 py-2 text-sm focus:ring-2 focus:ring-[var(--gold)] outline-none transition-all text-gray-800"
-              />
-              <button 
-                type="submit"
-                disabled={!inputText.trim()}
-                className="p-2 bg-[var(--gold)] text-white rounded-full hover:bg-[var(--off-black)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
-              >
-                <Send className="w-5 h-5 rtl:rotate-180" />
-              </button>
-            </form>
+            {isChatClosed ? (
+                <div className="p-4 bg-gray-100 text-center text-sm text-gray-500 border-t border-gray-200">
+                    {locale === 'tr' ? 'Bu sohbet sona ermiştir.' : 'This chat has ended.'}
+                </div>
+            ) : (
+                <form onSubmit={handleSend} className="p-4 bg-white border-t border-gray-100 flex gap-2">
+                <input
+                    type="text"
+                    value={inputText}
+                    onChange={(e) => setInputText(e.target.value)}
+                    placeholder={locale === 'tr' ? "Mesajınızı yazın..." : "Type your message..."}
+                    className="flex-1 bg-gray-100 border-none rounded-full px-4 py-2 text-sm focus:ring-2 focus:ring-[var(--gold)] outline-none transition-all text-gray-800"
+                />
+                <button 
+                    type="submit"
+                    disabled={!inputText.trim()}
+                    className="p-2 bg-[var(--gold)] text-white rounded-full hover:bg-[var(--off-black)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
+                >
+                    <Send className="w-5 h-5 rtl:rotate-180" />
+                </button>
+                </form>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

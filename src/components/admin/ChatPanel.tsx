@@ -26,8 +26,22 @@ export default function ChatPanel() {
     // Realtime listener for new sessions or updates
     const channel = supabase
         .channel('admin-chat-list')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'Chat_Sessions' }, () => {
-            fetchSessions();
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'Chat_Sessions' }, (payload) => {
+            if (payload.eventType === 'UPDATE') {
+                const updatedSession = payload.new as ChatSession;
+                
+                if (updatedSession.status === 'closed') {
+                    // If closed, remove from list
+                    setSessions(prev => prev.filter(s => s.id !== updatedSession.id));
+                    if (selectedSession === updatedSession.id) setSelectedSession(null);
+                } else {
+                    // If active update (e.g. name change), update in place
+                    setSessions(prev => prev.map(s => s.id === updatedSession.id ? { ...s, ...updatedSession } : s));
+                }
+            } else {
+                // For INSERT/DELETE, fetch fresh list
+                fetchSessions();
+            }
         })
         .subscribe();
     
@@ -65,7 +79,6 @@ export default function ChatPanel() {
                 if (prev.find(m => m.id === newMsg.id)) return prev;
                 return [...prev, newMsg];
             });
-            // Play sound?
         })
         .subscribe();
 
@@ -98,19 +111,40 @@ export default function ChatPanel() {
       }
   };
 
-  const handleCloseSession = async (id: string) => {
-      if (!confirm("Bu sohbeti sonlandırmak istediğinize emin misiniz?")) return;
-      try {
-          await closeSession(id);
-          toast.success("Sohbet sonlandırıldı");
-          setSelectedSession(null);
-          fetchSessions();
-      } catch (err) {
-          toast.error("İşlem başarısız");
-      }
+  const handleCloseSession = (id: string) => {
+      toast((t) => (
+        <div className="flex flex-col gap-2 bg-white rounded-lg p-1">
+           <span className="font-medium text-gray-800">Sohbeti sonlandırmak istiyor musunuz?</span>
+           <div className="flex gap-2 justify-end mt-2">
+               <button 
+                 onClick={() => toast.dismiss(t.id)}
+                 className="px-3 py-1.5 text-xs bg-gray-100 hover:bg-gray-200 rounded text-gray-600 transition-colors"
+               >
+                 Vazgeç
+               </button>
+               <button 
+                 onClick={async () => {
+                     toast.dismiss(t.id);
+                     try {
+                         await closeSession(id);
+                         toast.success("Sohbet sonlandırıldı");
+                         // Immediately remove from UI list or update status
+                         setSessions(prev => prev.filter(s => s.id !== id));
+                         if (selectedSession === id) setSelectedSession(null);
+                     } catch (err) {
+                         toast.error("İşlem başarısız");
+                     }
+                 }}
+                 className="px-3 py-1.5 text-xs bg-red-600 hover:bg-red-700 rounded text-white transition-colors"
+               >
+                 Bitir
+               </button>
+           </div>
+        </div>
+      ), { duration: 5000, icon: '⚠️', style: { minWidth: '300px' } });
   };
 
-  if (loading) return <div className="p-10 text-center">Yükleniyor...</div>;
+  if (loading) return <div className="p-10 text-center text-gray-500">Yükleniyor...</div>;
 
   return (
     <div className="h-[600px] bg-white border border-gray-200 rounded-xl shadow-sm flex overflow-hidden">
@@ -123,12 +157,12 @@ export default function ChatPanel() {
                 </h3>
             </div>
             <div className="flex-1 overflow-y-auto">
-                {sessions.length === 0 ? (
+                {sessions.filter(s => s.status === 'active').length === 0 ? (
                     <div className="p-8 text-center text-gray-400 text-sm">
                         Aktif sohbet bulunmuyor.
                     </div>
                 ) : (
-                    sessions.map(session => (
+                    sessions.filter(s => s.status === 'active').map(session => (
                         <div 
                             key={session.id}
                             onClick={() => setSelectedSession(session.id)}
@@ -137,8 +171,8 @@ export default function ChatPanel() {
                             }`}
                         >
                             <div className="flex justify-between items-start mb-1">
-                                <span className="font-bold text-gray-900 text-sm">{session.customer_name}</span>
-                                <span className="text-[10px] text-gray-400">
+                                <span className="font-bold text-gray-900 text-sm truncate pr-2">{session.customer_name}</span>
+                                <span className="text-[10px] text-gray-400 whitespace-nowrap">
                                     {new Date(session.last_message_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                                 </span>
                             </div>
