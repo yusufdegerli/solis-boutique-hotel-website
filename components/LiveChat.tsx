@@ -4,30 +4,96 @@ import { useState, useRef, useEffect } from "react";
 import { MessageSquare, X, Send, Globe, Loader2, Minimize2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePathname } from "next/navigation";
+import { startChatSession, sendMessage, getMessages, ChatMessage } from "@/src/services/chatService";
+import { createClient } from "@supabase/supabase-js";
 
-interface Message {
-  id: string;
-  text: string;
-  sender: 'user' | 'agent';
-  timestamp: Date;
-  translatedFrom?: string;
-  originalText?: string;
-}
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabase = createClient(supabaseUrl, anonKey);
 
 export default function LiveChat({ locale }: { locale: string }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [inputText, setInputText] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      text: locale === 'tr' ? 'Merhaba! Solis Hotels asistanınızım. Size nasıl yardımcı olabilirim?' : 'Hello! I am your Solis Hotels assistant. How can I help you?',
-      sender: 'agent',
-      timestamp: new Date()
-    }
-  ]);
+  const [isTyping, setIsTyping] = useState(false); // Can be used for "agent is typing" later
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const pathname = usePathname();
+
+  // Load session from local storage or create new on first open
+  useEffect(() => {
+    if (isOpen && !sessionId) {
+        const storedSession = localStorage.getItem('solis_chat_session_id');
+        if (storedSession) {
+            setSessionId(storedSession);
+            loadMessages(storedSession);
+        } else {
+            // Create new session
+            startChatSession('Ziyaretçi').then(session => {
+                if (session) {
+                    setSessionId(session.id);
+                    localStorage.setItem('solis_chat_session_id', session.id);
+                    // Add welcome message
+                    setMessages([{
+                        id: 0,
+                        session_id: session.id,
+                        sender: 'admin', // System/Bot
+                        message: locale === 'tr' ? 'Merhaba! Size nasıl yardımcı olabilirim?' : 'Hello! How can I help you?',
+                        created_at: new Date().toISOString()
+                    }]);
+                }
+            });
+        }
+    }
+  }, [isOpen]);
+
+  // Realtime subscription
+  useEffect(() => {
+    if (!sessionId) return;
+
+    const channel = supabase
+        .channel(`chat:${sessionId}`)
+        .on('postgres_changes', { 
+            event: 'INSERT', 
+            schema: 'public', 
+            table: 'Chat_Messages', 
+            filter: `session_id=eq.${sessionId}` 
+        }, (payload) => {
+            const newMsg = payload.new as ChatMessage;
+            setMessages(prev => {
+                // Prevent duplicate if we added it optimistically (though we don't do that here yet)
+                if (prev.find(m => m.id === newMsg.id)) return prev;
+                return [...prev, newMsg];
+            });
+        })
+        .subscribe();
+
+    return () => {
+        supabase.removeChannel(channel);
+    };
+  }, [sessionId]);
+
+  const loadMessages = async (id: string) => {
+      try {
+          const msgs = await getMessages(id);
+          if (msgs && msgs.length > 0) {
+            setMessages(msgs);
+          } else {
+             // If no messages (maybe cleared db), show welcome
+             setMessages([{
+                id: 0,
+                session_id: id,
+                sender: 'admin',
+                message: locale === 'tr' ? 'Merhaba! Size nasıl yardımcı olabilirim?' : 'Hello! How can I help you?',
+                created_at: new Date().toISOString()
+            }]);
+          }
+      } catch (err) {
+          console.error(err);
+      }
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -37,59 +103,21 @@ export default function LiveChat({ locale }: { locale: string }) {
     scrollToBottom();
   }, [messages, isOpen]);
 
-  const pathname = usePathname();
-
   const isHiddenPage = pathname?.includes("/admin") || pathname?.includes("/login") || pathname?.includes("/update-password");
 
-  if (isHiddenPage) {
-    return null;
-  }
+  if (isHiddenPage) return null;
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputText.trim()) return;
+    if (!inputText.trim() || !sessionId) return;
 
-    const userMsgId = Date.now().toString();
-    const userMessage: Message = {
-      id: userMsgId,
-      text: inputText,
-      sender: 'user',
-      timestamp: new Date()
-    };
-
-    setMessages(prev => [...prev, userMessage]);
-    setInputText("");
-    setIsTyping(true);
-
-    // Simulate Translation & Response Delay
-    setTimeout(() => {
-      setIsTyping(false);
-      
-      const agentResponse: Message = {
-        id: (Date.now() + 1).toString(),
-        text: getSimulatedResponse(inputText, locale),
-        sender: 'agent',
-        timestamp: new Date(),
-        // Simulate translation metadata if not English
-        translatedFrom: locale !== 'en' ? locale.toUpperCase() : undefined,
-        originalText: locale !== 'en' ? "Auto-translated message" : undefined
-      };
-      
-      setMessages(prev => [...prev, agentResponse]);
-    }, 2000);
-  };
-
-  const getSimulatedResponse = (input: string, lang: string) => {
-    // Simple keyword matching for demo
-    const lowerInput = input.toLowerCase();
-    
-    if (lowerInput.includes('fiyat') || lowerInput.includes('price')) {
-      return lang === 'tr' ? 'Oda fiyatlarımız gecelik 2.500₺\'den başlamaktadır. Tarihlerinizi belirtirseniz detaylı bilgi verebilirim.' : 'Our room rates start from 2.500₺ per night. Please specify your dates for detailed pricing.';
+    try {
+        await sendMessage(sessionId, 'user', inputText);
+        setInputText("");
+        // Realtime will add the message to the list
+    } catch (err) {
+        console.error('Send error:', err);
     }
-    if (lowerInput.includes('rezervasyon') || lowerInput.includes('book')) {
-      return lang === 'tr' ? 'Web sitemiz üzerinden veya 0212 555 0000 numarasından rezervasyon yapabilirsiniz.' : 'You can book via our website or call +90 212 555 0000.';
-    }
-    return lang === 'tr' ? 'Anladım. Müsaitlik durumunu kontrol edip size hemen dönüyorum.' : 'I understand. Let me check the availability and get back to you immediately.';
   };
 
   return (
@@ -115,7 +143,7 @@ export default function LiveChat({ locale }: { locale: string }) {
                 <div>
                   <h3 className="font-bold font-heading text-sm">Solis Assistant</h3>
                   <p className="text-[10px] text-gray-300 flex items-center gap-1">
-                    <Globe className="w-3 h-3" /> {locale !== 'en' ? 'Auto-Translation Active' : 'Online'}
+                    <Globe className="w-3 h-3" /> Online
                   </p>
                 </div>
               </div>
@@ -143,26 +171,13 @@ export default function LiveChat({ locale }: { locale: string }) {
                         : 'bg-white text-gray-800 rounded-tl-none shadow-sm border border-gray-100'
                     }`}
                   >
-                    {msg.sender === 'agent' && msg.translatedFrom && (
-                       <div className="flex items-center gap-1 text-[10px] text-[var(--gold)] mb-1 font-bold uppercase tracking-wider">
-                          <Globe className="w-3 h-3" /> Translated from {locale.toUpperCase()}
-                       </div>
-                    )}
-                    {msg.text}
+                    {msg.message}
                     <div className={`text-[10px] mt-1 text-right ${msg.sender === 'user' ? 'text-white/70' : 'text-gray-400'}`}>
-                      {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </div>
                   </div>
                 </div>
               ))}
-              {isTyping && (
-                <div className="flex justify-start">
-                  <div className="bg-white p-4 rounded-2xl rounded-tl-none shadow-sm border border-gray-100 flex items-center gap-2">
-                    <Loader2 className="w-4 h-4 animate-spin text-[var(--gold)]" />
-                    <span className="text-xs text-gray-400 italic">Translating & typing...</span>
-                  </div>
-                </div>
-              )}
               <div ref={messagesEndRef} />
             </div>
 
