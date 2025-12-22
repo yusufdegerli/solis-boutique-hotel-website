@@ -1,15 +1,15 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { 
-  LayoutDashboard, 
-  Hotel as HotelIcon, 
-  BedDouble, 
-  Tags, 
-  Plus, 
-  Edit, 
-  Trash2, 
-  Save, 
+import {
+  LayoutDashboard,
+  Hotel as HotelIcon,
+  BedDouble,
+  Tags,
+  Plus,
+  Edit,
+  Trash2,
+  Save,
   X,
   Search,
   CheckCircle,
@@ -21,23 +21,24 @@ import {
   LogOut,
   Image as ImageIcon
 } from 'lucide-react';
-import { 
-  getHotels, 
-  getRooms, 
-  createHotel, 
-  updateHotel, 
-  deleteHotel, 
-  createRoom, 
-  updateRoom, 
+import {
+  getHotels,
+  getRooms,
+  createHotel,
+  updateHotel,
+  deleteHotel,
+  createRoom,
+  updateRoom,
   deleteRoom,
   getBookings,
-  updateBookingStatus,
   Booking,
   uploadImage
 } from '@/src/services/hotelService';
+import { updateBookingStatusServer } from '@/src/actions/bookingActions';
 import { Hotel, Room } from '@/lib/data';
 import { supabase } from '@/lib/supabaseClient';
 import { logout } from '../login/actions';
+import toast, { Toaster } from 'react-hot-toast';
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<'live' | 'hotels' | 'rooms' | 'campaigns'>('live');
@@ -53,6 +54,106 @@ export default function AdminDashboard() {
   const [editingItem, setEditingItem] = useState<any>(null); // Hotel or Room
   const [formData, setFormData] = useState<any>({});
 
+  // --- NEW: Check-In / Check-Out States ---
+  const [checkInModal, setCheckInModal] = useState<{ isOpen: boolean, bookingId: string | null }>({ isOpen: false, bookingId: null });
+  const [checkOutModal, setCheckOutModal] = useState<{ isOpen: boolean, bookingId: string | null }>({ isOpen: false, bookingId: null });
+  
+  const [checkInForm, setCheckInForm] = useState({
+      guest_id_number: '',
+      guest_nationality: '',
+      check_in_notes: '',
+      payment_received: false
+  });
+
+  const [checkOutForm, setCheckOutForm] = useState({
+      extra_charges: 0,
+      damage_report: '',
+      payment_settled: false
+  });
+
+  const openCheckIn = (bookingId: string) => {
+      setCheckInForm({ guest_id_number: '', guest_nationality: '', check_in_notes: '', payment_received: false });
+      setCheckInModal({ isOpen: true, bookingId });
+  };
+
+  const openCheckOut = (bookingId: string) => {
+      setCheckOutForm({ extra_charges: 0, damage_report: '', payment_settled: false });
+      setCheckOutModal({ isOpen: true, bookingId });
+  };
+
+  const submitCheckIn = async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!checkInModal.bookingId) return;
+
+      // --- VALIDATION START ---
+      const idInput = checkInForm.guest_id_number.trim().toUpperCase();
+      
+      // TC Identity: Exactly 11 digits
+      const isTC = /^[0-9]{11}$/.test(idInput);
+      
+      // Passport: Starts with 'U', followed by 8 alphanumeric characters (Total 9)
+      const isPassport = /^U[A-Z0-9]{8}$/.test(idInput);
+
+      if (!isTC && !isPassport) {
+          toast.error("Hatalı Kimlik/Pasaport Formatı!\nTC Kimlik (11 hane) veya Pasaport (U+8 hane) giriniz.");
+          return;
+      }
+      // --- VALIDATION END ---
+
+      setLoading(true);
+      const loadingToast = toast.loading('Giriş işlemi yapılıyor...');
+      try {
+          const result = await updateBookingStatusServer(checkInModal.bookingId, 'checked_in', {
+              guest_id_number: idInput, // Use cleaned input
+              guest_nationality: checkInForm.guest_nationality,
+              check_in_notes: checkInForm.check_in_notes,
+              payment_status: checkInForm.payment_received ? 'paid' : 'pending'
+          });
+
+          if (!result.success) {
+             throw new Error(result.error || "Veritabanı güncellenemedi.");
+          }
+
+          toast.success('Misafir girişi başarıyla tamamlandı!', { id: loadingToast });
+          setCheckInModal({ isOpen: false, bookingId: null });
+          fetchData(); // Refresh list
+      } catch (err: any) {
+          console.error('Check-in Error:', err);
+          toast.error(`Giriş işlemi başarısız: ${err.message || "Bilinmeyen hata"}`, { id: loadingToast });
+      } finally {
+          setLoading(false);
+      }
+  };
+
+  const submitCheckOut = async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!checkOutModal.bookingId) return;
+      
+      setLoading(true);
+      const loadingToast = toast.loading('Çıkış işlemi yapılıyor...');
+
+      try {
+          const result = await updateBookingStatusServer(checkOutModal.bookingId, 'checked_out', {
+              extra_charges: checkOutForm.extra_charges,
+              damage_report: checkOutForm.damage_report,
+              payment_status: checkOutForm.payment_settled ? 'paid' : 'pending'
+          });
+
+          if (!result.success) {
+             throw new Error(result.error || "Veritabanı güncellenemedi.");
+          }
+
+          toast.success('Misafir çıkışı başarıyla tamamlandı!', { id: loadingToast });
+          setCheckOutModal({ isOpen: false, bookingId: null });
+          fetchData();
+      } catch (err: any) {
+           console.error('Check-out Error:', err);
+           toast.error(`Çıkış işlemi başarısız: ${err.message}`, { id: loadingToast });
+      } finally {
+          setLoading(false);
+      }
+  };
+
   useEffect(() => {
     fetchData();
 
@@ -62,6 +163,7 @@ export default function AdminDashboard() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'Reservation_Information' }, (payload) => {
         if (payload.eventType === 'INSERT') {
           setBookings((prev) => [payload.new as Booking, ...prev]);
+          toast('Yeni rezervasyon geldi!', { icon: '🔔' });
         } else if (payload.eventType === 'UPDATE') {
           setBookings((prev) => prev.map(b => b.id === payload.new.id ? payload.new as Booking : b));
         }
@@ -82,6 +184,7 @@ export default function AdminDashboard() {
       setBookings(bookingsData);
     } catch (err) {
       setError('Veriler yüklenirken bir hata oluştu.');
+      toast.error('Veriler yüklenemedi.');
       console.error(err);
     } finally {
       setLoading(false);
@@ -92,13 +195,15 @@ export default function AdminDashboard() {
     if (!e.target.files || e.target.files.length === 0) return;
     
     setUploading(true);
+    const loadingToast = toast.loading('Resim yükleniyor...');
     try {
       const file = e.target.files[0];
       const url = await uploadImage(file);
       setFormData((prev: any) => ({ ...prev, image: url }));
+      toast.success('Resim yüklendi', { id: loadingToast });
     } catch (err) {
       console.error('Upload failed:', err);
-      alert('Resim yüklenirken bir hata oluştu.');
+      toast.error('Resim yüklenirken hata oluştu', { id: loadingToast });
     } finally {
       setUploading(false);
     }
@@ -109,21 +214,23 @@ export default function AdminDashboard() {
     
     const currentImages = formData.images || [];
     if (currentImages.length >= 5) {
-      alert("En fazla 5 fotoğraf yükleyebilirsiniz.");
+      toast.error("En fazla 5 fotoğraf yükleyebilirsiniz.");
       return;
     }
 
     setUploading(true);
+    const loadingToast = toast.loading('Resim yükleniyor...');
     try {
       const file = e.target.files[0];
       const url = await uploadImage(file);
-      setFormData((prev: any) => ({ 
+      setFormData((prev: any) => ({
         ...prev, 
         images: [...(prev.images || []), url] 
       }));
+      toast.success('Resim eklendi', { id: loadingToast });
     } catch (err) {
       console.error('Upload failed:', err);
-      alert('Resim yüklenirken bir hata oluştu.');
+      toast.error('Resim yüklenirken hata oluştu', { id: loadingToast });
     } finally {
       setUploading(false);
     }
@@ -147,6 +254,7 @@ export default function AdminDashboard() {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    const loadingToast = toast.loading('Kaydediliyor...');
 
     try {
       if (activeTab === 'hotels') {
@@ -173,38 +281,93 @@ export default function AdminDashboard() {
       }
       setIsModalOpen(false);
       fetchData(); // Refresh data
+      toast.success('İşlem başarıyla kaydedildi!', { id: loadingToast });
     } catch (err: any) {
       console.error('Submit Error:', JSON.stringify(err, null, 2));
-      setError(`İşlem başarısız oldu: ${err.message || JSON.stringify(err)}`);
+      toast.error(`İşlem başarısız: ${err.message || "Hata"}`, { id: loadingToast });
     } finally {
       setLoading(false);
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm('Bu kaydı silmek istediğinize emin misiniz?')) return;
-    
-    setLoading(true);
-    try {
-      if (activeTab === 'hotels') await deleteHotel(id);
-      if (activeTab === 'rooms') await deleteRoom(id);
-      fetchData();
-    } catch (err) {
-      console.error(err);
-      setError('Silme işlemi başarısız oldu.');
-    } finally {
-      setLoading(false);
-    }
+    // Custom Confirmation Toast for Delete
+    toast((t) => (
+      <div className="flex flex-col gap-2">
+         <span className="font-medium text-gray-800">Bu kaydı silmek istediğinize emin misiniz?</span>
+         <div className="flex gap-2 justify-end">
+             <button 
+               onClick={() => toast.dismiss(t.id)}
+               className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded text-gray-600"
+             >
+               Vazgeç
+             </button>
+             <button 
+               onClick={async () => {
+                   toast.dismiss(t.id);
+                   setLoading(true);
+                   try {
+                     if (activeTab === 'hotels') await deleteHotel(id);
+                     if (activeTab === 'rooms') await deleteRoom(id);
+                     fetchData();
+                     toast.success("Kayıt silindi.");
+                   } catch (err) {
+                     console.error(err);
+                     toast.error("Silme işlemi başarısız.");
+                   } finally {
+                     setLoading(false);
+                   }
+               }}
+               className="px-3 py-1 text-sm bg-red-600 hover:bg-red-700 rounded text-white"
+             >
+               Evet, Sil
+             </button>
+         </div>
+      </div>
+    ), { duration: 5000, icon: '🗑️' });
   };
 
   const handleStatusChange = async (id: string, newStatus: string) => {
+    const loadingToast = toast.loading('Durum güncelleniyor...');
     try {
-        await updateBookingStatus(id, newStatus);
+        const result = await updateBookingStatusServer(id, newStatus);
+        if (!result.success) throw new Error(result.error);
         setBookings(prev => prev.map(b => b.id === id ? { ...b, room_status: newStatus as any } : b));
-    } catch (err) {
+        
+        // Custom message based on status
+        if (newStatus === 'confirmed') toast.success('Rezervasyon onaylandı ve mail gönderildi!', { id: loadingToast });
+        else if (newStatus === 'cancelled') toast.success('Rezervasyon iptal edildi.', { id: loadingToast });
+        else toast.success('Durum güncellendi.', { id: loadingToast });
+
+    } catch (err: any) {
         console.error(err);
-        alert("Durum güncellenemedi.");
+        toast.error(`Güncelleme hatası: ${err.message}`, { id: loadingToast });
     }
+  };
+
+  const confirmCancellation = (bookingId: string) => {
+    toast((t) => (
+        <div className="flex flex-col gap-2">
+           <span className="font-medium text-gray-800">Bu rezervasyonu iptal etmek istediğinize emin misiniz?</span>
+           <div className="flex gap-2 justify-end">
+               <button 
+                 onClick={() => toast.dismiss(t.id)}
+                 className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded text-gray-600"
+               >
+                 Vazgeç
+               </button>
+               <button 
+                 onClick={() => {
+                     toast.dismiss(t.id);
+                     handleStatusChange(bookingId, 'cancelled');
+                 }}
+                 className="px-3 py-1 text-sm bg-red-600 hover:bg-red-700 rounded text-white"
+               >
+                 İptal Et
+               </button>
+           </div>
+        </div>
+      ), { duration: 5000, icon: '⚠️' });
   };
 
   // --- RENDER HELPERS ---
@@ -212,7 +375,7 @@ export default function AdminDashboard() {
   const SidebarItem = ({ id, icon: Icon, label }: { id: any, icon: any, label: string }) => (
     <button
       onClick={() => setActiveTab(id)}
-      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${ 
         activeTab === id 
           ? 'bg-[var(--gold)] text-white shadow-md' 
           : 'text-gray-600 hover:bg-gray-100'
@@ -225,6 +388,56 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
+      <Toaster 
+        position="top-center"
+        reverseOrder={false}
+        gutter={8}
+        containerClassName=""
+        containerStyle={{
+            zIndex: 99999, // Ensure it's above everything including modals
+        }}
+        toastOptions={{
+            // Define default options
+            className: '',
+            duration: 4000,
+            style: {
+                background: '#ffffff',
+                color: '#1f2937', // Gray-800
+                border: '1px solid #e5e7eb', // Gray-200
+                padding: '16px',
+                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)', // Shadow-lg
+                fontSize: '14px',
+                fontWeight: '500',
+                borderRadius: '12px',
+            },
+            // Default options for specific types
+            success: {
+                duration: 3000,
+                iconTheme: {
+                    primary: '#10b981', // Green-500
+                    secondary: '#ffffff',
+                },
+                style: {
+                    borderLeft: '4px solid #10b981',
+                }
+            },
+            error: {
+                duration: 5000,
+                iconTheme: {
+                    primary: '#ef4444', // Red-500
+                    secondary: '#ffffff',
+                },
+                style: {
+                    borderLeft: '4px solid #ef4444',
+                }
+            },
+            loading: {
+                style: {
+                    borderLeft: '4px solid #d4a373', // Gold
+                }
+            }
+        }}
+      />
       {/* Sidebar */}
       <aside className="w-64 bg-white border-r border-gray-200 fixed h-full z-10 hidden md:block">
         <div className="p-6 border-b border-gray-100">
@@ -313,11 +526,12 @@ export default function AdminDashboard() {
                                         <div key={booking.id} className="border border-green-100 bg-green-50/50 p-4 rounded-lg flex justify-between items-center">
                                             <div>
                                                 <p className="font-bold text-gray-800">{booking.customer_name}</p>
+                                                {booking.customer_phone && <p className="text-xs text-gray-500">{booking.customer_phone}</p>}
                                                 <p className="text-sm text-gray-500">{locationInfo}</p>
                                                 <p className="text-xs text-gray-400 mt-1">Çıkış: {booking.check_out}</p>
                                             </div>
                                             <button 
-                                                onClick={() => handleStatusChange(booking.id, 'checked_out')}
+                                                onClick={() => openCheckOut(booking.id)}
                                                 className="bg-white text-red-600 px-3 py-1.5 rounded border border-red-200 hover:bg-red-50 text-sm font-medium flex items-center gap-1"
                                             >
                                                 <LogOut className="w-4 h-4" /> Çıkış Yap
@@ -353,7 +567,12 @@ export default function AdminDashboard() {
                                          
                                          return (
                                             <tr key={booking.id} className="hover:bg-gray-50">
-                                                <td className="p-3 font-medium text-gray-900">{booking.customer_name}</td>
+                                                <td className="p-3">
+                                                    <p className="font-medium text-gray-900">{booking.customer_name}</p>
+                                                    {booking.customer_phone && (
+                                                        <p className="text-xs text-gray-400">{booking.customer_phone}</p>
+                                                    )}
+                                                </td>
                                                 <td className="p-3 text-gray-600">{roomName}</td>
                                                 <td className="p-3 text-gray-500">
                                                     {booking.check_in} <span className="text-gray-300">/</span> {booking.check_out}
@@ -365,10 +584,19 @@ export default function AdminDashboard() {
                                                 </td>
                                                 <td className="p-3 text-right flex justify-end gap-2">
                                                     {booking.room_status === 'pending' && (
-                                                        <button onClick={() => handleStatusChange(booking.id, 'confirmed')} className="text-blue-600 hover:bg-blue-50 px-2 py-1 rounded">Onayla</button>
+                                                        <>
+                                                            <button 
+                                                                onClick={() => confirmCancellation(booking.id)} 
+                                                                className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors"
+                                                                title="İptal Et"
+                                                            >
+                                                                <Trash2 className="w-4 h-4" />
+                                                            </button>
+                                                            <button onClick={() => handleStatusChange(booking.id, 'confirmed')} className="text-blue-600 hover:bg-blue-50 px-2 py-1 rounded">Onayla</button>
+                                                        </>
                                                     )}
                                                     <button 
-                                                        onClick={() => handleStatusChange(booking.id, 'checked_in')}
+                                                        onClick={() => openCheckIn(booking.id)}
                                                         className="bg-[var(--off-black)] text-white px-3 py-1.5 rounded hover:bg-black flex items-center gap-1 ml-auto"
                                                     >
                                                         <LogIn className="w-3 h-3" /> Giriş
@@ -623,7 +851,8 @@ export default function AdminDashboard() {
                         <input 
                           type="number" 
                           value={formData.quantity || ''} 
-                          onChange={(e) => setFormData({...formData, quantity: parseInt(e.target.value)})}
+                          onChange={(e) => setFormData({...formData, quantity: parseInt(e.target.value)})
+                          }
                           className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[var(--gold)] outline-none"
                           required 
                         />
@@ -679,6 +908,126 @@ export default function AdminDashboard() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* CHECK-IN MODAL */}
+      {checkInModal.isOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+             <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+               <h3 className="font-bold text-lg text-gray-800 flex items-center gap-2">
+                 <LogIn className="w-5 h-5 text-[var(--gold)]" /> Misafir Girişi (Check-in)
+               </h3>
+               <button onClick={() => setCheckInModal({isOpen: false, bookingId: null})} className="text-gray-400 hover:text-gray-600"><X className="w-5 h-5" /></button>
+             </div>
+             <form onSubmit={submitCheckIn} className="p-6 space-y-4">
+                <div>
+                   <label className="block text-sm font-medium text-gray-700 mb-1">TC Kimlik / Pasaport No</label>
+                   <input 
+                     type="text" 
+                     required
+                     className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[var(--gold)] outline-none"
+                     value={checkInForm.guest_id_number}
+                     onChange={(e) => setCheckInForm({...checkInForm, guest_id_number: e.target.value})}
+                   />
+                </div>
+                <div>
+                   <label className="block text-sm font-medium text-gray-700 mb-1">Uyruk</label>
+                   <input 
+                     type="text" 
+                     required
+                     className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[var(--gold)] outline-none"
+                     value={checkInForm.guest_nationality}
+                     onChange={(e) => setCheckInForm({...checkInForm, guest_nationality: e.target.value})}
+                     placeholder="Örn: TC, Almanya..."
+                   />
+                </div>
+                <div>
+                   <label className="block text-sm font-medium text-gray-700 mb-1">Notlar (Opsiyonel)</label>
+                   <textarea 
+                     className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[var(--gold)] outline-none"
+                     value={checkInForm.check_in_notes}
+                     onChange={(e) => setCheckInForm({...checkInForm, check_in_notes: e.target.value})}
+                     placeholder="Özel istekler, oda numarası teyidi vb."
+                   />
+                </div>
+                <div className="flex items-center gap-2 mt-2">
+                    <input 
+                      type="checkbox" 
+                      id="paymentReceived"
+                      checked={checkInForm.payment_received}
+                      onChange={(e) => setCheckInForm({...checkInForm, payment_received: e.target.checked})}
+                      className="w-4 h-4 text-[var(--gold)] focus:ring-[var(--gold)] border-gray-300 rounded"
+                    />
+                    <label htmlFor="paymentReceived" className="text-sm font-medium text-gray-700">Ödeme Tahsil Edildi</label>
+                </div>
+                
+                <div className="pt-4 flex gap-3">
+                   <button type="button" onClick={() => setCheckInModal({isOpen: false, bookingId: null})} className="flex-1 py-2 bg-gray-100 rounded-lg font-medium text-gray-700 hover:bg-gray-200">İptal</button>
+                   <button type="submit" disabled={loading} className="flex-1 py-2 bg-[var(--gold)] text-white rounded-lg font-bold hover:bg-yellow-600 shadow-lg transition-colors">
+                     {loading ? 'İşleniyor...' : 'Girişi Tamamla'}
+                   </button>
+                </div>
+             </form>
+          </div>
+        </div>
+      )}
+
+      {/* CHECK-OUT MODAL */}
+      {checkOutModal.isOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+             <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+               <h3 className="font-bold text-lg text-gray-800 flex items-center gap-2">
+                 <LogOut className="w-5 h-5 text-red-600" /> Misafir Çıkışı (Check-out)
+               </h3>
+               <button onClick={() => setCheckOutModal({isOpen: false, bookingId: null})} className="text-gray-400 hover:text-gray-600"><X className="w-5 h-5" /></button>
+             </div>
+             <form onSubmit={submitCheckOut} className="p-6 space-y-4">
+                <div className="bg-yellow-50 p-3 rounded-lg border border-yellow-200 text-sm text-yellow-800 mb-4">
+                   Lütfen oda kontrolünü yaptığınızdan ve anahtarı teslim aldığınızdan emin olun.
+                </div>
+                <div>
+                   <label className="block text-sm font-medium text-gray-700 mb-1">Ekstra Harcamalar (Minibar vb.)</label>
+                   <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">₺</span>
+                        <input 
+                            type="number" 
+                            className="w-full pl-8 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-[var(--gold)] outline-none"
+                            value={checkOutForm.extra_charges}
+                            onChange={(e) => setCheckOutForm({...checkOutForm, extra_charges: parseFloat(e.target.value) || 0})}
+                        />
+                   </div>
+                </div>
+                <div>
+                   <label className="block text-sm font-medium text-gray-700 mb-1">Hasar / Olay Raporu</label>
+                   <textarea 
+                     className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[var(--gold)] outline-none"
+                     value={checkOutForm.damage_report}
+                     onChange={(e) => setCheckOutForm({...checkOutForm, damage_report: e.target.value})}
+                     placeholder="Oda durumu hakkında notlar..."
+                   />
+                </div>
+                <div className="flex items-center gap-2 mt-2">
+                    <input 
+                      type="checkbox" 
+                      id="paymentSettled"
+                      required
+                      checked={checkOutForm.payment_settled}
+                      onChange={(e) => setCheckOutForm({...checkOutForm, payment_settled: e.target.checked})}
+                      className="w-4 h-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+                    />
+                    <label htmlFor="paymentSettled" className="text-sm font-bold text-gray-800">Tüm ödemeler alındı ve hesap kapatıldı</label>
+                </div>
+                
+                <div className="pt-4 flex gap-3">
+                   <button type="button" onClick={() => setCheckOutModal({isOpen: false, bookingId: null})} className="flex-1 py-2 bg-gray-100 rounded-lg font-medium text-gray-700 hover:bg-gray-200">İptal</button>
+                   <button type="submit" disabled={loading} className="flex-1 py-2 bg-red-600 text-white rounded-lg font-bold hover:bg-red-700 shadow-lg transition-colors">
+                     {loading ? 'İşleniyor...' : 'Çıkışı Onayla'}
+                   </button>
+                </div>
+             </form>
           </div>
         </div>
       )}
