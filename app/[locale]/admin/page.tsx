@@ -19,8 +19,12 @@ import {
   User,
   LogIn,
   LogOut,
-  Image as ImageIcon
+  Image as ImageIcon,
+  PieChart, // Added
+  MessageSquare // Added
 } from 'lucide-react';
+import ReportsTab from '@/src/components/admin/ReportsTab';
+import ChatPanel from '@/src/components/admin/ChatPanel';
 import {
   getHotels,
   getRooms,
@@ -41,7 +45,7 @@ import { logout } from '../login/actions';
 import toast, { Toaster } from 'react-hot-toast';
 
 export default function AdminDashboard() {
-  const [activeTab, setActiveTab] = useState<'live' | 'hotels' | 'rooms' | 'campaigns'>('live');
+  const [activeTab, setActiveTab] = useState<'live' | 'hotels' | 'rooms' | 'campaigns' | 'reports' | 'chat'>('live');
   const [hotels, setHotels] = useState<Hotel[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -447,6 +451,8 @@ export default function AdminDashboard() {
         <nav className="p-4 flex flex-col h-[calc(100vh-120px)]">
           <div className="space-y-2 flex-1">
             <SidebarItem id="live" icon={Activity} label="Canlı Durum" />
+            <SidebarItem id="chat" icon={MessageSquare} label="Canlı Destek" />
+            <SidebarItem id="reports" icon={PieChart} label="Raporlar" />
             <SidebarItem id="hotels" icon={HotelIcon} label="Oteller" />
             <SidebarItem id="rooms" icon={BedDouble} label="Odalar" />
             <SidebarItem id="campaigns" icon={Tags} label="Kampanyalar" />
@@ -470,15 +476,20 @@ export default function AdminDashboard() {
           <div>
             <h2 className="text-3xl font-bold text-gray-800 font-serif">
               {activeTab === 'live' && 'Canlı Otel Durumu'}
+              {activeTab === 'chat' && 'Canlı Destek Merkezi'}
+              {activeTab === 'reports' && 'Raporlar ve Analitik'}
               {activeTab === 'hotels' && 'Otel Yönetimi'}
               {activeTab === 'rooms' && 'Oda & Fiyat Yönetimi'}
               {activeTab === 'campaigns' && 'Kampanyalar & İndirimler'}
             </h2>
             <p className="text-gray-500 mt-1">
-                {activeTab === 'live' ? 'Anlık misafir ve rezervasyon takibi.' : 'İçeriklerinizi buradan yönetebilirsiniz.'}
+                {activeTab === 'live' ? 'Anlık misafir ve rezervasyon takibi.' : 
+                 activeTab === 'reports' ? 'Gelir ve doluluk istatistikleri.' :
+                 activeTab === 'chat' ? 'Web sitesi ziyaretçileriyle anlık mesajlaşma.' :
+                 'İçeriklerinizi buradan yönetebilirsiniz.'}
             </p>
           </div>
-          {activeTab !== 'campaigns' && activeTab !== 'live' && (
+          {activeTab !== 'campaigns' && activeTab !== 'live' && activeTab !== 'reports' && activeTab !== 'chat' && (
             <button 
               onClick={() => handleOpenModal('add')}
               className="flex items-center gap-2 bg-[var(--off-black)] text-white px-5 py-2.5 rounded-lg hover:bg-black transition-colors shadow-lg"
@@ -616,6 +627,12 @@ export default function AdminDashboard() {
                     </div>
                 </div>
             )}
+            
+            {/* REPORTS TAB */}
+            {activeTab === 'reports' && <ReportsTab bookings={bookings} rooms={rooms} />}
+
+            {/* CHAT TAB */}
+            {activeTab === 'chat' && <ChatPanel />}
 
             {/* HOTELS LIST */}
             {activeTab === 'hotels' && (
