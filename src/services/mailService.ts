@@ -32,26 +32,48 @@ export async function sendEmail(to: string, subject: string, html: string) {
 }
 
 // Template generator based on status
-function getEmailTemplate(status: string, customerName: string, bookingId?: string) {
+function getEmailTemplate(status: string, customerName: string, bookingId?: string, cancellationToken?: string) {
   const styles = {
     container: "font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e7eb; border-radius: 12px;",
     header: "color: #d4a373; text-align: center;",
     text: "color: #374151; line-height: 1.6;",
+    button: "display: inline-block; background-color: #ef4444; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold; margin-top: 15px;",
     footer: "text-align: center; color: #9ca3af; font-size: 12px; margin-top: 30px;",
     highlight: "font-weight: bold; color: #d4a373;"
   };
 
   let title = "Rezervasyon Durumu";
   let message = "";
+  let actionHtml = "";
+
+  // Base URL (assuming localhost for dev or production URL from env)
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  const manageLink = cancellationToken ? `${baseUrl}/tr/reservation/manage/${cancellationToken}` : '#';
 
   switch (status) {
     case 'pending':
       title = "Rezervasyon Talebiniz Alındı";
       message = `Sayın <strong>${customerName}</strong>,<br><br>Rezervasyon talebiniz tarafımıza ulaşmıştır. Müsaitlik durumunu kontrol ettikten sonra size en kısa sürede onay veya bilgilendirme maili göndereceğiz.<br><br>Talep ID: #${bookingId}`;
+      if (cancellationToken) {
+        actionHtml = `
+          <div style="text-align: center; margin: 20px 0;">
+            <p style="font-size: 14px; color: #6b7280; margin-bottom: 10px;">Rezervasyonunuzu iptal etmeniz gerekirse:</p>
+            <a href="${manageLink}" style="${styles.button}">Rezervasyonu Yönet / İptal Et</a>
+          </div>
+        `;
+      }
       break;
     case 'confirmed':
       title = "Rezervasyonunuz Onaylandı!";
       message = `Sayın <strong>${customerName}</strong>,<br><br>Solis Hotel'i tercih ettiğiniz için teşekkür ederiz. Rezervasyon işleminiz başarıyla <strong>ONAYLANMIŞTIR</strong>.<br><br>Sizi otelimizde ağırlamak için sabırsızlanıyoruz.`;
+      if (cancellationToken) {
+        actionHtml = `
+          <div style="text-align: center; margin: 20px 0;">
+             <p style="font-size: 14px; color: #6b7280; margin-bottom: 10px;">Planlarınız değişirse rezervasyonunuzu buradan yönetebilirsiniz:</p>
+            <a href="${manageLink}" style="${styles.button}">Rezervasyonu Yönet</a>
+          </div>
+        `;
+      }
       break;
     case 'cancelled':
       title = "Rezervasyon İptali";
@@ -71,6 +93,8 @@ function getEmailTemplate(status: string, customerName: string, bookingId?: stri
       <h2 style="${styles.header}">${title}</h2>
       <p style="${styles.text}">${message}</p>
       
+      ${actionHtml}
+
       <div style="background-color: #f9fafb; padding: 15px; border-radius: 8px; margin: 20px 0;">
         <p style="margin: 0; color: #4b5563;">Herhangi bir sorunuz olursa yanıtlayabilirsiniz.</p>
       </div>
@@ -83,8 +107,8 @@ function getEmailTemplate(status: string, customerName: string, bookingId?: stri
   `;
 }
 
-export async function sendBookingStatusEmail(email: string, customerName: string, status: string, bookingId?: string) {
-  const html = getEmailTemplate(status, customerName, bookingId);
+export async function sendBookingStatusEmail(email: string, customerName: string, status: string, bookingId?: string, cancellationToken?: string) {
+  const html = getEmailTemplate(status, customerName, bookingId, cancellationToken);
   // Extract title from HTML simply or define map
   let subject = "Solis Hotel - Rezervasyon Bilgilendirme";
   if (status === 'confirmed') subject = "Rezervasyonunuz Onaylandı! - Solis Hotel";

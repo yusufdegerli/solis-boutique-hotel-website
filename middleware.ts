@@ -22,7 +22,7 @@ export default async function middleware(request: NextRequest) {
   }
 
   // 2. Supabase session update and check
-  const { response, user } = await updateSession(request);
+  const { response, user, supabase } = await updateSession(request);
 
   // 3. Protected Route Logic
   const isProtectedRoute = path.includes('/admin');
@@ -39,12 +39,17 @@ export default async function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // --- ADMIN AUTHORIZATION CHECK ---
-  const adminEmailsEnv = process.env.ADMIN_EMAILS || '';
-  const ADMIN_EMAILS = adminEmailsEnv.split(',').map(email => email.trim()).filter(email => email.length > 0);
-  
+  // --- ADMIN AUTHORIZATION CHECK (DB BASED) ---
   if (isProtectedRoute && user) {
-    if (!user.email || !ADMIN_EMAILS.includes(user.email)) {
+     const { data: roleData } = await supabase
+       .from('user_roles')
+       .select('role')
+       .eq('user_id', user.id)
+       .single();
+     
+     const role = roleData?.role;
+
+     if (role !== 'admin') {
        // User is logged in but NOT authorized
        const locale = getLocale();
        const homeUrl = new URL(`/${locale}`, request.url);
