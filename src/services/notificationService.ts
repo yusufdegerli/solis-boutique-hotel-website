@@ -30,6 +30,18 @@ export async function sendBookingNotification(booking: {
     console.log(`[Notification] Skipped Email: No valid email for ${booking.customer_name}`);
   }
 
+  // 1.1 Admin Notification (Optional)
+  const adminEmail = process.env.ADMIN_EMAIL;
+  if (adminEmail) {
+    await sendBookingStatusEmail(
+        adminEmail,
+        `${booking.customer_name} (Admin Copy)`,
+        status,
+        booking.id?.toString(),
+        booking.cancellation_token
+    ).catch(err => console.error('Admin Email Error:', err));
+  }
+
   // 2. SMS Notification (Mock / Log)
   if (booking.customer_phone) {
     const smsRes = await sendMockSMS(

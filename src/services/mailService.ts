@@ -13,7 +13,7 @@ export async function sendEmail(to: string, subject: string, html: string) {
 
   try {
     const { data, error } = await resend.emails.send({
-      from: 'Solis Hotel <onboarding@resend.dev>',
+      from: process.env.EMAIL_FROM || 'Solis Hotel <onboarding@resend.dev>',
       to: [to],
       subject: subject,
       html: html,
@@ -47,7 +47,11 @@ function getEmailTemplate(status: string, customerName: string, bookingId?: stri
   let actionHtml = "";
 
   // Base URL (assuming localhost for dev or production URL from env)
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  // Vercel usually sets NEXT_PUBLIC_VERCEL_URL but it doesn't include https://
+  const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
+  const domain = process.env.NEXT_PUBLIC_APP_URL || (process.env.NEXT_PUBLIC_VERCEL_URL ? `${protocol}://${process.env.NEXT_PUBLIC_VERCEL_URL}` : 'http://localhost:3000');
+  
+  const baseUrl = domain.startsWith('http') ? domain : `${protocol}://${domain}`;
   const manageLink = cancellationToken ? `${baseUrl}/tr/reservation/manage/${cancellationToken}` : '#';
 
   switch (status) {
