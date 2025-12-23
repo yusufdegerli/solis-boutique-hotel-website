@@ -1,16 +1,12 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { createClient } from '@supabase/supabase-js';
-import { ChatMessage, ChatSession, getActiveSessions, getMessages, sendMessage, closeSession } from '@/src/services/chatService';
+import { supabase } from '@/lib/supabaseClient';
+import { ChatMessage, ChatSession, getActiveSessions, getMessages, sendMessage, closeSession, markMessagesAsRead } from '@/src/services/chatService';
 import { Send, User, Clock, CheckCircle, XCircle, Search, MessageSquare } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, anonKey);
-
-export default function ChatPanel() {
+export default function ChatPanel({ onMessagesRead }: { onMessagesRead?: () => void }) {
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [selectedSession, setSelectedSession] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -24,7 +20,7 @@ export default function ChatPanel() {
     fetchSessions();
 
     // Realtime listener for new sessions or updates
-    const channel = supabase
+    const sessionChannel = supabase
         .channel('admin-chat-list')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'Chat_Sessions' }, (payload) => {
             if (payload.eventType === 'UPDATE') {
@@ -36,7 +32,7 @@ export default function ChatPanel() {
                     if (selectedSession === updatedSession.id) setSelectedSession(null);
                 } else {
                     // If active update (e.g. name change), update in place
-                    setSessions(prev => prev.map(s => s.id === updatedSession.id ? { ...s, ...updatedSession } : s));
+                    setSessions(prev => prev.map(s => s.id === updatedSession.id ? { ...s, ...updatedSession, unread_count: s.unread_count } : s));
                 }
             } else {
                 // For INSERT/DELETE, fetch fresh list
@@ -44,9 +40,48 @@ export default function ChatPanel() {
             }
         })
         .subscribe();
+
+    // Global Message Listener for Unread Counts
+    const messageChannel = supabase
+        .channel('admin-global-messages')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'Chat_Messages' }, (payload) => {
+            const newMsg = payload.new as ChatMessage;
+            if (newMsg.sender === 'user') {
+                setSessions(prev => prev.map(s => {
+                    if (s.id === newMsg.session_id) {
+                        // If this session is currently open, don't increase count (it will be read immediately)
+                        // Actually, better to increase and let the separate logic handle the read status if focused.
+                        // But since we can't easily check "is focused" inside this callback without refs,
+                        // we'll increment if it's NOT the selected session ID (we need a ref for selectedSession to be safe or use functional state update correctly)
+                        
+                        // NOTE: using selectedSession here would be stale due to closure. 
+                        // So we increment regardless, and if it IS selected, the other effect cleans it up? 
+                        // Or better: we rely on fetchSessions for initial load, and here just increment.
+                        return { ...s, unread_count: (s.unread_count || 0) + 1 };
+                    }
+                    return s;
+                }));
+            }
+        })
+        .subscribe();
     
-    return () => { supabase.removeChannel(channel); }
+    return () => { 
+        supabase.removeChannel(sessionChannel); 
+        supabase.removeChannel(messageChannel);
+    }
   }, []);
+
+  // Effect to clear unread count if we are looking at the session
+  useEffect(() => {
+      if (selectedSession) {
+          // Reset count locally
+          setSessions(prev => prev.map(s => s.id === selectedSession ? { ...s, unread_count: 0 } : s));
+          // Mark in DB
+          markMessagesAsRead(selectedSession).then(() => {
+              if (onMessagesRead) onMessagesRead();
+          });
+      }
+  }, [selectedSession, messages]); // Also run when new messages arrive while selected
 
   const fetchSessions = async () => {
       try {
@@ -79,6 +114,12 @@ export default function ChatPanel() {
                 if (prev.find(m => m.id === newMsg.id)) return prev;
                 return [...prev, newMsg];
             });
+            // Also mark as read immediately if we are viewing it
+            if (newMsg.sender === 'user') {
+                 markMessagesAsRead(selectedSession).then(() => {
+                     if (onMessagesRead) onMessagesRead();
+                 });
+            }
         })
         .subscribe();
 
@@ -89,6 +130,11 @@ export default function ChatPanel() {
       try {
           const msgs = await getMessages(id);
           setMessages(msgs);
+          // Mark as read on load
+          markMessagesAsRead(id).then(() => {
+              if (onMessagesRead) onMessagesRead();
+          });
+          setSessions(prev => prev.map(s => s.id === id ? { ...s, unread_count: 0 } : s));
       } catch (err) {
           toast.error("Mesajlar yüklenemedi");
       }
@@ -171,7 +217,14 @@ export default function ChatPanel() {
                             }`}
                         >
                             <div className="flex justify-between items-start mb-1">
-                                <span className="font-bold text-gray-900 text-sm truncate pr-2">{session.customer_name}</span>
+                                <span className="font-bold text-gray-900 text-sm truncate pr-2 flex items-center gap-2">
+                                    {session.customer_name}
+                                    {session.unread_count && session.unread_count > 0 ? (
+                                        <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                                            {session.unread_count}
+                                        </span>
+                                    ) : null}
+                                </span>
                                 <span className="text-[10px] text-gray-400 whitespace-nowrap">
                                     {new Date(session.last_message_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                                 </span>

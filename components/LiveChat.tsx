@@ -78,7 +78,8 @@ export default function LiveChat({ locale }: { locale: string }) {
                 session_id: session.id,
                 sender: 'admin',
                 message: initialMsg,
-                created_at: new Date().toISOString()
+                created_at: new Date().toISOString(),
+                is_read: true
             }]);
         }
     });
@@ -149,7 +150,8 @@ export default function LiveChat({ locale }: { locale: string }) {
                 session_id: id,
                 sender: 'admin',
                 message: locale === 'tr' ? 'Tekrar Hoş Geldiniz!' : 'Welcome back!',
-                created_at: new Date().toISOString()
+                created_at: new Date().toISOString(),
+                is_read: true
             }]);
           }
       } catch (err) {

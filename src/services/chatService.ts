@@ -1,8 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, anonKey);
+import { supabase } from '@/lib/supabaseClient';
 
 export interface ChatMessage {
     id: number;
@@ -10,6 +6,7 @@ export interface ChatMessage {
     sender: 'user' | 'admin';
     message: string;
     created_at: string;
+    is_read: boolean;
 }
 
 export interface ChatSession {
@@ -49,6 +46,18 @@ export async function sendMessage(sessionId: string, sender: 'user' | 'admin', m
     return data;
 }
 
+// Admin: Mark messages as read
+export async function markMessagesAsRead(sessionId: string) {
+    const { error } = await supabase
+        .from('Chat_Messages')
+        .update({ is_read: true })
+        .eq('session_id', sessionId)
+        .eq('sender', 'user') // Only mark user messages as read
+        .eq('is_read', false);
+
+    if (error) console.error('Error marking messages as read:', error);
+}
+
 // Shared: Get messages for a session
 export async function getMessages(sessionId: string) {
     const { data, error } = await supabase
@@ -81,7 +90,7 @@ export async function updateCustomerName(sessionId: string, name: string) {
 export async function getActiveSessions() {
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
-    const { data, error } = await supabase
+    const { data: sessions, error } = await supabase
         .from('Chat_Sessions')
         .select('*')
         .eq('status', 'active')
@@ -89,7 +98,21 @@ export async function getActiveSessions() {
         .order('last_message_at', { ascending: false });
 
     if (error) throw error;
-    return data as ChatSession[];
+
+    // Fetch unread counts for each session
+    // Note: This could be optimized with a stored procedure or view, but for small scale this is fine.
+    const sessionsWithUnread = await Promise.all(sessions.map(async (s) => {
+        const { count } = await supabase
+            .from('Chat_Messages')
+            .select('*', { count: 'exact', head: true })
+            .eq('session_id', s.id)
+            .eq('sender', 'user')
+            .eq('is_read', false);
+        
+        return { ...s, unread_count: count || 0 };
+    }));
+
+    return sessionsWithUnread as ChatSession[];
 }
 
 // Admin: Close session

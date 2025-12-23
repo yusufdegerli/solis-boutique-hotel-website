@@ -74,6 +74,41 @@ export default function AdminDashboard() {
       damage_report: '',
       payment_settled: false
   });
+  
+  // --- NEW: Global Chat Unread Count ---
+  const [totalUnreadCount, setTotalUnreadCount] = useState(0);
+
+  const fetchUnreadCount = async () => {
+     const { count, error } = await supabase
+         .from('Chat_Messages')
+         .select('*', { count: 'exact', head: true })
+         .eq('is_read', false)
+         .eq('sender', 'user');
+     
+     if (!error && count !== null) {
+         setTotalUnreadCount(count);
+     }
+  };
+
+  useEffect(() => {
+     fetchUnreadCount();
+
+     // Realtime Listener for Unread Count Updates
+     const channel = supabase
+        .channel('admin-global-badge')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'Chat_Messages' }, (payload) => {
+            // Re-fetch count on any change to be accurate (simplest way to handle insert/update/delete correctly)
+            // Or optimize: 
+            // INSERT: if new msg is user & unread -> +1
+            // UPDATE: if msg becomes read -> -1
+            
+            // Re-fetching is safer against edge cases and reasonably fast for this scale.
+            fetchUnreadCount();
+        })
+        .subscribe();
+
+     return () => { supabase.removeChannel(channel); }
+  }, []);
 
   const openCheckIn = (bookingId: string) => {
       setCheckInForm({ guest_id_number: '', guest_nationality: '', check_in_notes: '', payment_received: false });
@@ -376,10 +411,10 @@ export default function AdminDashboard() {
 
   // --- RENDER HELPERS ---
 
-  const SidebarItem = ({ id, icon: Icon, label }: { id: any, icon: any, label: string }) => (
+  const SidebarItem = ({ id, icon: Icon, label, badge }: { id: any, icon: any, label: string, badge?: number }) => (
     <button
       onClick={() => setActiveTab(id)}
-      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${ 
+      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all relative ${ 
         activeTab === id 
           ? 'bg-[var(--gold)] text-white shadow-md' 
           : 'text-gray-600 hover:bg-gray-100'
@@ -387,6 +422,13 @@ export default function AdminDashboard() {
     >
       <Icon className="w-5 h-5" />
       <span className="font-medium">{label}</span>
+      {badge && badge > 0 ? (
+          <span className={`ml-auto text-xs font-bold px-2 py-0.5 rounded-full ${
+              activeTab === id ? 'bg-white text-[var(--gold)]' : 'bg-red-500 text-white'
+          }`}>
+              {badge}
+          </span>
+      ) : null}
     </button>
   );
 
@@ -451,7 +493,7 @@ export default function AdminDashboard() {
         <nav className="p-4 flex flex-col h-[calc(100vh-120px)]">
           <div className="space-y-2 flex-1">
             <SidebarItem id="live" icon={Activity} label="Canlı Durum" />
-            <SidebarItem id="chat" icon={MessageSquare} label="Canlı Destek" />
+            <SidebarItem id="chat" icon={MessageSquare} label="Canlı Destek" badge={totalUnreadCount} />
             <SidebarItem id="reports" icon={PieChart} label="Raporlar" />
             <SidebarItem id="hotels" icon={HotelIcon} label="Oteller" />
             <SidebarItem id="rooms" icon={BedDouble} label="Odalar" />
@@ -632,7 +674,7 @@ export default function AdminDashboard() {
             {activeTab === 'reports' && <ReportsTab bookings={bookings} rooms={rooms} />}
 
             {/* CHAT TAB */}
-            {activeTab === 'chat' && <ChatPanel />}
+            {activeTab === 'chat' && <ChatPanel onMessagesRead={fetchUnreadCount} />}
 
             {/* HOTELS LIST */}
             {activeTab === 'hotels' && (
