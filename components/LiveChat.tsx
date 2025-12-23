@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { usePathname } from "next/navigation";
 import { startChatSession, sendMessage, getMessages, updateCustomerName, ChatMessage } from "@/src/services/chatService";
 import { createClient } from "@supabase/supabase-js";
+import toast from "react-hot-toast";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -21,10 +22,18 @@ export default function LiveChat({ locale }: { locale: string }) {
   
   // New State for Name Flow
   const [isNameSet, setIsNameSet] = useState(false);
-  const [isChatClosed, setIsChatClosed] = useState(false); // NEW
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
+
+  // Helper to reset session
+  const resetSession = () => {
+    localStorage.removeItem('solis_chat_session_id');
+    localStorage.removeItem('solis_chat_customer_name');
+    setSessionId(null);
+    setMessages([]);
+    setIsNameSet(false);
+  };
 
   // Load session from local storage or create new on first open
   useEffect(() => {
@@ -33,33 +42,55 @@ export default function LiveChat({ locale }: { locale: string }) {
         const storedName = localStorage.getItem('solis_chat_customer_name');
 
         if (storedSession) {
-            setSessionId(storedSession);
-            setIsNameSet(!!storedName); 
-            loadMessages(storedSession);
-        } else {
-            // Create new session
-            startChatSession('Ziyaretçi').then(session => {
-                if (session) {
-                    setSessionId(session.id);
-                    localStorage.setItem('solis_chat_session_id', session.id);
-                    
-                    // Add initial prompt
-                    const initialMsg = locale === 'tr' 
-                        ? 'Merhaba! Size daha iyi yardımcı olabilmek için isminizi öğrenebilir miyim?' 
-                        : 'Hello! May I know your name to assist you better?';
-                    
-                    setMessages([{
-                        id: 0,
-                        session_id: session.id,
-                        sender: 'admin',
-                        message: initialMsg,
-                        created_at: new Date().toISOString()
-                    }]);
+            // First verify if this session is still valid/active
+            checkSessionStatus(storedSession).then(isValid => {
+                if (isValid) {
+                    setSessionId(storedSession);
+                    setIsNameSet(!!storedName); 
+                    loadMessages(storedSession);
+                } else {
+                    // Invalid/Closed session found in storage, clear it and create new
+                    resetSession();
+                    // This will trigger the effect again because sessionId is null, 
+                    // but we need to ensure we don't loop. The checkSessionStatus ensures that.
+                    createNewSession();
                 }
             });
+        } else {
+            createNewSession();
         }
     }
-  }, [isOpen]);
+  }, [isOpen, sessionId]);
+
+  const createNewSession = () => {
+    startChatSession('Ziyaretçi').then(session => {
+        if (session) {
+            setSessionId(session.id);
+            localStorage.setItem('solis_chat_session_id', session.id);
+            
+            // Add initial prompt
+            const initialMsg = locale === 'tr' 
+                ? 'Merhaba! Size daha iyi yardımcı olabilmek için isminizi öğrenebilir miyim?' 
+                : 'Hello! May I know your name to assist you better?';
+            
+            setMessages([{
+                id: 0,
+                session_id: session.id,
+                sender: 'admin',
+                message: initialMsg,
+                created_at: new Date().toISOString()
+            }]);
+        }
+    });
+  };
+
+  const checkSessionStatus = async (id: string) => {
+      const { data: session } = await supabase.from('Chat_Sessions').select('status').eq('id', id).single();
+      if (session && session.status === 'closed') {
+          return false;
+      }
+      return true;
+  };
 
   // Realtime subscription
   useEffect(() => {
@@ -93,10 +124,10 @@ export default function LiveChat({ locale }: { locale: string }) {
         }, (payload) => {
             const updatedSession = payload.new as any;
             if (updatedSession.status === 'closed') {
-                setIsChatClosed(true);
-                // Clear local storage so user can start new chat later if they refresh
-                localStorage.removeItem('solis_chat_session_id');
-                // Optional: localStorage.removeItem('solis_chat_customer_name');
+                // Admin closed the chat
+                toast.error(locale === 'tr' ? 'Sohbet oturumunuzun süresi doldu. Yeni sohbet oluşturuluyor.' : 'Chat session expired. Starting new chat.');
+                resetSession();
+                // createNewSession will be triggered by the main useEffect since sessionId became null and isOpen is true
             }
         })
         .subscribe();
@@ -108,21 +139,11 @@ export default function LiveChat({ locale }: { locale: string }) {
   }, [sessionId]);
 
   const loadMessages = async (id: string) => {
-      // Check session status first
-      const { data: session } = await supabase.from('Chat_Sessions').select('status').eq('id', id).single();
-      if (session && session.status === 'closed') {
-          setIsChatClosed(true);
-          localStorage.removeItem('solis_chat_session_id');
-          // Don't load messages if closed, or maybe load them read-only? 
-          // Let's load them read-only for history.
-      }
-
       try {
           const msgs = await getMessages(id);
           if (msgs && msgs.length > 0) {
             setMessages(msgs);
           } else {
-             // Fallback if empty (shouldn't happen often)
              setMessages([{
                 id: 0,
                 session_id: id,
@@ -247,28 +268,22 @@ export default function LiveChat({ locale }: { locale: string }) {
             </div>
 
             {/* Input Area */}
-            {isChatClosed ? (
-                <div className="p-4 bg-gray-100 text-center text-sm text-gray-500 border-t border-gray-200">
-                    {locale === 'tr' ? 'Bu sohbet sona ermiştir.' : 'This chat has ended.'}
-                </div>
-            ) : (
-                <form onSubmit={handleSend} className="p-4 bg-white border-t border-gray-100 flex gap-2">
-                <input
-                    type="text"
-                    value={inputText}
-                    onChange={(e) => setInputText(e.target.value)}
-                    placeholder={locale === 'tr' ? "Mesajınızı yazın..." : "Type your message..."}
-                    className="flex-1 bg-gray-100 border-none rounded-full px-4 py-2 text-sm focus:ring-2 focus:ring-[var(--gold)] outline-none transition-all text-gray-800"
-                />
-                <button 
-                    type="submit"
-                    disabled={!inputText.trim()}
-                    className="p-2 bg-[var(--gold)] text-white rounded-full hover:bg-[var(--off-black)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
-                >
-                    <Send className="w-5 h-5 rtl:rotate-180" />
-                </button>
-                </form>
-            )}
+            <form onSubmit={handleSend} className="p-4 bg-white border-t border-gray-100 flex gap-2">
+            <input
+                type="text"
+                value={inputText}
+                onChange={(e) => setInputText(e.target.value)}
+                placeholder={locale === 'tr' ? "Mesajınızı yazın..." : "Type your message..."}
+                className="flex-1 bg-gray-100 border-none rounded-full px-4 py-2 text-sm focus:ring-2 focus:ring-[var(--gold)] outline-none transition-all text-gray-800"
+            />
+            <button 
+                type="submit"
+                disabled={!inputText.trim()}
+                className="p-2 bg-[var(--gold)] text-white rounded-full hover:bg-[var(--off-black)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
+            >
+                <Send className="w-5 h-5 rtl:rotate-180" />
+            </button>
+            </form>
           </motion.div>
         )}
       </AnimatePresence>

@@ -34,20 +34,18 @@ export async function startChatSession(name?: string) {
 
 // Shared: Send a message
 export async function sendMessage(sessionId: string, sender: 'user' | 'admin', message: string) {
-    const { data, error } = await supabase
-        .from('Chat_Messages')
-        .insert({ session_id: sessionId, sender, message })
-        .select()
-        .single();
+    const response = await fetch('/api/chat/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId, sender, message })
+    });
 
-    if (error) throw error;
+    if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || 'Failed to send message');
+    }
 
-    // Update last_message_at
-    await supabase
-        .from('Chat_Sessions')
-        .update({ last_message_at: new Date().toISOString() })
-        .eq('id', sessionId);
-
+    const { data } = await response.json();
     return data;
 }
 
@@ -65,12 +63,18 @@ export async function getMessages(sessionId: string) {
 
 // Shared: Update customer name (for first message flow)
 export async function updateCustomerName(sessionId: string, name: string) {
-    const { error } = await supabase
-        .from('Chat_Sessions')
-        .update({ customer_name: name })
-        .eq('id', sessionId);
-    
-    if (error) throw error;
+    // Use API route to bypass RLS for updating name
+    const response = await fetch('/api/chat/update-name', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ sessionId, name }),
+    });
+
+    if (!response.ok) {
+        throw new Error('Failed to update customer name');
+    }
 }
 
 // Admin: Get all active sessions (Last 24 hours only)
@@ -90,10 +94,15 @@ export async function getActiveSessions() {
 
 // Admin: Close session
 export async function closeSession(sessionId: string) {
-    const { error } = await supabase
-        .from('Chat_Sessions')
-        .update({ status: 'closed' })
-        .eq('id', sessionId);
-    
-    if (error) throw error;
+    const response = await fetch('/api/chat/close', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ sessionId }),
+    });
+
+    if (!response.ok) {
+        throw new Error('Failed to close session');
+    }
 }
