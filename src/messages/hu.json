@@ -1,0 +1,93 @@
+{
+  "Navbar": {
+    "home": "Kezdőlap",
+    "hotels": "Szállodáink",
+    "contact": "Kapcsolat",
+    "book": "Foglalás"
+  },
+  "Hero": {
+    "subtitle": "Fedezze fel újra a",
+    "subtitleHighlight": "Luxust",
+    "description": "Felejthetetlen emlékek, kifogástalan kiszolgálás és egyedi helyszínek. Álmai nyaralása itt kezdődik.",
+    "explore": "Szállodák felfedezése"
+  },
+  "Home": {
+    "collection": "Solis Gyűjtemény",
+    "discoverTitle": "Fedezze fel szállodáinkat",
+    "discoverDesc": "Egy kiváltságos világ egyedi elhelyezkedésű szállodáinkban, ahol minden részletet az Ön kényelméért terveztünk.",
+    "features": {
+      "service": "5 Csillagos Szolgáltatás",
+      "serviceDesc": "Világszínvonalú szállás.",
+      "architecture": "Díjazott Építészet",
+      "architectureDesc": "Az esztétika és a kényelem találkozása.",
+      "security": "Biztonságos Nyaralás",
+      "securityDesc": "Felső szintű higiéniai szabványok.",
+      "satisfaction": "100% Elégedettség",
+      "satisfactionDesc": "Az Ön boldogsága a prioritásunk."
+    },
+    "ctaTitle": "Felejthetetlen nyaralás várja",
+    "ctaDesc": "Foglalja le helyét most, és használja ki az előfoglalási kedvezményeket."
+  },
+  "Footer": {
+    "desc": "Ahol a kényelem találkozik a luxussal. Várjuk Önt egy felejthetetlen szállásélményre.",
+    "quickLinks": "Gyors Linkek",
+    "about": "Rólunk",
+    "rooms": "Szobák",
+    "spa": "Spa & Wellness",
+    "contact": "Kapcsolat",
+    "address": "Székhely: Levent Mah. Büyükdere Cad. No:1, Isztambul",
+    "newsletter": "Hírlevél",
+    "newsletterDesc": "Iratkozzon fel hírlevelünkre, hogy értesüljön a különleges ajánlatokról.",
+    "placeholder": "Az Ön e-mail címe",
+    "subscribe": "Feliratkozás",
+    "rights": "Minden jog fenntartva."
+  },
+  "Contact": {
+    "title": "Kapcsolat",
+    "desc": "Forduljon hozzánk kérdéseivel, véleményével vagy foglalási kéréseivel. Csapatunk a lehető leghamarabb válaszol Önnek.",
+    "contactInfo": "Vegye fel a kapcsolatot",
+    "addressTitle": "Cím",
+    "phoneTitle": "Telefon",
+    "phoneDesc": "Hétköznap 09:00 - 18:00",
+    "emailTitle": "E-mail",
+    "formTitle": "Küldjön üzenetet",
+    "name": "Keresztnév",
+    "surname": "Vezetéknév",
+    "email": "E-mail",
+    "message": "Üzenet",
+    "send": "Küldés"
+  },
+  "Rooms": {
+    "title": "Szállás",
+    "desc": "A kényelem és a luxus tökéletes harmóniája. Érezze otthona melegét különlegesen tervezett szobáinkban.",
+    "night": "Éjszakánként",
+    "book": "Foglalás"
+  },
+  "Services": {
+    "title": "Exkluzív Szolgáltatások",
+    "desc": "Nem csak szállást kínálunk, hanem az életstílusához illő kiváltságos élményt.",
+    "moreInfo": "Információ",
+    "vipTitle": "A várakozás nincs a szótárunkban.",
+    "vipSubtitle": "VIP Transzfer Privilégium",
+    "vipDesc": "Érezze a Solis kiváltságát a leszállás pillanatától kezdve. Kényelmes és biztonságos utazás várja Önt luxusjárműveinkkel.",
+    "feature1": "24/7 Fogadószolgálat",
+    "feature2": "Mercedes S-Class és V-Class Opciók",
+    "feature3": "Ingyenes Wi-Fi és Frissítők",
+    "bookTransfer": "Transzfer Foglalása"
+  },
+  "Blog": {
+    "title": "Utazási Napló",
+    "desc": "Hírek a Solis világából, utazási tippek és felfedezésre váró útvonalak.",
+    "readMore": "Olvasson Tovább"
+  },
+  "History": {
+    "tag": "A Város, Ahol Két Kontinens Találkozik",
+    "title": "ISZTAMBUL",
+    "quote": "\"Isztambul, a költők, császárok és álmodozók városa. Egy legendás metropolisz, amely minden történelmi rétegben titkot rejt.\"",
+    "section1Title": "Birodalmak Fővárosa",
+    "section1Desc": "Csodálatos utazás a Kr. e. 7. században alapított Büzantiontól Konstantinápolyon át az Oszmán Birodalomig. Isztambul 1600 éven át volt három nagy birodalom fővárosa.",
+    "section1Extra": "Imák visszhangoznak a Hagia Sophia kupolájában, államtitkokat suttognak a Topkapi palota folyosóin... Isztambul élő szabadtéri múzeum.",
+    "section2Title": "Fedezze fel Isztambult a Solisszal",
+    "section2Desc": "Solis City szállodánkban megszállva e varázslatos történelem szívében lesz. Concierge csapatunk készen áll arra, hogy felejthetetlenné tegye isztambuli élményét."
+  }
+}

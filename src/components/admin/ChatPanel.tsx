@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabaseClient';
-import { ChatMessage, ChatSession, getActiveSessions, getMessages, sendMessage, closeSession, markMessagesAsRead } from '@/src/services/chatService';
+import { ChatMessage, ChatSession, getActiveSessions, getMessages, sendMessage, closeSession, markMessagesAsRead } from '@/services/chatService';
 import { Send, User, Clock, CheckCircle, XCircle, Search, MessageSquare } from 'lucide-react';
 import toast from 'react-hot-toast';
 

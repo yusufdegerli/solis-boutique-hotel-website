@@ -6,8 +6,8 @@ import {
   PieChart, Pie, Cell, Legend
 } from 'recharts';
 import { TrendingUp, Users, Calendar, DollarSign, Activity, Filter, Download, Loader2, X, BedDouble } from 'lucide-react';
-import { getDashboardStats, DashboardStats } from '@/src/actions/reportActions';
-import { getHotels, Booking } from '@/src/services/hotelService';
+import { getDashboardStats, DashboardStats } from '@/actions/reportActions';
+import { getHotels, Booking } from '@/services/hotelService';
 import { Hotel, Room } from '@/lib/data';
 import toast from 'react-hot-toast';
 import jsPDF from 'jspdf';
