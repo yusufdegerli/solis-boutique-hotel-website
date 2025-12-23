@@ -1,4 +1,3 @@
-
 import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
 import path from 'path';
@@ -12,17 +11,11 @@ const supabase = createClient(
 );
 
 async function migrateDb() {
-  console.log('--- MIGRATING DATABASE (ROOM IMAGES) ---');
+  console.log('--- MIGRATING DATABASE ---');
   
-  const sql = fs.readFileSync('MIGRATE_ROOM_IMAGES.sql', 'utf8');
-
-  // Supabase JS client doesn't run raw SQL easily without extensions.
-  // However, we can use the Postgres connection or just use the dashboard.
-  // BUT, since we are in a CLI flow, I will instruct the user to run it via Dashboard
-  // OR I can try to execute it via a specialized RPC if one existed.
-  
-  // Since we don't have a direct SQL runner, I will ask you to run it.
-  console.log('Please run the contents of "MIGRATE_ROOM_IMAGES.sql" in your Supabase SQL Editor.');
+  // Since we don't have a direct SQL runner via Supabase JS client easily,
+  // we instruct the user to run migrations manually via the dashboard.
+  console.log('Please run the contents of your migration SQL files in your Supabase SQL Editor.');
 }
 
 migrateDb();
