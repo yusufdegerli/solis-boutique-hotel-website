@@ -273,6 +273,21 @@ export const getBookings = async (): Promise<Booking[]> => {
   return data as Booking[];
 };
 
+export const getUserBookings = async (email: string): Promise<Booking[]> => {
+  const { data, error } = await supabase
+    .from('Reservation_Information')
+    .select('*')
+    .eq('customer_email', email)
+    .order('check_in', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching user bookings:', error);
+    return [];
+  }
+
+  return data as Booking[];
+};
+
 import { createBookingServer } from "@/actions/bookingActions";
 
 // ... existing imports ...

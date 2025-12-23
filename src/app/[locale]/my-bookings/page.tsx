@@ -10,7 +10,7 @@ export default async function MyBookingsPage({
   params: { locale: string }
 }) {
   const t = await getTranslations('MyBookings');
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const {
     data: { user },
