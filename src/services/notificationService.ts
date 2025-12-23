@@ -8,6 +8,7 @@ export async function sendBookingNotification(booking: {
   customer_name: string;
   customer_phone?: string | null;
   id?: string | number;
+  cancellation_token?: string; // Added optional token
 }, status: string) {
 
   const results = {
@@ -21,7 +22,8 @@ export async function sendBookingNotification(booking: {
       booking.customer_email,
       booking.customer_name,
       status,
-      booking.id?.toString()
+      booking.id?.toString(),
+      booking.cancellation_token // Pass token
     );
     results.email = emailRes.success;
   } else {

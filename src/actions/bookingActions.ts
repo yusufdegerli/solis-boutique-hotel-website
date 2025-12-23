@@ -2,8 +2,8 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { z } from "zod";
-import { sendBookingNotification } from '@/src/services/notificationService';
-import { sendConfirmationEmail } from '@/src/services/mailService'; // Keep for now or remove if unused later
+import { sendBookingNotification } from '@/services/notificationService';
+import { sendConfirmationEmail } from '@/services/mailService'; // Keep for now or remove if unused later
 
 // Initialize Supabase client
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -37,28 +37,45 @@ const serverBookingSchema = z.object({
 export async function createBookingServer(bookingData: any) {
   // ... existing code ...
   console.log('--- SERVER ACTION START ---');
+  console.log('Received Payload:', JSON.stringify(bookingData, null, 2));
   
   // 1. Zod Validation
+  // Ensure we handle "NaN" or string numbers correctly
   const result = serverBookingSchema.safeParse({
-    hotel_id: bookingData.hotel_id, // NEW
-    room_id: bookingData.room_id,
+    hotel_id: Number(bookingData.hotel_id), // Explicit cast
+    room_id: Number(bookingData.room_id),   // Explicit cast
     customer_name: bookingData.customer_name,
     customer_email: bookingData.customer_email || "no-email@provided.com",
     customer_phone: bookingData.customer_phone,
     check_in: bookingData.check_in,
     check_out: bookingData.check_out,
-    guests_count: bookingData.guests_count || 1,
-    total_price: bookingData.total_price // NEW
+    guests_count: Number(bookingData.guests_count) || 1,
+    total_price: Number(bookingData.total_price) // Explicit cast
   });
 
   if (!result.success) {
-    // Cast to any to bypass potential Zod type definition mismatch in this environment
-    const errorMessage = (result.error as any).errors.map((e: any) => e.message).join(', ');
-    console.error('Validation Error:', errorMessage);
-    return { success: false, error: errorMessage };
+    console.error('Validation Failed:', JSON.stringify(result.error, null, 2));
+    // Try to extract messages from the formatted error or the flat errors
+    const formatted = result.error.format();
+    const flatErrors = result.error.flatten();
+    
+    // Prioritize field errors
+    const fieldErrorMessages = Object.entries(flatErrors.fieldErrors)
+        .map(([field, errors]) => `${field}: ${errors?.join(', ')}`)
+        .join(' | ');
+        
+    const formErrorMessages = flatErrors.formErrors.join(', ');
+
+    const combinedMessage = [fieldErrorMessages, formErrorMessages].filter(Boolean).join(' | ');
+
+    return { success: false, error: combinedMessage || 'Doğrulama Hatası (Detay yok)' };
   }
 
   const payload = result.data;
+  
+  if (isNaN(payload.room_id)) {
+     return { success: false, error: "Geçersiz Oda ID" };
+  }
   
   // --- SERVICE KEY CHECK ---
   if (!serviceKey) {
@@ -69,48 +86,54 @@ export async function createBookingServer(bookingData: any) {
     };
   }
 
-  // --- ATOMIC BOOKING CREATION (Via RPC) ---
-  try {
-    const { data: rpcResult, error: rpcError } = await supabase.rpc('create_booking_safe', {
-      p_hotel_id: payload.hotel_id, // NEW
-      p_room_id: payload.room_id,
-      p_customer_name: payload.customer_name,
-      p_customer_email: payload.customer_email,
-      p_customer_phone: payload.customer_phone || "",
-      p_check_in: payload.check_in,
-      p_check_out: payload.check_out,
-      p_guests_count: payload.guests_count,
-      p_total_price: payload.total_price // NEW PARAM
-    });
-
-    if (rpcError) {
-      console.error('RPC Error:', rpcError);
-      return { success: false, error: 'İşlem sırasında bir hata oluştu: ' + rpcError.message };
-    }
-
-    // Handle RPC response (it might be an array or an object depending on .single() usage)
-    const resultData = Array.isArray(rpcResult) ? rpcResult[0] : rpcResult;
-    
-    if (!resultData || !resultData.success) {
-      return { success: false, error: resultData?.error || 'Rezervasyon oluşturulamadı.' };
-    }
-
-    // --- NOTIFICATION TRIGGER (NEW) ---
-    const bookingId = resultData.data;
-    const notificationPayload = {
-      id: bookingId,
-      customer_name: payload.customer_name,
-      customer_email: payload.customer_email,
-      customer_phone: payload.customer_phone
-    };
-    
-    // Send "Pending" notification
-    sendBookingNotification(notificationPayload, 'pending').catch(err => console.error('Notification Error:', err));
-    
-    return { success: true, data: [{ id: bookingId }] };
-
-  } catch (err) {
-    console.error('Unexpected error in createBookingServer:', err);
+      // --- ATOMIC BOOKING CREATION (Via RPC) ---
+    try {
+      const { data: rpcResult, error: rpcError } = await supabase.rpc('create_booking_safe', {
+        p_hotel_id: payload.hotel_id, // NEW
+        p_room_id: payload.room_id,
+        p_customer_name: payload.customer_name,
+        p_customer_email: payload.customer_email,
+        p_customer_phone: payload.customer_phone || "",
+        p_check_in: payload.check_in,
+        p_check_out: payload.check_out,
+        p_guests_count: payload.guests_count,
+        p_total_price: payload.total_price // NEW PARAM
+      });
+  
+      if (rpcError) {
+        console.error('RPC Error:', rpcError);
+        return { success: false, error: 'İşlem sırasında bir hata oluştu: ' + rpcError.message };
+      }
+  
+      // Handle RPC response
+      // The new RPC returns { success: bool, data: { id: number, token: string }, error: string }
+      // But rpc returns an array of rows. Since we use RETURN QUERY SELECT..., it might be [ { success:..., data:..., error:... } ]
+      
+      const row = Array.isArray(rpcResult) ? rpcResult[0] : rpcResult;
+      
+      if (!row || !row.success) {
+        return { success: false, error: row?.error || 'Rezervasyon oluşturulamadı.' };
+      }
+  
+      const resultData = row.data; // This is now { id: ..., token: ... }
+      const bookingId = resultData.id;
+      const cancellationToken = resultData.token;
+  
+      // --- NOTIFICATION TRIGGER (NEW) ---
+      const notificationPayload = {
+        id: bookingId,
+        customer_name: payload.customer_name,
+        customer_email: payload.customer_email,
+        customer_phone: payload.customer_phone,
+        cancellation_token: cancellationToken // Pass token to notification
+      };
+      
+      // Send "Pending" notification
+      sendBookingNotification(notificationPayload, 'pending').catch(err => console.error('Notification Error:', err));
+      
+      return { success: true, data: [{ id: bookingId }] };
+  
+    } catch (err) {    console.error('Unexpected error in createBookingServer:', err);
     return { success: false, error: 'Beklenmedik bir hata oluştu.' };
   }
 }

@@ -18,7 +18,7 @@ export const getHotels = async (): Promise<Hotel[]> => {
     return [];
   }
 
-  return data.map((hotel: any) => mapDbHotelToModel(hotel));
+  return (data || []).map((hotel: any) => mapDbHotelToModel(hotel));
 };
 
 export const getHotelBySlug = async (slug: string): Promise<Hotel | undefined> => {
@@ -114,7 +114,7 @@ export const getRooms = async (): Promise<Room[]> => {
     return [];
   }
 
-  return data.map((room: any) => mapDbRoomToModel(room));
+  return (data || []).map((room: any) => mapDbRoomToModel(room));
 };
 
 export const createRoom = async (room: Partial<Room>) => {
@@ -273,7 +273,7 @@ export const getBookings = async (): Promise<Booking[]> => {
   return data as Booking[];
 };
 
-import { createBookingServer } from "@/src/actions/bookingActions";
+import { createBookingServer } from "@/actions/bookingActions";
 
 // ... existing imports ...
 
@@ -289,6 +289,7 @@ export const createBooking = async (booking: Partial<Booking>) => {
 
   // 2. Construct Payload
   const payload = {
+    hotel_id: booking.hotel_id, // Ensure hotel_id is passed
     room_id: booking.room_id,
     customer_name: booking.guest_name || booking.customer_name,
     customer_email: booking.email || booking.customer_email || "no-email@provided.com",
