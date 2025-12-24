@@ -40,3 +40,16 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Admin & Migration Scripts (Local Use Only)
+create_admin_user.ts
+set_admin.ts
+check_admins.ts
+add_admins.ts
+check_db.ts
+check_data.ts
+FIX_RLS.sql
+MIGRATE_*.sql
+run_migration.ts
+seed_db.ts
+setup_storage.ts

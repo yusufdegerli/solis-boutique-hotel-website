@@ -18,9 +18,6 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${requestUrl.origin}${next}`)
   }
 
-  // Default redirect to update password page if no next param
-  // Note: We need to handle locale dynamically or default to a known one.
-  // Since we don't have locale here easily without parsing URL, we redirect to root
-  // Middleware should handle the locale redirect if needed, but let's try to be safe.
-  return NextResponse.redirect(`${requestUrl.origin}/admin`) 
+  // Default redirect to root if no next param
+  return NextResponse.redirect(`${requestUrl.origin}/`) 
 }

@@ -128,7 +128,8 @@ export const createRoom = async (room: Partial<Room>) => {
     base_price: room.price,
     capacity: parseInt(room.capacity?.split(' ')[0] || '2'),
     quantity: room.quantity || 10,
-    images: room.images // Save array
+    images: room.images, // Save array
+    amenities: room.amenities // Save amenities
   };
 
   const { data, error } = await supabase
@@ -155,6 +156,7 @@ export const updateRoom = async (id: string, room: Partial<Room>) => {
   if (room.capacity) dbRoom.capacity = parseInt(room.capacity?.split(' ')[0] || '2');
   if (room.quantity !== undefined) dbRoom.quantity = room.quantity;
   if (room.images) dbRoom.images = room.images;
+  if (room.amenities) dbRoom.amenities = room.amenities;
 
   const { data, error } = await supabase
     .from('Rooms_Information')
@@ -187,7 +189,7 @@ function mapDbHotelToModel(hotel: any): Hotel {
     slug: hotel.slug,
     tagline: hotel.tagline || "Unutulmaz Bir Konaklama Deneyimi",
     description: hotel.description,
-    pricePerNight: hotel.stats?.min_price || 3500, // Use stats if available, else default
+    pricePerNight: hotel.stats?.min_price || 120, // Use stats if available, else default
     rating: Number(hotel.rating) || 9.0,
     reviews: hotel.reviews_count || 0,
     image: hotel.image_url || "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80",
@@ -226,7 +228,8 @@ function mapDbRoomToModel(room: any): Room {
     price: room.base_price || 0,
     quantity: room.quantity || 0,
     image: images[0], // Primary image for backward compatibility
-    images: images
+    images: images,
+    amenities: room.amenities || []
   };
 }
 

@@ -10,7 +10,7 @@ export async function login(formData: FormData) {
   const password = formData.get('password') as string
   const supabase = await createClient()
   
-  const { error } = await supabase.auth.signInWithPassword({
+  const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
   })
@@ -20,7 +20,19 @@ export async function login(formData: FormData) {
   }
 
   const locale = await getLocale();
-  redirect(`/${locale}/admin`)
+
+  // Check user role
+  const { data: roleData } = await supabase
+    .from('user_roles')
+    .select('role')
+    .eq('user_id', data.user?.id)
+    .single();
+
+  if (roleData?.role === 'admin') {
+    redirect(`/${locale}/admin`);
+  } else {
+    redirect(`/${locale}`);
+  }
 }
 
 export async function logout() {
@@ -64,7 +76,7 @@ export async function updatePassword(formData: FormData) {
   const password = formData.get('password') as string;
   const supabase = await createClient();
 
-  const { error } = await supabase.auth.updateUser({
+  const { data, error } = await supabase.auth.updateUser({
     password: password
   });
 
@@ -73,5 +85,17 @@ export async function updatePassword(formData: FormData) {
   }
 
   const locale = await getLocale();
-  redirect(`/${locale}/admin`);
+  
+  // Check user role
+  const { data: roleData } = await supabase
+    .from('user_roles')
+    .select('role')
+    .eq('user_id', data.user?.id)
+    .single();
+
+  if (roleData?.role === 'admin') {
+    redirect(`/${locale}/admin`);
+  } else {
+    redirect(`/${locale}`);
+  }
 }

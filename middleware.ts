@@ -39,7 +39,6 @@ export default async function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // --- ADMIN AUTHORIZATION CHECK (DB BASED) ---
   if (isProtectedRoute && user) {
      const { data: roleData } = await supabase
        .from('user_roles')
@@ -50,7 +49,6 @@ export default async function middleware(request: NextRequest) {
      const role = roleData?.role;
 
      if (role !== 'admin') {
-       // User is logged in but NOT authorized
        const locale = getLocale();
        const homeUrl = new URL(`/${locale}`, request.url);
        return NextResponse.redirect(homeUrl);
