@@ -145,7 +145,7 @@ export default async function HotelDetail({ params }: { params: Promise<{ slug: 
                   <div className="flex justify-between items-center mb-8">
                     <div>
                       <span className="block text-xs text-gray-400 uppercase tracking-wider font-sans mb-1">Gecelik Başlangıç</span>
-                      <span className="text-4xl font-bold text-[var(--off-black)] font-serif">₺{hotel.pricePerNight.toLocaleString('tr-TR')}</span>
+                      <span className="text-4xl font-bold text-[var(--off-black)] font-serif">€{hotel.pricePerNight.toLocaleString('en-US')}</span>
                     </div>
                   </div>
 

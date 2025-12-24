@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Users, Maximize2 } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import RoomImageSlider from "@/components/RoomImageSlider";
+import { getAmenityIcon, getAmenityLabel } from "@/lib/amenityOptions";
 
 export default async function RoomsPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
@@ -34,44 +35,69 @@ export default async function RoomsPage({ params }: { params: Promise<{ locale: 
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
         <div className="grid gap-12">
-          {rooms.map((room, index) => (
-            <div key={room.id} className={`bg-white rounded-xl overflow-hidden shadow-xl flex flex-col md:flex-row h-full ${index % 2 === 1 ? 'md:flex-row-reverse' : ''}`}>
-              <div className="md:w-1/2 relative min-h-[300px] md:min-h-[400px]">
+          {rooms.map((room) => (
+            <div key={room.id} className="bg-white rounded-xl overflow-hidden shadow-xl flex flex-col h-full transform hover:-translate-y-1 transition-transform duration-300">
+              <div className="w-full relative h-[400px] md:h-[500px]">
                 <RoomImageSlider 
                   images={room.images && room.images.length > 0 ? room.images : [room.image]} 
                   roomName={room.name} 
                 />
               </div>
-              <div className="md:w-1/2 p-8 md:p-12 flex flex-col justify-center">
-                <h3 className="text-3xl font-serif font-bold text-[var(--off-black)] mb-4">{room.name}</h3>
-                <p className="text-gray-600 mb-8 font-sans leading-relaxed">
+              <div className="p-8 md:p-10 flex flex-col flex-grow">
+                <div className="flex flex-col md:flex-row justify-between items-start gap-4 mb-6">
+                    <h3 className="text-4xl font-serif font-bold text-[var(--off-black)]">{room.name}</h3>
+                    <div className="flex items-center gap-6 text-gray-600 bg-gray-50 px-4 py-2 rounded-lg">
+                        <div className="flex items-center gap-2">
+                            <Maximize2 className="w-4 h-4 text-[var(--gold)]" />
+                            <span className="font-sans text-sm">{room.size}</span>
+                        </div>
+                        <div className="w-px h-4 bg-gray-300"></div>
+                        <div className="flex items-center gap-2">
+                            <Users className="w-4 h-4 text-[var(--gold)]" />
+                            <span className="font-sans text-sm">{room.capacity}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <p className="text-gray-600 mb-10 font-sans leading-relaxed text-lg">
                   {room.description}
                 </p>
                 
-                <div className="grid grid-cols-2 gap-6 mb-8">
-                  <div className="flex items-center gap-3 text-gray-700">
-                    <Maximize2 className="w-5 h-5 text-[var(--gold)]" />
-                    <span className="font-sans">{room.size}</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-gray-700">
-                    <Users className="w-5 h-5 text-[var(--gold)]" />
-                    <span className="font-sans">{room.capacity}</span>
-                  </div>
-                </div>
+                <div className="mt-auto border-t border-gray-100 pt-8">
+                    <div className="flex flex-col xl:flex-row items-center justify-between gap-8">
+                        
+                        {/* Amenities Section */}
+                        {room.amenities && room.amenities.length > 0 ? (
+                            <div className="flex flex-wrap justify-center xl:justify-start gap-3 flex-1">
+                                {room.amenities.map(key => {
+                                    const Icon = getAmenityIcon(key);
+                                    const label = getAmenityLabel(key);
+                                    return (
+                                    <div key={key} className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-lg text-sm text-gray-600 border border-gray-100 hover:border-[var(--gold)] hover:text-[var(--gold)] transition-colors" title={label}>
+                                        <Icon size={16} />
+                                        <span className="hidden sm:inline">{label}</span>
+                                    </div>
+                                    )
+                                })}
+                            </div>
+                        ) : <div className="flex-1"></div>}
 
-                <div className="flex items-center justify-between border-t border-gray-100 pt-8 mt-auto">
-                  <div>
-                    <span className="text-xs text-gray-400 uppercase tracking-wider font-sans">{t('night')}</span>
-                    <div className="text-2xl font-serif font-bold text-[var(--gold)]">
-                      ₺{room.price.toLocaleString('tr-TR')}
+                        {/* Price & Action */}
+                        <div className="flex items-center gap-6 shrink-0">
+                            <div className="text-right">
+                                <span className="block text-xs text-gray-400 uppercase tracking-wider font-sans mb-1">{t('night')}</span>
+                                <div className="text-3xl font-serif font-bold text-[var(--gold)]">
+                                    €{room.price.toLocaleString('en-US')}
+                                </div>
+                            </div>
+                            <Link 
+                                href={`/${locale}/reservation`} 
+                                className="px-10 py-4 bg-[var(--off-black)] text-white font-serif font-bold uppercase tracking-widest rounded hover:bg-[var(--gold)] transition-colors shadow-lg hover:shadow-xl"
+                            >
+                                {t('book')}
+                            </Link>
+                        </div>
                     </div>
-                  </div>
-                  <Link 
-                    href={`/${locale}/reservation`} 
-                    className="px-8 py-3 bg-[var(--off-black)] text-white font-serif text-sm uppercase tracking-widest rounded-sm hover:bg-[var(--gold)] transition-colors"
-                  >
-                    {t('book')}
-                  </Link>
                 </div>
               </div>
             </div>
