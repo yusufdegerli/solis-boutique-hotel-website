@@ -1,7 +1,15 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
-import { Calendar, Users, Hotel as HotelIcon, Loader2, BedDouble } from "lucide-react";
+import { useState, useEffect } from 'react';
+import { z } from 'zod';
+import {
+  Calendar,
+  Users,
+  ArrowRight,
+  CheckCircle2,
+  AlertCircle,
+  Loader2,
+} from 'lucide-react';
 import { Hotel, Room } from "@/lib/data";
 import { createBooking } from "@/services/hotelService";
 import { useTranslations } from "next-intl";
