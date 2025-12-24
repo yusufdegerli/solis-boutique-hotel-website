@@ -61,7 +61,7 @@ export default function HotelCard({ hotel, locale = 'tr' }: HotelCardProps) {
           <div>
             <span className="block text-xs text-gray-400 uppercase tracking-wider mb-1 font-sans">Başlangıç</span>
             <div className="text-2xl font-serif font-bold text-[var(--off-black)]">
-              ₺{hotel.pricePerNight.toLocaleString('tr-TR')}
+              €{hotel.pricePerNight.toLocaleString('en-US')}
             </div>
           </div>
           

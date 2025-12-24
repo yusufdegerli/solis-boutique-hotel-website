@@ -35,7 +35,7 @@
     "rooms": "الغرف",
     "spa": "سبا وعافية",
     "contact": "اتصل بنا",
-    "address": "المكتب الرئيسي: ليفنت، شارع بويوكدير رقم: 1، إسطنبول",
+    "address": "Mimar Kemalettin Mah. Mithatpaşa Caddesi No:14/16 Beyazıt, Istanbul, Turkey",
     "newsletter": "النشرة الإخبارية",
     "newsletterDesc": "اشترك في نشرتنا الإخبارية لتكون على اطلاع بالعروض الخاصة.",
     "placeholder": "عنوان بريدك الإلكتروني",
@@ -55,7 +55,10 @@
     "surname": "اللقب",
     "email": "البريد الإلكتروني",
     "message": "رسالتك",
-    "send": "إرسال"
+    "send": "إرسال",
+    "addressDetail": "Mimar Kemalettin Mah. Mithatpaşa Caddesi No:14/16 Beyazıt, Istanbul, Turkey",
+    "phoneNumber": "+90 533 793 24 72",
+    "emailAddress": "info@solisboutiquehotel.com"
   },
   "Rooms": {
     "title": "إقامة",

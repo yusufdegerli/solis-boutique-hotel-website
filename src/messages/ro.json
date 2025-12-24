@@ -35,7 +35,7 @@
     "rooms": "Camere",
     "spa": "Spa & Wellness",
     "contact": "Contact",
-    "address": "Sediul Central: Levent Mah. Büyükdere Cad. No:1, Istanbul",
+    "address": "Mimar Kemalettin Mah. Mithatpaşa Caddesi No:14/16 Beyazıt, Istanbul, Turkey",
     "newsletter": "Buletin Informativ",
     "newsletterDesc": "Abonează-te la buletinul nostru pentru a fi informat despre ofertele speciale.",
     "placeholder": "Adresa ta de email",
@@ -55,7 +55,10 @@
     "surname": "Nume",
     "email": "Email",
     "message": "Mesajul Tău",
-    "send": "Trimite"
+    "send": "Trimite",
+    "addressDetail": "Mimar Kemalettin Mah. Mithatpaşa Caddesi No:14/16 Beyazıt, Istanbul, Turkey",
+    "phoneNumber": "+90 533 793 24 72",
+    "emailAddress": "info@solisboutiquehotel.com"
   },
   "Rooms": {
     "title": "Cazare",

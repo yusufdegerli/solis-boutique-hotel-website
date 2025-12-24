@@ -1,7 +1,9 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { Mail, Phone, MapPin, Send } from "lucide-react";
+import { Mail, Phone, MapPin } from "lucide-react";
 import { getTranslations } from 'next-intl/server';
+import ContactForm from "@/components/ContactForm";
+import { Toaster } from 'react-hot-toast';
 
 export default async function ContactPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
@@ -10,6 +12,7 @@ export default async function ContactPage({ params }: { params: Promise<{ locale
   return (
     <main className="min-h-screen bg-white flex flex-col">
       <Navbar locale={locale} />
+      <Toaster position="bottom-right" />
       
       <div className="bg-[var(--off-black)] text-white py-32 text-center relative overflow-hidden">
         <div className="absolute inset-0 bg-black/40 z-0"></div>
@@ -61,33 +64,14 @@ export default async function ContactPage({ params }: { params: Promise<{ locale
           </div>
 
           {/* Contact Form */}
-          <div className="bg-white p-10 rounded-2xl shadow-xl border border-gray-100 relative">
-            <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-[var(--gold)]/10 rounded-full blur-xl -z-10"></div>
-            <h2 className="text-3xl font-bold text-[var(--off-black)] mb-8 font-serif">{t('formTitle')}</h2>
-            <form className="space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700 font-sans">{t('name')}</label>
-                  <input type="text" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[var(--gold)] focus:border-transparent outline-none transition-all" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700 font-sans">{t('surname')}</label>
-                  <input type="text" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[var(--gold)] focus:border-transparent outline-none transition-all" />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700 font-sans">{t('email')}</label>
-                <input type="email" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[var(--gold)] focus:border-transparent outline-none transition-all" />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700 font-sans">{t('message')}</label>
-                <textarea rows={4} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[var(--gold)] focus:border-transparent outline-none transition-all"></textarea>
-              </div>
-              <button type="submit" className="w-full bg-[var(--gold)] text-white py-4 rounded-lg font-bold hover:bg-yellow-600 transition-colors flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-1 duration-200 font-serif">
-                {t('send')} <Send className="w-4 h-4 rtl:rotate-180" />
-              </button>
-            </form>
-          </div>
+          <ContactForm t={{
+            name: t('name'),
+            surname: t('surname'),
+            email: t('email'),
+            message: t('message'),
+            send: t('send'),
+            formTitle: t('formTitle')
+          }} />
         </div>
       </div>
       <Footer />

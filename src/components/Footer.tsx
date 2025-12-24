@@ -43,11 +43,11 @@ export default function Footer() {
               </li>
               <li className="flex items-center gap-3">
                 <Phone className="h-5 w-5 text-[var(--gold)] shrink-0" />
-                <span dir="ltr">+90 212 555 0000</span>
+                <span dir="ltr">+90 533 793 24 72</span>
               </li>
               <li className="flex items-center gap-3">
                 <Mail className="h-5 w-5 text-[var(--gold)] shrink-0" />
-                <span>info@solishotels.com</span>
+                <span>info@solisboutiquehotel.com</span>
               </li>
             </ul>
           </div>

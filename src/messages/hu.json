@@ -35,7 +35,7 @@
     "rooms": "Szobák",
     "spa": "Spa & Wellness",
     "contact": "Kapcsolat",
-    "address": "Székhely: Levent Mah. Büyükdere Cad. No:1, Isztambul",
+    "address": "Mimar Kemalettin Mah. Mithatpaşa Caddesi No:14/16 Beyazıt, Istanbul, Turkey",
     "newsletter": "Hírlevél",
     "newsletterDesc": "Iratkozzon fel hírlevelünkre, hogy értesüljön a különleges ajánlatokról.",
     "placeholder": "Az Ön e-mail címe",
@@ -55,7 +55,10 @@
     "surname": "Vezetéknév",
     "email": "E-mail",
     "message": "Üzenet",
-    "send": "Küldés"
+    "send": "Küldés",
+    "addressDetail": "Mimar Kemalettin Mah. Mithatpaşa Caddesi No:14/16 Beyazıt, Istanbul, Turkey",
+    "phoneNumber": "+90 533 793 24 72",
+    "emailAddress": "info@solisboutiquehotel.com"
   },
   "Rooms": {
     "title": "Szállás",
