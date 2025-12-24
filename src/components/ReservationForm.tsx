@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { z } from 'zod';
 import {
   Calendar,
@@ -9,12 +9,14 @@ import {
   CheckCircle2,
   AlertCircle,
   Loader2,
+  Hotel as HotelIcon,
+  BedDouble
 } from 'lucide-react';
 import { Hotel, Room } from "@/lib/data";
 import { createBooking } from "@/services/hotelService";
 import { useTranslations } from "next-intl";
 import { bookingSchema } from "@/lib/validations/booking";
-import { ZodError } from "zod";
+import toast from 'react-hot-toast';
 
 export default function ReservationForm({ 
   preSelectedHotelId, 
