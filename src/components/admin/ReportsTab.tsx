@@ -225,7 +225,7 @@ export default function ReportsTab({ bookings = [], rooms = [] }: ReportsTabProp
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <KpiCard 
                 title="Toplam Gelir" 
-                value={`${stats.totalRevenue.toLocaleString('tr-TR')} ₺`} 
+                value={`€${stats.totalRevenue.toLocaleString('en-US')}`} 
                 icon={DollarSign} 
                 color="#22c55e" // green-500
                 />
@@ -273,7 +273,7 @@ export default function ReportsTab({ bookings = [], rooms = [] }: ReportsTabProp
                         <XAxis dataKey="name" tick={{fontSize: 12, fill: '#6b7280'}} stroke="#9ca3af" />
                         <YAxis tickFormatter={(value) => `${value / 1000}k`} tick={{fill: '#6b7280'}} stroke="#9ca3af" />
                         <RechartsTooltip 
-                        formatter={(value: any) => [`${Number(value).toLocaleString('tr-TR')} ₺`, 'Gelir']}
+                        formatter={(value: any) => [`€${Number(value).toLocaleString('en-US')}`, 'Gelir']}
                         contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', backgroundColor: '#ffffff', color: '#374151' }}
                         itemStyle={{ color: '#d4a373' }}
                         />
@@ -359,7 +359,7 @@ export default function ReportsTab({ bookings = [], rooms = [] }: ReportsTabProp
                                         {getRoomName(booking.room_id)}
                                     </td>
                                     <td className="p-4 text-[var(--gold)] font-bold">
-                                        {Number(booking.total_price).toLocaleString('tr-TR')} ₺
+                                        €{Number(booking.total_price).toLocaleString('en-US')}
                                     </td>
                                     <td className="p-4">
                                         <span className={`px-2 py-1 rounded text-xs font-bold uppercase tracking-wider

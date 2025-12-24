@@ -83,7 +83,7 @@ export default function UserBookingList({ bookings, locale }: UserBookingListPro
                 <div className="flex justify-between">
                   <span className="text-gray-600">{t('totalPrice')}</span>
                   <span className="font-medium text-green-600">
-                    {booking.total_price} ₺
+                    €{booking.total_price}
                   </span>
                 </div>
                 {/* Add more details here if available */}

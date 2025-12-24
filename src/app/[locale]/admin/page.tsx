@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation'; // Added
 import {
   LayoutDashboard,
   Hotel as HotelIcon,
@@ -43,6 +44,7 @@ import { Hotel, Room } from '@/lib/data';
 import { supabase } from '@/lib/supabaseClient';
 import { logout } from '../login/actions';
 import toast, { Toaster } from 'react-hot-toast';
+import { AMENITY_OPTIONS } from '@/lib/amenityOptions';
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<'live' | 'hotels' | 'rooms' | 'campaigns' | 'reports' | 'chat'>('live');
@@ -52,6 +54,8 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [authChecking, setAuthChecking] = useState(true); // NEW: Auth loading state
+  const router = useRouter();
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -90,25 +94,7 @@ export default function AdminDashboard() {
      }
   };
 
-  useEffect(() => {
-     fetchUnreadCount();
-
-     // Realtime Listener for Unread Count Updates
-     const channel = supabase
-        .channel('admin-global-badge')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'Chat_Messages' }, (payload) => {
-            // Re-fetch count on any change to be accurate (simplest way to handle insert/update/delete correctly)
-            // Or optimize: 
-            // INSERT: if new msg is user & unread -> +1
-            // UPDATE: if msg becomes read -> -1
-            
-            // Re-fetching is safer against edge cases and reasonably fast for this scale.
-            fetchUnreadCount();
-        })
-        .subscribe();
-
-     return () => { supabase.removeChannel(channel); }
-  }, []);
+  // Unread Count Effect removed here, will be triggered after auth check
 
   const openCheckIn = (bookingId: string) => {
       setCheckInForm({ guest_id_number: '', guest_nationality: '', check_in_notes: '', payment_received: false });
@@ -194,24 +180,58 @@ export default function AdminDashboard() {
   };
 
   useEffect(() => {
-    fetchData();
+            const initAdmin = async () => {
+                // 1. Check Auth
+                const { data: { user }, error } = await supabase.auth.getUser();
+                
+                if (error || !user) {
+                    router.push('/tr/login'); 
+                    return;
+                }
+                
+                // Check Role
+                const { data: roleData } = await supabase
+                  .from('user_roles')
+                  .select('role')
+                  .eq('user_id', user.id)
+                  .single();
+        
+                if (roleData?.role !== 'admin') {
+                  router.push('/'); 
+                  return;
+                }
+                
+                setAuthChecking(false);        // 2. Fetch Initial Data
+        fetchData();
+        fetchUnreadCount();
 
-    // Realtime Subscription
-    const channel = supabase
-      .channel('realtime bookings')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'Reservation_Information' }, (payload) => {
-        if (payload.eventType === 'INSERT') {
-          setBookings((prev) => [payload.new as Booking, ...prev]);
-          toast('Yeni rezervasyon geldi!', { icon: '🔔' });
-        } else if (payload.eventType === 'UPDATE') {
-          setBookings((prev) => prev.map(b => b.id === payload.new.id ? payload.new as Booking : b));
-        }
-      })
-      .subscribe();
+        // 3. Setup Realtime Listeners
+        const bookingChannel = supabase
+            .channel('realtime bookings')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'Reservation_Information' }, (payload) => {
+                if (payload.eventType === 'INSERT') {
+                    setBookings((prev) => [payload.new as Booking, ...prev]);
+                    toast('Yeni rezervasyon geldi!', { icon: '🔔' });
+                } else if (payload.eventType === 'UPDATE') {
+                    setBookings((prev) => prev.map(b => b.id === payload.new.id ? payload.new as Booking : b));
+                }
+            })
+            .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
+        const chatChannel = supabase
+            .channel('admin-global-badge')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'Chat_Messages' }, () => {
+                fetchUnreadCount();
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(bookingChannel);
+            supabase.removeChannel(chatChannel);
+        };
     };
+
+    initAdmin();
   }, []);
 
   const fetchData = async () => {
@@ -432,6 +452,16 @@ export default function AdminDashboard() {
     </button>
   );
 
+  const handleLogout = async () => {
+    const loadingToast = toast.loading('Çıkış yapılıyor...');
+    try {
+        await logout();
+    } catch (error) {
+        console.error('Logout error:', error);
+        toast.error('Çıkış yapılırken bir hata oluştu.', { id: loadingToast });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex">
       <Toaster 
@@ -502,7 +532,7 @@ export default function AdminDashboard() {
           
           <div className="pt-4 border-t border-gray-100">
             <button
-              onClick={() => logout()}
+              onClick={handleLogout}
               className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 transition-all font-medium"
             >
               <LogOut className="w-5 h-5" />
@@ -735,9 +765,9 @@ export default function AdminDashboard() {
                              )}
                            </div>
                         </td>
-                        <td className="p-4 text-gray-600 font-bold">{room.quantity}</td>
+                        <td className="p-4 text-gray-600">{room.quantity}</td>
                         <td className="p-4 text-gray-600">{room.capacity}</td>
-                        <td className="p-4 font-medium text-[var(--gold)]">{room.price}₺</td>
+                        <td className="p-4 font-medium text-[var(--gold)]">€{room.price}</td>
                         <td className="p-4 text-right">
                           <div className="flex items-center justify-end gap-2">
                              <button onClick={() => handleOpenModal('edit', room)} className="p-2 hover:bg-blue-50 text-blue-600 rounded-lg transition-colors"><Edit className="w-4 h-4" /></button>
@@ -929,7 +959,7 @@ export default function AdminDashboard() {
                   </div>
                   
                   <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Fiyat (₺)</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Fiyat (€)</label>
                       <input 
                         type="number" 
                         value={formData.price || ''} 
@@ -937,6 +967,35 @@ export default function AdminDashboard() {
                         className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[var(--gold)] outline-none"
                         required 
                       />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Oda Özellikleri</label>
+                    <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto">
+                        {AMENITY_OPTIONS.map((amenity) => {
+                            const Icon = amenity.icon;
+                            const isChecked = (formData.amenities || []).includes(amenity.key);
+                            return (
+                                <label key={amenity.key} className={`flex items-center gap-2 p-2 border rounded-lg cursor-pointer transition-colors ${isChecked ? 'bg-yellow-50 border-[var(--gold)]' : 'hover:bg-gray-50'}`}>
+                                    <input 
+                                        type="checkbox"
+                                        checked={isChecked}
+                                        onChange={(e) => {
+                                            const current = formData.amenities || [];
+                                            if (e.target.checked) {
+                                                setFormData({...formData, amenities: [...current, amenity.key]});
+                                            } else {
+                                                setFormData({...formData, amenities: current.filter((k: string) => k !== amenity.key)});
+                                            }
+                                        }}
+                                        className="w-4 h-4 text-[var(--gold)] focus:ring-[var(--gold)] border-gray-300 rounded"
+                                    />
+                                    <Icon size={16} className={isChecked ? 'text-[var(--gold)]' : 'text-gray-400'} />
+                                    <span className={`text-sm ${isChecked ? 'font-medium text-gray-800' : 'text-gray-600'}`}>{amenity.label}</span>
+                                </label>
+                            )
+                        })}
+                    </div>
                   </div>
 
                   <div>
@@ -1050,7 +1109,7 @@ export default function AdminDashboard() {
                 <div>
                    <label className="block text-sm font-medium text-gray-700 mb-1">Ekstra Harcamalar (Minibar vb.)</label>
                    <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">₺</span>
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">€</span>
                         <input 
                             type="number" 
                             className="w-full pl-8 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-[var(--gold)] outline-none"

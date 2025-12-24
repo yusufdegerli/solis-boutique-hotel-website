@@ -256,7 +256,7 @@ export default function ReservationForm({
               </option>
               {availableRooms.map((room) => (
                 <option key={room.id} value={room.id}>
-                  {room.name} ({room.price}₺) - {room.capacity}
+                  {room.name} (€{room.price}) - {room.capacity}
                 </option>
               ))}
             </select>
@@ -330,20 +330,20 @@ export default function ReservationForm({
                 {discount > 0 && (
                     <div className="flex justify-between items-center text-sm text-gray-500 mb-1">
                         <span>Oda Fiyatı (İndirimsiz):</span>
-                        <span className="line-through">{(totalPrice + discount).toLocaleString('tr-TR')} ₺</span>
+                        <span className="line-through">€{(totalPrice + discount).toLocaleString('en-US')}</span>
                     </div>
                 )}
                 
                 {discount > 0 && (
                     <div className="flex justify-between items-center text-sm text-green-600 mb-1">
                         <span>Sezon Sonu İndirimi (%15):</span>
-                        <span>-{discount.toLocaleString('tr-TR')} ₺</span>
+                        <span>-€{discount.toLocaleString('en-US')}</span>
                     </div>
                 )}
 
                 <div className="flex justify-between items-center mt-2 pt-2 border-t border-gray-200">
                     <span className="font-bold text-gray-900 text-lg">Toplam Tutar:</span>
-                    <span className="font-bold text-[var(--gold)] text-2xl">{totalPrice.toLocaleString('tr-TR')} ₺</span>
+                    <span className="font-bold text-[var(--gold)] text-2xl">€{totalPrice.toLocaleString('en-US')}</span>
                 </div>
                 <p className="text-xs text-gray-400 mt-2 text-right">Vergiler dahildir.</p>
             </div>
