@@ -30,9 +30,6 @@ NEXT_PUBLIC_SUPABASE_URL=https://your-project-id.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 
-# Admin Access Control (Comma separated emails)
-ADMIN_EMAILS=admin@solis.com,manager@solis.com
-
 # Site URL (For email links)
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 ```
@@ -43,21 +40,28 @@ NEXT_PUBLIC_SITE_URL=http://localhost:3000
 
 This project uses raw SQL for migrations. You need to run the following scripts in your **Supabase SQL Editor** in the specified order to set up the schema correctly.
 
-1.  **Initial Schema:** Run `supabase/migrations/20240101000000_init_schema.sql` (if available) or `db_schema.sql` to create the base tables (`Hotel_Information_Table`, `Rooms_Information`, `Reservation_Information`).
+1.  **Initial Schema:** Run `supabase/migrations/20240101000000_init_schema.sql` (if available) to create the base tables.
 2.  **Room Images Fix:** Run `MIGRATE_ROOM_IMAGES.sql` to enable array support for room images.
 3.  **Cancellation System:** Run `MIGRATE_CANCELLATION_TOKEN.sql` to add the cancellation token column and the secure booking function (`create_booking_safe`).
-4.  **User Roles & Permissions:** Run `MIGRATE_USER_ROLES.sql` to setup the `user_roles` table and RLS policies.
-5.  **Storage Buckets:**
-    - Create a public storage bucket named `hotel-images`.
-    - Set the policy to allow public read access.
+4.  **User Roles & Permissions (Important):** Run `MIGRATE_USER_ROLES.sql` to setup the `user_roles` table.
+5.  **Fix RLS Policies:** Run the content of `FIX_RLS.sql` (if provided) or ensure RLS policies allow authenticated users to read their own roles.
+6.  **Room Amenities:** Run `supabase/migrations/20251224124703_add_amenities_to_rooms.sql` to add the amenities column to the rooms table.
 
-## 5. Seed Data (Optional)
+### Storage Buckets
+- Create a public storage bucket named `hotel-images`.
+- Set the policy to allow public read access.
 
-To populate the database with initial hotel and room data for testing:
+## 5. Creating an Admin User
 
-```bash
-npx tsx seed_db.ts
-```
+Since the system uses a Role-Based Access Control (RBAC), simply signing up is not enough to access the admin panel.
+
+1.  Sign up a user via the website (e.g., `/login` -> Sign Up) or create one in the Supabase Dashboard.
+2.  Go to your Supabase Table Editor -> `user_roles` table.
+3.  Insert a new row:
+    - `user_id`: The UUID of the user you just created.
+    - `role`: `admin`
+
+*Alternatively, you can use the provided local helper scripts (not included in the repo) if you have the Service Role Key configured.*
 
 ## 6. Running the Application
 
@@ -70,9 +74,9 @@ npm run dev
 The application will be available at [http://localhost:3000](http://localhost:3000).
 
 - **Public Site:** Visit `/` (e.g., `/tr` or `/en`).
-- **Admin Panel:** Visit `/tr/admin` (Requires login with an email listed in `ADMIN_EMAILS`).
+- **Admin Panel:** Visit `/tr/admin`. If you are not an admin, you will be redirected to the home page.
 
 ## Troubleshooting
 
-- **"Invalid input syntax for type bigint"**: This usually means the `create_booking_safe` function in the database is outdated. Re-run `MIGRATE_CANCELLATION_TOKEN.sql` in Supabase.
-- **"supabase.from is not a function"**: Ensure you are using `createClient()` from `@/lib/supabase/server` in Server Components and awaiting it.
+- **"Auth session missing"**: Ensure you are using `createBrowserClient` in `src/lib/supabaseClient.ts` for client-side components and `@supabase/ssr` for server-side.
+- **"Failed to fetch" on Logout**: Ensure your internet connection is stable and the Supabase project is active.

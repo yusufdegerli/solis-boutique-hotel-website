@@ -40,6 +40,7 @@ export interface Room {
   quantity: number;
   image: string; // Deprecated: Use images[0]
   images: string[]; // New: Array of image URLs
+  amenities?: string[];
 }
 
 export interface BlogPost {
