@@ -127,21 +127,14 @@ export default function ReservationForm({
       }
 
       setIsSubmitted(true);
-    } catch (err: any) {
-      console.error('Reservation Error:', err);
-      
-      if (err?.errors && Array.isArray(err.errors) && err.errors.length > 0) {
-        const firstError = err.errors[0];
-        if (firstError?.message) {
-           setError(t(firstError.message as any)); 
-           return;
-        }
-      }
-
-      const errorMessage = err?.message || t('errorGeneric');
-      setError(errorMessage);
-    } finally {
-      setIsLoading(false);
+        } catch (err: any) {
+          if (err instanceof z.ZodError) {
+            const firstError = err.issues[0];
+            toast.error(firstError.message);
+          } else {
+            toast.error("Beklenmedik bir hata oluştu.");
+          }
+        } finally {      setIsLoading(false);
     }
   };
 
