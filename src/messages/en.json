@@ -1,7 +1,7 @@
 {
   "Navbar": {
     "home": "Home",
-    "hotels": "Our Hotels",
+    "hotels": "Hotels",
     "contact": "Contact",
     "book": "Book Now",
     "myBookings": "My Bookings"
@@ -9,7 +9,7 @@
   "MyBookings": {
     "title": "My Bookings",
     "noBookings": "You have no bookings yet.",
-    "bookingId": "Booking ID",
+    "bookingId": "Booking No",
     "hotel": "Hotel",
     "room": "Room",
     "dates": "Dates",
@@ -21,26 +21,26 @@
     "viewDetails": "View Details"
   },
   "Hero": {
-    "subtitle": "Rediscover",
-    "subtitleHighlight": "Luxury",
+    "subtitle": "Redefining Luxury",
+    "subtitleHighlight": "Discover",
     "description": "Unforgettable memories, impeccable service, and unique locations. Your dream vacation starts here.",
-    "explore": "Explore Hotels"
+    "explore": "View Hotels"
   },
   "Home": {
     "collection": "Solis Collection",
     "discoverTitle": "Discover Our Hotels",
     "discoverDesc": "A privileged world in our hotels in unique locations, where every detail is considered for your comfort.",
     "features": {
-      "service": "5-Star Service",
+      "service": "5 Star Service",
       "serviceDesc": "World-class accommodation.",
-      "architecture": "Awarded Architecture",
+      "architecture": "Award Winning Architecture",
       "architectureDesc": "Meeting of aesthetics and comfort.",
-      "security": "Safe Vacation",
-      "securityDesc": "Top-level hygiene standards.",
+      "security": "Safe Holiday",
+      "securityDesc": "High-level hygiene standards.",
       "satisfaction": "100% Satisfaction",
       "satisfactionDesc": "Your happiness is our priority."
     },
-    "ctaTitle": "An Unforgettable Vacation Awaits",
+    "ctaTitle": "An Unforgettable Holiday Awaits You",
     "ctaDesc": "Book your place now to take advantage of early booking opportunities."
   },
   "Footer": {
@@ -60,15 +60,15 @@
   "Contact": {
     "title": "Contact",
     "desc": "Contact us for your questions, opinions, or reservation requests. Our team will get back to you as soon as possible.",
-    "contactInfo": "Get in Touch",
+    "contactInfo": "Contact Us",
     "addressTitle": "Address",
     "phoneTitle": "Phone",
     "phoneDesc": "Weekdays 09:00 - 18:00",
-    "emailTitle": "Email",
-    "formTitle": "Send a Message",
-    "name": "First Name",
-    "surname": "Last Name",
-    "email": "Email",
+    "emailTitle": "E-mail",
+    "formTitle": "Send Message",
+    "name": "Your Name",
+    "surname": "Your Surname",
+    "email": "E-mail",
     "message": "Your Message",
     "send": "Send",
     "addressDetail": "Mimar Kemalettin Mah. Mithatpaşa Caddesi No:14/16 Beyazıt, Istanbul, Turkey",
@@ -79,18 +79,18 @@
     "title": "Accommodation",
     "desc": "The perfect harmony of comfort and luxury. Feel the warmth of your home in our specially designed rooms.",
     "night": "Per Night",
-    "book": "Book Now"
+    "book": "Book"
   },
   "Services": {
-    "title": "Exclusive Services",
-    "desc": "We offer not just accommodation, but a privileged experience that suits your lifestyle.",
+    "title": "Special Services",
+    "desc": "We offer a privileged experience suitable for your lifestyle, not just accommodation.",
     "moreInfo": "Get Info",
     "vipTitle": "Waiting is Not in Our Vocabulary.",
     "vipSubtitle": "VIP Transfer Privilege",
-    "vipDesc": "Start feeling the Solis privilege from the moment you land. A comfortable and safe journey away from traffic stress awaits you with our private chauffeured luxury vehicles.",
+    "vipDesc": "Start feeling the Solis privilege from the moment you land at the airport. A comfortable and safe journey away from traffic stress awaits you with our luxury vehicles with private drivers.",
     "feature1": "24/7 Greeting Service",
     "feature2": "Mercedes S-Class & V-Class Options",
-    "feature3": "Free Wi-Fi and Refreshments",
+    "feature3": "Free Wi-Fi and Beverage Service",
     "bookTransfer": "Book Transfer"
   },
   "Blog": {
@@ -99,31 +99,31 @@
     "readMore": "Read More"
   },
   "History": {
-    "tag": "City Where Two Continents Meet",
+    "tag": "The City Where Two Continents Meet",
     "title": "ISTANBUL",
-    "quote": "\"Istanbul, the city of poets, emperors, and dreamers. A legendary metropolis that hides a secret in every layer of history, uniting the past and future in the blue waters of the Bosphorus.\"",
+    "quote": "\"Istanbul, the city of poets, emperors, and dreamers. A legendary metropolis hiding a separate secret in every layer of history, combining the past and the future in the blue waters of the Bosphorus.\"",
     "section1Title": "Capital of Empires",
-    "section1Desc": "A magnificent journey from Byzantium founded in the 7th century BC to Constantinople, the 'New Rome' of the Roman Empire, and to the Ottoman's Dersaadet. Istanbul has been the capital of three great empires for 1600 years, witnessing sieges, victories, and cultural revolutions that changed the course of history.",
-    "section1Extra": "Prayers echoing in the dome of Hagia Sophia, state secrets whispered in the corridors of Topkapi Palace, and time lost in the labyrinths of the Grand Bazaar... Istanbul is not just a city, but a living open-air museum.",
+    "section1Desc": "A magnificent journey extending from Byzantium founded in the 7th century BC to Constantinople, the \"New Rome\" of the Roman Empire, and to the Ottoman's Dersaadet. Istanbul has been the capital of three great empires for 1600 years, witnessing sieges, victories, and cultural revolutions that changed the course of history.",
+    "section1Extra": "Prayers echoing in the dome of Hagia Sophia, state secrets whispered in the corridors of Topkapi Palace, and time lost in the labyrinths of the Grand Bazaar... Istanbul is not just a city, it is a living open-air museum.",
     "section2Title": "Discover Istanbul with Solis",
-    "section2Desc": "While staying at our Solis City hotel, you will be at the very heart of this magical history. Our private concierge team is ready to make your Istanbul experience unforgettable with events specially prepared for you, such as the 'Historical Peninsula Tour' or 'Sunset Boat Tour on the Bosphorus'."
+    "section2Desc": "While staying at our Solis City hotel, you will be right in the heart of this magical history. Our special concierge team is ready to make your Istanbul experience unforgettable with events such as the \"Historical Peninsula Tour\" or \"Sunset Boat Tour on the Bosphorus\" prepared especially for you."
   },
   "Reservation": {
     "title": "Complete Your Reservation",
-    "subtitle": "A vacation full of Solis privileges awaits you.",
+    "subtitle": "A holiday full of Solis privileges awaits you.",
     "successTitle": "Reservation Request Received!",
     "successMessage": "Your request has successfully reached us. Our customer representative will contact you as soon as possible.",
-    "newBooking": "Make a New Reservation",
+    "newBooking": "Make New Reservation",
     "detailsTitle": "Reservation Details",
-    "nameLabel": "Full Name",
-    "namePlaceholder": "Your Full Name",
-    "emailLabel": "Email",
+    "nameLabel": "Name Surname",
+    "namePlaceholder": "Your Name Surname",
+    "emailLabel": "E-mail",
     "emailPlaceholder": "example@email.com",
     "hotelLabel": "Hotel Selection",
     "hotelSelectPlaceholder": "Please select a hotel",
     "roomLabel": "Room Selection",
     "roomSelectPlaceholder": "Please select a room",
-    "selectHotelFirst": "Select a hotel first",
+    "selectHotelFirst": "Select hotel first",
     "checkIn": "Check-in Date",
     "checkOut": "Check-out Date",
     "guests": "Number of Guests",
@@ -135,10 +135,10 @@
     "errorHotelRequired": "Please select a hotel.",
     "errorRoomRequired": "Please select a room.",
     "errorNameRequired": "Name must be at least 2 characters.",
-    "errorEmailInvalid": "Please enter a valid email address.",
+    "errorEmailInvalid": "Please enter a valid e-mail address.",
     "errorDatePast": "Check-in date cannot be in the past.",
     "errorDateOrder": "Check-out date must be after check-in date.",
-    "errorGuestsMin": "At least 1 guest is required.",
-    "errorGuestsMax": "Maximum 10 guests are allowed."
+    "errorGuestsMin": "There must be at least 1 guest.",
+    "errorGuestsMax": "Maximum 10 guests are accepted."
   }
 }

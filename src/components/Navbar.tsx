@@ -13,16 +13,6 @@ export default function Navbar({ locale }: { locale: string }) {
   const router = useRouter();
   const pathname = usePathname();
 
-  // Removed Auth Logic (Guest Mode)
-
-  const handleLanguageChange = (newLocale: string) => {
-    // Replace locale in path
-    const pathSegments = pathname.split('/');
-    pathSegments[1] = newLocale;
-    const newPath = pathSegments.join('/');
-    router.push(newPath);
-  };
-
   return (
     <nav className="fixed top-0 z-50 w-full bg-[#0a0a0a]/90 backdrop-blur-lg border-b border-white/10 shadow-lg transition-all duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -42,7 +32,7 @@ export default function Navbar({ locale }: { locale: string }) {
           <div className="hidden md:flex space-x-8 items-center">
             <Link href={`/${locale}`} className="text-white/80 hover:text-[var(--gold)] transition-colors font-sans font-medium text-xs tracking-widest uppercase">{t('home')}</Link>
             <Link href={`/${locale}/#hotels`} className="text-white/80 hover:text-[var(--gold)] transition-colors font-sans font-medium text-xs tracking-widest uppercase">
-                {locale === 'tr' ? 'Şubeler' : locale === 'en' ? 'Branches' : t('hotels')}
+                {locale === 'tr' ? 'Şubeler' : t('hotels')}
             </Link>
             
             {/* Pages Dropdown */}
@@ -72,31 +62,25 @@ export default function Navbar({ locale }: { locale: string }) {
             
             {/* Language Switcher */}
             <div className="relative group">
-                <button className="flex items-center gap-2 text-white/80 hover:text-[var(--gold)] border border-white/20 px-3 py-1 rounded-sm">
-                    <Globe className="w-3 h-3" />
-                    <span className="uppercase text-[10px] font-bold tracking-wider">
-                        {locale === 'tr' ? '🇹🇷 TR' : 
-                         locale === 'en' ? '🇬🇧 EN' : 
-                         locale === 'ar' ? '🇸🇦 AR' : 
-                         locale === 'hu' ? '🇭🇺 HU' : '🇷🇴 RO'}
-                    </span>
+                <button className="flex items-center gap-2 text-white/80 hover:text-[var(--gold)] border border-white/20 px-3 py-1 rounded-sm transition-colors duration-300">
+                     <Globe className="w-3 h-3" />
+                     <span className="uppercase text-[10px] font-bold tracking-wider">{locale}</span>
                 </button>
-                <div className="absolute right-0 mt-2 w-32 bg-white rounded-sm shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 p-2 z-50">
-                    {[
-                        { code: 'tr', label: '🇹🇷 TR' },
-                        { code: 'en', label: '🇬🇧 EN' },
-                        { code: 'ar', label: '🇸🇦 AR' },
-                        { code: 'hu', label: '🇭🇺 HU' },
-                        { code: 'ro', label: '🇷🇴 RO' }
-                    ].map((l) => (
-                        <button 
-                            key={l.code} 
-                            onClick={() => handleLanguageChange(l.code)}
-                            className={`block w-full text-left px-4 py-2 text-xs uppercase tracking-wider hover:bg-gray-50 rounded-sm ${locale === l.code ? 'text-[var(--gold)] font-bold' : 'text-gray-700'}`}
-                        >
-                            {l.label}
-                        </button>
-                    ))}
+                <div className="absolute right-0 mt-0 w-24 bg-white rounded-sm shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform group-hover:translate-y-0 translate-y-2 border-t-2 border-[var(--gold)]">
+                    <div className="py-1">
+                        {['tr', 'en', 'ru', 'ar', 'ro', 'hu'].map((l) => (
+                             <button
+                                key={l}
+                                onClick={() => {
+                                    const newPath = pathname.replace(`/${locale}`, `/${l}`);
+                                    router.push(newPath);
+                                }}
+                                className={`block w-full text-left px-4 py-2 text-xs text-gray-700 hover:bg-gray-50 hover:text-[var(--gold)] font-sans uppercase tracking-wider ${locale === l ? 'font-bold text-[var(--gold)]' : ''}`}
+                             >
+                                {l}
+                             </button>
+                        ))}
+                    </div>
                 </div>
             </div>
 
@@ -124,13 +108,6 @@ export default function Navbar({ locale }: { locale: string }) {
            <Link href={`/${locale}/services`} className="block text-white font-serif text-lg">Hizmetler</Link>
            <Link href={`/${locale}/#hotels`} className="block text-white font-serif text-lg">{t('hotels')}</Link>
            <Link href={`/${locale}/contact`} className="block text-white font-serif text-lg">{t('contact')}</Link>
-           <div className="flex gap-4 pt-4 border-t border-gray-800">
-                {['tr', 'en', 'ar', 'hu', 'ro'].map((l) => (
-                    <button key={l} onClick={() => handleLanguageChange(l)} className={`uppercase text-sm ${locale === l ? 'text-[var(--gold)] font-bold' : 'text-gray-500'}`}>
-                        {l}
-                    </button>
-                ))}
-           </div>
         </div>
       )}
     </nav>

@@ -1,11 +1,56 @@
 import { Resend } from 'resend';
+import nodemailer from 'nodemailer';
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
+const EMAIL_PROVIDER = process.env.EMAIL_PROVIDER || 'resend'; // 'resend' | 'gmail'
+
+// Gmail SMTP Configuration
+const GMAIL_USER = process.env.GMAIL_USER;
+const GMAIL_PASS = process.env.GMAIL_APP_PASSWORD;
 
 // Generic send email function
 export async function sendEmail(to: string, subject: string, html: string) {
+  if (EMAIL_PROVIDER === 'gmail') {
+    return sendViaGmail(to, subject, html);
+  } else {
+    return sendViaResend(to, subject, html);
+  }
+}
+
+// 1. Gmail Implementation
+async function sendViaGmail(to: string, subject: string, html: string) {
+  if (!GMAIL_USER || !GMAIL_PASS) {
+    console.warn('⚠️ GMAIL_USER veya GMAIL_APP_PASSWORD eksik.');
+    return { success: false, error: 'Gmail Configuration Missing' };
+  }
+
+  try {
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: GMAIL_USER,
+        pass: GMAIL_PASS,
+      },
+    });
+
+    const info = await transporter.sendMail({
+      from: `"Solis Hotel" <${GMAIL_USER}>`,
+      to: to,
+      subject: subject,
+      html: html,
+    });
+
+    return { success: true, data: info };
+  } catch (err) {
+    console.error('Gmail sending failed:', err);
+    return { success: false, error: err };
+  }
+}
+
+// 2. Resend Implementation
+async function sendViaResend(to: string, subject: string, html: string) {
   if (!RESEND_API_KEY) {
-    console.warn('⚠️ RESEND_API_KEY eksik. E-posta gönderilemedi: ' + subject);
+    console.warn('⚠️ RESEND_API_KEY eksik.');
     return { success: false, error: 'API Key Missing' };
   }
 
@@ -20,13 +65,13 @@ export async function sendEmail(to: string, subject: string, html: string) {
     });
 
     if (error) {
-      console.error('Email sending failed:', error);
+      console.error('Resend sending failed:', error);
       return { success: false, error };
     }
 
     return { success: true, data };
   } catch (err) {
-    console.error('Email service error:', err);
+    console.error('Resend service error:', err);
     return { success: false, error: err };
   }
 }
@@ -46,8 +91,7 @@ function getEmailTemplate(status: string, customerName: string, bookingId?: stri
   let message = "";
   let actionHtml = "";
 
-  // Base URL (assuming localhost for dev or production URL from env)
-  // Vercel usually sets NEXT_PUBLIC_VERCEL_URL but it doesn't include https://
+  // Base URL
   const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
   const domain = process.env.NEXT_PUBLIC_APP_URL || (process.env.NEXT_PUBLIC_VERCEL_URL ? `${protocol}://${process.env.NEXT_PUBLIC_VERCEL_URL}` : 'http://localhost:3000');
   
@@ -113,7 +157,6 @@ function getEmailTemplate(status: string, customerName: string, bookingId?: stri
 
 export async function sendBookingStatusEmail(email: string, customerName: string, status: string, bookingId?: string, cancellationToken?: string) {
   const html = getEmailTemplate(status, customerName, bookingId, cancellationToken);
-  // Extract title from HTML simply or define map
   let subject = "Solis Hotel - Rezervasyon Bilgilendirme";
   if (status === 'confirmed') subject = "Rezervasyonunuz Onaylandı! - Solis Hotel";
   if (status === 'cancelled') subject = "Rezervasyon İptali - Solis Hotel";
@@ -122,8 +165,7 @@ export async function sendBookingStatusEmail(email: string, customerName: string
   return sendEmail(email, subject, html);
 }
 
-// Backward compatibility (optional, but good practice if other files use it)
+// Backward compatibility
 export async function sendConfirmationEmail(email: string, customerName: string) {
   return sendBookingStatusEmail(email, customerName, 'confirmed');
 }
-

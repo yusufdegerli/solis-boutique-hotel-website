@@ -22,6 +22,9 @@ const jakarta = Plus_Jakarta_Sans({
 export const metadata: Metadata = {
   title: "Solis Hotels | Modern Luxury",
   description: "Experience the future of hospitality at Solis City and Solis Resort.",
+  icons: {
+    icon: '/favicon.svg',
+  },
 };
 
 export default async function RootLayout({
@@ -33,7 +36,7 @@ export default async function RootLayout({
 }) {
   const { locale } = await params;
   
-  if (!['en', 'tr', 'ar', 'hu', 'ro'].includes(locale)) {
+  if (!['tr', 'en', 'ru', 'ar', 'ro', 'hu'].includes(locale)) {
     notFound();
   }
 

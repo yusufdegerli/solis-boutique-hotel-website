@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const intlMiddleware = createMiddleware({
   // A list of all locales that are supported
-  locales: ['en', 'tr', 'ar', 'hu', 'ro'],
+  locales: ['tr', 'en', 'ru', 'ar', 'ro', 'hu'],
  
   // Used when no locale matches
   defaultLocale: 'tr'
@@ -12,7 +12,7 @@ const intlMiddleware = createMiddleware({
 
 export default async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
-  const LOCALES = ['en', 'tr', 'ar', 'hu', 'ro'];
+  const LOCALES = ['tr', 'en', 'ru', 'ar', 'ro', 'hu'];
 
   // 1. Force locale prefix for known routes if missing
   const firstSegment = path.split('/')[1];
