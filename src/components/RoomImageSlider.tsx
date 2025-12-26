@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import Image from 'next/image';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface RoomImageSliderProps {
   images: string[];
@@ -53,15 +53,22 @@ export default function RoomImageSlider({ images, roomName }: RoomImageSliderPro
     <div className="relative h-64 w-full overflow-hidden group">
       {/* Images */}
       <div 
-        className="w-full h-full relative"
+        className="w-full h-full relative bg-gray-100"
         onMouseEnter={() => setIsAutoPlaying(false)}
         onMouseLeave={() => setIsAutoPlaying(true)}
       >
-        <img
-          src={images[currentIndex]}
-          alt={`${roomName} - Görsel ${currentIndex + 1}`}
-          className="w-full h-full object-cover transition-all duration-500 ease-in-out"
-        />
+        <AnimatePresence mode="wait">
+          <motion.img
+            key={currentIndex}
+            src={images[currentIndex]}
+            alt={`${roomName} - Görsel ${currentIndex + 1}`}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.5, ease: "easeInOut" }}
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+        </AnimatePresence>
       </div>
 
       {/* Navigation Buttons (Only if > 1 image) */}

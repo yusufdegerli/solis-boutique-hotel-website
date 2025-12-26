@@ -19,7 +19,7 @@ export default function Navbar({ locale }: { locale: string }) {
         <div className="flex justify-between h-24 items-center">
           <div className="flex-shrink-0 flex items-center">
             <Link href={`/${locale}`} className="flex items-center gap-3 group">
-              <div className="bg-[var(--gold)] p-2 rounded-sm text-white group-hover:bg-white group-hover:text-[var(--gold)] transition-colors duration-300">
+              <div className="bg-[var(--gold)] p-2 rounded-full text-white group-hover:bg-white group-hover:text-[var(--gold)] transition-colors duration-300">
                 <Hotel className="h-6 w-6" />
               </div>
               <div className="flex flex-col">
@@ -40,7 +40,7 @@ export default function Navbar({ locale }: { locale: string }) {
                 <button className="flex items-center gap-1 text-white/80 hover:text-[var(--gold)] font-sans font-medium text-xs tracking-widest uppercase py-4">
                     {locale === 'tr' ? 'Keşfet' : 'Discover'} <ChevronDown className="w-3 h-3" />
                 </button>
-                <div className="absolute left-0 mt-0 w-56 bg-white rounded-sm shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform group-hover:translate-y-0 translate-y-2 border-t-2 border-[var(--gold)]">
+                <div className="absolute left-0 mt-0 w-56 bg-white rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform group-hover:translate-y-0 translate-y-2 border-t-2 border-[var(--gold)] overflow-hidden">
                     <div className="py-2">
                         <Link href={`/${locale}/rooms`} className="block px-6 py-3 text-sm text-gray-700 hover:bg-gray-50 hover:text-[var(--gold)] font-serif border-b border-gray-100">
                            {locale === 'tr' ? 'Odalar & Suitler' : 'Rooms & Suites'}
@@ -62,11 +62,11 @@ export default function Navbar({ locale }: { locale: string }) {
             
             {/* Language Switcher */}
             <div className="relative group">
-                <button className="flex items-center gap-2 text-white/80 hover:text-[var(--gold)] border border-white/20 px-3 py-1 rounded-sm transition-colors duration-300">
+                <button className="flex items-center gap-2 text-white/80 hover:text-[var(--gold)] border border-white/20 px-3 py-1.5 rounded-full transition-colors duration-300">
                      <Globe className="w-3 h-3" />
                      <span className="uppercase text-[10px] font-bold tracking-wider">{locale}</span>
                 </button>
-                <div className="absolute right-0 mt-0 w-24 bg-white rounded-sm shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform group-hover:translate-y-0 translate-y-2 border-t-2 border-[var(--gold)]">
+                <div className="absolute right-0 mt-0 w-24 bg-white rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform group-hover:translate-y-0 translate-y-2 border-t-2 border-[var(--gold)] overflow-hidden">
                     <div className="py-1">
                         {['tr', 'en', 'ru', 'ar', 'ro', 'hu'].map((l) => (
                              <button
@@ -84,7 +84,7 @@ export default function Navbar({ locale }: { locale: string }) {
                 </div>
             </div>
 
-            <Link href={`/${locale}/reservation`} className="bg-[var(--gold)] text-white px-6 py-3 rounded-sm font-serif text-xs uppercase tracking-widest hover:bg-white hover:text-[var(--off-black)] transition-all shadow-lg hover:shadow-xl duration-200">
+            <Link href={`/${locale}/reservation`} className="bg-[var(--gold)] text-white px-8 py-3 rounded-full font-serif text-xs uppercase tracking-widest hover:bg-white hover:text-[var(--off-black)] transition-all shadow-lg hover:shadow-xl duration-300 transform hover:-translate-y-0.5">
               {t('book')}
             </Link>
           </div>

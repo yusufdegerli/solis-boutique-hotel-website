@@ -56,13 +56,13 @@ export default function Footer() {
           <div>
             <h4 className="text-lg font-semibold mb-6 text-white font-serif">{t('newsletter')}</h4>
             <p className="text-gray-400 text-sm mb-4 font-sans">{t('newsletterDesc')}</p>
-            <form className="flex flex-col gap-2">
+            <form className="flex flex-col gap-3">
               <input 
                 type="email" 
                 placeholder={t('placeholder')} 
-                className="bg-gray-800 text-white px-4 py-2 rounded focus:outline-none focus:ring-1 focus:ring-[var(--gold)] font-sans"
+                className="bg-gray-800 text-white px-6 py-3 rounded-full focus:outline-none focus:ring-1 focus:ring-[var(--gold)] font-sans text-sm border border-white/10"
               />
-              <button className="bg-[var(--gold)] text-white px-4 py-2 rounded font-medium hover:bg-yellow-600 transition-colors font-serif">
+              <button className="bg-[var(--gold)] text-white px-6 py-3 rounded-full font-serif font-bold uppercase tracking-widest text-xs hover:bg-white hover:text-[var(--off-black)] transition-all duration-300 shadow-lg">
                 {t('subscribe')}
               </button>
             </form>
