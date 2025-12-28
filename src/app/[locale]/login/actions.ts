@@ -74,6 +74,13 @@ export async function resetPassword(formData: FormData) {
 
 export async function updatePassword(formData: FormData) {
   const password = formData.get('password') as string;
+
+  // Strong Password Validation
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+  if (!passwordRegex.test(password)) {
+    return { error: 'Şifreniz en az 8 karakter uzunluğunda olmalı ve en az bir büyük harf, bir küçük harf ve bir rakam içermelidir.' };
+  }
+
   const supabase = await createClient();
 
   const { data, error } = await supabase.auth.updateUser({

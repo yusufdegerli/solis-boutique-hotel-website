@@ -4,7 +4,12 @@
     "hotels": "Otellerimiz",
     "contact": "İletişim",
     "book": "Rezervasyon Yap",
-    "myBookings": "Rezervasyonlarım"
+    "myBookings": "Rezervasyonlarım",
+    "discover": "Keşfet",
+    "roomsSuites": "Odalar & Suitler",
+    "servicesTransfer": "Hizmetler & Transfer",
+    "istanbulHistory": "İstanbul Tarihi",
+    "blog": "Blog"
   },
   "MyBookings": {
     "title": "Rezervasyonlarım",

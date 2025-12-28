@@ -4,7 +4,12 @@
     "hotels": "Hotels",
     "contact": "Contact",
     "book": "Book Now",
-    "myBookings": "My Bookings"
+    "myBookings": "My Bookings",
+    "discover": "Discover",
+    "roomsSuites": "Rooms & Suites",
+    "servicesTransfer": "Services & Transfer",
+    "istanbulHistory": "History of Istanbul",
+    "blog": "Blog"
   },
   "MyBookings": {
     "title": "My Bookings",

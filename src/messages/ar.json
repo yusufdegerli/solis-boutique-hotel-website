@@ -4,7 +4,12 @@
     "hotels": "فنادقنا",
     "contact": "اتصل بنا",
     "book": "احجز الآن",
-    "myBookings": "حجوزاتي"
+    "myBookings": "حجوزاتي",
+    "discover": "اكتشف",
+    "roomsSuites": "الغرف والأجنحة",
+    "servicesTransfer": "الخدمات والنقل",
+    "istanbulHistory": "تاريخ إسطنبول",
+    "blog": "المدونة"
   },
   "MyBookings": {
     "title": "حجوزاتي",

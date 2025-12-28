@@ -4,7 +4,12 @@
     "hotels": "Наши отели",
     "contact": "Контакты",
     "book": "Забронировать",
-    "myBookings": "Мои бронирования"
+    "myBookings": "Мои бронирования",
+    "discover": "Узнать больше",
+    "roomsSuites": "Номера и люксы",
+    "servicesTransfer": "Услуги и трансфер",
+    "istanbulHistory": "История Стамбула",
+    "blog": "Блог"
   },
   "MyBookings": {
     "title": "Мои бронирования",

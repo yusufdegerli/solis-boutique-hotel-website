@@ -32,27 +32,27 @@ export default function Navbar({ locale }: { locale: string }) {
           <div className="hidden md:flex space-x-8 items-center">
             <Link href={`/${locale}`} className="text-white/80 hover:text-[var(--gold)] transition-colors font-sans font-medium text-xs tracking-widest uppercase">{t('home')}</Link>
             <Link href={`/${locale}/#hotels`} className="text-white/80 hover:text-[var(--gold)] transition-colors font-sans font-medium text-xs tracking-widest uppercase">
-                {locale === 'tr' ? 'Şubeler' : t('hotels')}
+                {t('hotels')}
             </Link>
             
             {/* Pages Dropdown */}
             <div className="relative group" onMouseEnter={() => setIsPagesOpen(true)} onMouseLeave={() => setIsPagesOpen(false)}>
                 <button className="flex items-center gap-1 text-white/80 hover:text-[var(--gold)] font-sans font-medium text-xs tracking-widest uppercase py-4">
-                    {locale === 'tr' ? 'Keşfet' : 'Discover'} <ChevronDown className="w-3 h-3" />
+                    {t('discover')} <ChevronDown className="w-3 h-3" />
                 </button>
                 <div className="absolute left-0 mt-0 w-56 bg-white rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform group-hover:translate-y-0 translate-y-2 border-t-2 border-[var(--gold)] overflow-hidden">
                     <div className="py-2">
                         <Link href={`/${locale}/rooms`} className="block px-6 py-3 text-sm text-gray-700 hover:bg-gray-50 hover:text-[var(--gold)] font-serif border-b border-gray-100">
-                           {locale === 'tr' ? 'Odalar & Suitler' : 'Rooms & Suites'}
+                           {t('roomsSuites')}
                         </Link>
                         <Link href={`/${locale}/services`} className="block px-6 py-3 text-sm text-gray-700 hover:bg-gray-50 hover:text-[var(--gold)] font-serif border-b border-gray-100">
-                           {locale === 'tr' ? 'Hizmetler & Transfer' : 'Services & Transfer'}
+                           {t('servicesTransfer')}
                         </Link>
                          <Link href={`/${locale}/pages/istanbul-history`} className="block px-6 py-3 text-sm text-gray-700 hover:bg-gray-50 hover:text-[var(--gold)] font-serif border-b border-gray-100">
-                           {locale === 'tr' ? 'İstanbul Tarihi' : 'History of Istanbul'}
+                           {t('istanbulHistory')}
                         </Link>
                         <Link href={`/${locale}/blog`} className="block px-6 py-3 text-sm text-gray-700 hover:bg-gray-50 hover:text-[var(--gold)] font-serif">
-                           {locale === 'tr' ? 'Blog' : 'Blog'}
+                           {t('blog')}
                         </Link>
                     </div>
                 </div>
@@ -104,8 +104,8 @@ export default function Navbar({ locale }: { locale: string }) {
       {isOpen && (
         <div className="md:hidden bg-black/95 backdrop-blur-xl border-t border-white/10 p-6 space-y-6 h-screen">
            <Link href={`/${locale}`} className="block text-white font-serif text-lg">{t('home')}</Link>
-           <Link href={`/${locale}/rooms`} className="block text-white font-serif text-lg">Odalar</Link>
-           <Link href={`/${locale}/services`} className="block text-white font-serif text-lg">Hizmetler</Link>
+           <Link href={`/${locale}/rooms`} className="block text-white font-serif text-lg">{t('roomsSuites')}</Link>
+           <Link href={`/${locale}/services`} className="block text-white font-serif text-lg">{t('servicesTransfer')}</Link>
            <Link href={`/${locale}/#hotels`} className="block text-white font-serif text-lg">{t('hotels')}</Link>
            <Link href={`/${locale}/contact`} className="block text-white font-serif text-lg">{t('contact')}</Link>
         </div>

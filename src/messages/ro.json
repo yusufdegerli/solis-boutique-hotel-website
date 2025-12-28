@@ -4,7 +4,12 @@
     "hotels": "Hotelurile Noastre",
     "contact": "Contact",
     "book": "Rezervă Acum",
-    "myBookings": "Rezervările Mele"
+    "myBookings": "Rezervările Mele",
+    "discover": "Descoperă",
+    "roomsSuites": "Camere și apartamente",
+    "servicesTransfer": "Servicii și transfer",
+    "istanbulHistory": "Istoria Istanbulului",
+    "blog": "Blog"
   },
   "MyBookings": {
     "title": "Rezervările Mele",

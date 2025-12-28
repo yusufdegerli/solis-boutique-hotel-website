@@ -4,7 +4,12 @@
     "hotels": "Szállodáink",
     "contact": "Kapcsolat",
     "book": "Foglalás",
-    "myBookings": "Foglalásaim"
+    "myBookings": "Foglalásaim",
+    "discover": "Felfedezés",
+    "roomsSuites": "Szobák és lakosztályok",
+    "servicesTransfer": "Szolgáltatások és transzfer",
+    "istanbulHistory": "Isztambul történelme",
+    "blog": "Blog"
   },
   "MyBookings": {
     "title": "Foglalásaim",

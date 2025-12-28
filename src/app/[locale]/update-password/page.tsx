@@ -20,6 +20,13 @@ export default function UpdatePasswordPage() {
       return;
     }
 
+    // Strong Password Regex Validation
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+    if (!passwordRegex.test(password)) {
+      setMessage({ type: 'error', text: 'Şifreniz en az 8 karakter, bir büyük harf, bir küçük harf ve bir rakam içermelidir.' });
+      return;
+    }
+
     startTransition(async () => {
       const result = await updatePassword(formData);
       if (result?.error) {
