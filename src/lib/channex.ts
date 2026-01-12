@@ -1,6 +1,6 @@
 export const updateAvailability = async (
   roomTypeId: string, 
-  ratePlanId: string, // NEW PARAM
+  ratePlanId: string, 
   date: string, 
   count: number
 ): Promise<{ success: boolean; data?: any; error?: string }> => {
@@ -21,7 +21,7 @@ export const updateAvailability = async (
         {
           property_id: propertyId,
           room_type_id: roomTypeId,
-          rate_plan_id: ratePlanId, // Added Rate Plan ID
+          rate_plan_id: ratePlanId, 
           date_from: date,
           date_to: date, 
           availability: count 
@@ -29,12 +29,17 @@ export const updateAvailability = async (
       ]
     };
 
+    // Try multiple auth headers to be safe
+    const headers: any = {
+      'Content-Type': 'application/json',
+      'user-api-key': apiKey, // Standard v1
+      'apikey': apiKey,       // Alternative
+      // 'Authorization': `Bearer ${apiKey}` // Bearer is usually for OAuth, but keys sometimes work
+    };
+
     const response = await fetch(url, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'user-api-key': apiKey
-      },
+      headers: headers,
       body: JSON.stringify(payload)
     });
 
