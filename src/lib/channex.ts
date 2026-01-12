@@ -32,7 +32,7 @@ export const updateAvailability = async (
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'apikey': apiKey
+        'user-api-key': apiKey
       },
       body: JSON.stringify(payload)
     });
