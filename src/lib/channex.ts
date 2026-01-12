@@ -29,17 +29,14 @@ export const updateAvailability = async (
       ]
     };
 
-    // Try multiple auth headers to be safe
-    const headers: any = {
-      'Content-Type': 'application/json',
-      'user-api-key': apiKey, // Standard v1
-      'apikey': apiKey,       // Alternative
-      // 'Authorization': `Bearer ${apiKey}` // Bearer is usually for OAuth, but keys sometimes work
-    };
-
     const response = await fetch(url, {
       method: 'POST',
-      headers: headers,
+      headers: {
+        'Content-Type': 'application/json',
+        'user-api-key': apiKey,
+        'apikey': apiKey,
+        'User-Agent': 'SolisHotelWebsite/1.0 (Vercel; Node.js)' // User Agent Eklendi
+      },
       body: JSON.stringify(payload)
     });
 
