@@ -22,7 +22,9 @@ import {
   LogOut,
   Image as ImageIcon,
   PieChart, // Added
-  MessageSquare // Added
+  MessageSquare, // Added
+  Terminal,
+  Webhook
 } from 'lucide-react';
 import ReportsTab from '@/components/admin/ReportsTab';
 import ChatPanel from '@/components/admin/ChatPanel';
@@ -47,7 +49,7 @@ import toast, { Toaster } from 'react-hot-toast';
 import { AMENITY_OPTIONS } from '@/lib/amenityOptions';
 
 export default function AdminDashboard() {
-  const [activeTab, setActiveTab] = useState<'live' | 'hotels' | 'rooms' | 'campaigns' | 'reports' | 'chat'>('live');
+  const [activeTab, setActiveTab] = useState<'live' | 'hotels' | 'rooms' | 'campaigns' | 'reports' | 'chat' | 'api' | 'webhook'>('live');
   const [hotels, setHotels] = useState<Hotel[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -528,6 +530,8 @@ export default function AdminDashboard() {
             <SidebarItem id="hotels" icon={HotelIcon} label="Oteller" />
             <SidebarItem id="rooms" icon={BedDouble} label="Odalar" />
             <SidebarItem id="campaigns" icon={Tags} label="Kampanyalar" />
+            <SidebarItem id="api" icon={Terminal} label="/api" />
+            <SidebarItem id="webhook" icon={Webhook} label="/api/webhook" />
           </div>
           
           <div className="pt-4 border-t border-gray-100">
@@ -553,15 +557,19 @@ export default function AdminDashboard() {
               {activeTab === 'hotels' && 'Otel Yönetimi'}
               {activeTab === 'rooms' && 'Oda & Fiyat Yönetimi'}
               {activeTab === 'campaigns' && 'Kampanyalar & İndirimler'}
+              {activeTab === 'api' && 'API Durumu'}
+              {activeTab === 'webhook' && 'Webhook Yönetimi'}
             </h2>
             <p className="text-gray-500 mt-1">
                 {activeTab === 'live' ? 'Anlık misafir ve rezervasyon takibi.' : 
                  activeTab === 'reports' ? 'Gelir ve doluluk istatistikleri.' :
                  activeTab === 'chat' ? 'Web sitesi ziyaretçileriyle anlık mesajlaşma.' :
+                 activeTab === 'api' ? 'Sistem API uç noktaları ve durumları.' :
+                 activeTab === 'webhook' ? 'Dış servis entegrasyonları ve webhook kayıtları.' :
                  'İçeriklerinizi buradan yönetebilirsiniz.'}
             </p>
           </div>
-          {activeTab !== 'campaigns' && activeTab !== 'live' && activeTab !== 'reports' && activeTab !== 'chat' && (
+          {activeTab !== 'campaigns' && activeTab !== 'live' && activeTab !== 'reports' && activeTab !== 'chat' && activeTab !== 'api' && activeTab !== 'webhook' && (
             <button 
               onClick={() => handleOpenModal('add')}
               className="flex items-center gap-2 bg-[var(--off-black)] text-white px-5 py-2.5 rounded-lg hover:bg-black transition-colors shadow-lg"
@@ -705,6 +713,58 @@ export default function AdminDashboard() {
 
             {/* CHAT TAB */}
             {activeTab === 'chat' && <ChatPanel onMessagesRead={fetchUnreadCount} />}
+
+            {/* API TAB */}
+            {activeTab === 'api' && (
+              <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="p-3 bg-blue-50 rounded-lg text-blue-600">
+                    <Terminal className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900">API Durumu</h3>
+                    <p className="text-sm text-gray-500">Sistem API uç noktaları ve çalışma durumu.</p>
+                  </div>
+                </div>
+                
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <code className="px-2 py-1 bg-gray-200 rounded text-sm font-mono">GET /api</code>
+                      <span className="text-sm text-gray-600">Temel API Durumu</span>
+                    </div>
+                    <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full">AKTİF</span>
+                  </div>
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <code className="px-2 py-1 bg-gray-200 rounded text-sm font-mono">POST /api/webhook</code>
+                      <span className="text-sm text-gray-600">Webhook Dinleyicisi</span>
+                    </div>
+                    <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full">AKTİF</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* WEBHOOK TAB */}
+            {activeTab === 'webhook' && (
+              <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="p-3 bg-purple-50 rounded-lg text-purple-600">
+                    <Webhook className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900">Webhook İşlemleri</h3>
+                    <p className="text-sm text-gray-500">Dış servislerden gelen bildirimleri yönetin.</p>
+                  </div>
+                </div>
+
+                <div className="border-2 border-dashed border-gray-200 rounded-xl p-12 text-center">
+                  <p className="text-gray-400 italic">Henüz kaydedilmiş bir webhook aktivitesi bulunmuyor.</p>
+                  <p className="text-sm text-gray-400 mt-2">Dış servisler (Stripe, WhatsApp Business vb.) üzerinden veri geldiğinde burada listelenecektir.</p>
+                </div>
+              </div>
+            )}
 
             {/* HOTELS LIST */}
             {activeTab === 'hotels' && (
