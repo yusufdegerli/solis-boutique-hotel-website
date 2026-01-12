@@ -12,7 +12,7 @@ export const updateAvailability = async (
     }
 
     // Channex API v1 standard endpoint for updating availability is /availability
-    const url = 'https://app.channex.io/api/v1/availability';
+    const url = 'https://api.channex.io/api/v1/availability';
 
     console.log(`Channex Request: ${url} for Room: ${roomTypeId} Date: ${date} Count: ${count}`);
 
@@ -32,7 +32,7 @@ export const updateAvailability = async (
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'user-api-key': apiKey
+        'apikey': apiKey
       },
       body: JSON.stringify(payload)
     });
@@ -48,7 +48,8 @@ export const updateAvailability = async (
     }
 
     if (!response.ok) {
-      console.error('Channex API Fail Response:', data);
+      console.error('Channex API Fail Status', response.status);
+      console.error('Channex API Fail Response:', JSON.stringify(data, null, 2));
       throw new Error(data?.message || JSON.stringify(data) || 'Channex API request failed');
     }
 
