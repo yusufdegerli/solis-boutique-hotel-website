@@ -4,6 +4,8 @@ import { createClient } from '@supabase/supabase-js';
 import { z } from "zod";
 import { sendBookingNotification } from '@/services/notificationService';
 import { sendConfirmationEmail } from '@/services/mailService'; // Keep for now or remove if unused later
+import { updateAvailability } from '@/lib/channex';
+import { eachDayOfInterval, format, subDays } from 'date-fns';
 
 // Initialize Supabase client
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -131,6 +133,56 @@ export async function createBookingServer(bookingData: any) {
       // Send "Pending" notification
       sendBookingNotification(notificationPayload, 'pending').catch(err => console.error('Notification Error:', err));
       
+      // --- CHANNEX SYNC START ---
+      try {
+        // 1. Get Room Details for Channex ID
+        const { data: roomData, error: roomError } = await supabase
+          .from('Rooms_Information')
+          .select('quantity, channex_room_type_id')
+          .eq('id', payload.room_id)
+          .single();
+
+        if (!roomError && roomData && roomData.channex_room_type_id) {
+            const totalRooms = roomData.quantity;
+            const channexId = roomData.channex_room_type_id;
+
+            // 2. Calculate dates
+            const startDate = new Date(payload.check_in);
+            const endDate = new Date(payload.check_out);
+            const nights = eachDayOfInterval({
+              start: startDate,
+              end: subDays(endDate, 1) // Exclude checkout day
+            });
+
+            // 3. Update availability for each night
+            // We use Promise.all to speed up multiple requests
+            await Promise.all(nights.map(async (date) => {
+                const dateStr = format(date, 'yyyy-MM-dd');
+
+                // Count active bookings for this specific night
+                const { count, error: countError } = await supabase
+                  .from('Reservation_Information')
+                  .select('*', { count: 'exact', head: true })
+                  .eq('room_id', payload.room_id)
+                  .neq('room_status', 'cancelled')
+                  .neq('room_status', 'checked_out')
+                  .neq('room_status', 'completed')
+                  .lte('check_in', dateStr)
+                  .gt('check_out', dateStr);
+
+                if (!countError) {
+                    const currentCount = count !== null ? count : 0;
+                    const remaining = Math.max(0, totalRooms - currentCount);
+                    await updateAvailability(channexId, dateStr, remaining);
+                }
+            }));
+        }
+      } catch (channexErr) {
+          console.error('Channex Sync Error:', channexErr);
+          // We do NOT block the user booking success if Channex fails, just log it.
+      }
+      // --- CHANNEX SYNC END ---
+
       return { success: true, data: [{ id: bookingId }] };
   
     } catch (err) {    console.error('Unexpected error in createBookingServer:', err);
