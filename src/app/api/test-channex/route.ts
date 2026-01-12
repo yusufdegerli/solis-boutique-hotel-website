@@ -38,7 +38,7 @@ export async function GET() {
     step = 'supabase_query';
     const { data: room, error: roomError } = await supabase
       .from('Rooms_Information')
-      .select('type_name, channex_room_type_id, quantity')
+      .select('type_name, channex_room_type_id, channex_rate_plan_id, quantity')
       .not('channex_room_type_id', 'is', null)
       .limit(1)
       .single();
@@ -46,23 +46,29 @@ export async function GET() {
     if (roomError) throw new Error(`Supabase Sorgu Hatası: ${roomError.message}`);
     if (!room) throw new Error('Supabase: Channex ID tanımlı oda bulunamadı.');
 
+    // Rate Plan ID Kontrolü
+    if (!room.channex_rate_plan_id) {
+       throw new Error(`Oda (${room.type_name}) için Rate Plan ID eksik. Lütfen SQL ile channex_rate_plan_id sütununu güncelleyin.`);
+    }
+
     step = 'channex_request';
     const today = new Date().toISOString().split('T')[0];
     
-    // Log Property ID as well
-    console.log(`[DEBUG] Property ID: '${propertyId}'`);
-    
-    const result = await updateAvailability(room.channex_room_type_id, today, room.quantity);
+    const result = await updateAvailability(
+        room.channex_room_type_id, 
+        room.channex_rate_plan_id, 
+        today, 
+        room.quantity
+    );
 
     if (result.success) {
       return NextResponse.json({ 
         success: true, 
-        message: 'BAŞARILI',
+        message: 'BAŞARILI: Hem Veritabanı hem Channex bağlantısı çalışıyor.',
         room: room.type_name,
         details: result.data 
       });
     } else {
-      // Return the debug info in the error response to see it in browser
       return NextResponse.json({ 
           success: false, 
           step_failed: step,

@@ -1,5 +1,6 @@
 export const updateAvailability = async (
   roomTypeId: string, 
+  ratePlanId: string, // NEW PARAM
   date: string, 
   count: number
 ): Promise<{ success: boolean; data?: any; error?: string }> => {
@@ -11,16 +12,16 @@ export const updateAvailability = async (
       throw new Error('Channex API Configuration missing (API_KEY_CHANNEX or HOTEL_BOUTIQUE_ID)');
     }
 
-    // Channex API v1 standard endpoint for updating availability is /availability
     const url = 'https://app.channex.io/api/v1/availability';
 
-    console.log(`Channex Request: ${url} for Room: ${roomTypeId} Date: ${date} Count: ${count}`);
+    console.log(`Channex Request: ${url} Room: ${roomTypeId} Rate: ${ratePlanId} Date: ${date} Count: ${count}`);
 
     const payload = {
       values: [
         {
           property_id: propertyId,
           room_type_id: roomTypeId,
+          rate_plan_id: ratePlanId, // Added Rate Plan ID
           date_from: date,
           date_to: date, 
           availability: count 
@@ -37,7 +38,6 @@ export const updateAvailability = async (
       body: JSON.stringify(payload)
     });
 
-    // Yanıtın JSON olup olmadığını kontrol et
     const contentType = response.headers.get("content-type");
     let data;
     if (contentType && contentType.indexOf("application/json") !== -1) {
@@ -56,7 +56,6 @@ export const updateAvailability = async (
     return { success: true, data };
 
   } catch (error: any) {
-    // Detaylı hata analizi
     let errorMsg = error.message;
     if (error.cause) {
         errorMsg += ` | Cause: ${JSON.stringify(error.cause)}`;

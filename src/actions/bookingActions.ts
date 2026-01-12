@@ -138,13 +138,14 @@ export async function createBookingServer(bookingData: any) {
         // 1. Get Room Details for Channex ID
         const { data: roomData, error: roomError } = await supabase
           .from('Rooms_Information')
-          .select('quantity, channex_room_type_id')
+          .select('quantity, channex_room_type_id, channex_rate_plan_id')
           .eq('id', payload.room_id)
           .single();
 
-        if (!roomError && roomData && roomData.channex_room_type_id) {
+        if (!roomError && roomData && roomData.channex_room_type_id && roomData.channex_rate_plan_id) {
             const totalRooms = roomData.quantity;
             const channexId = roomData.channex_room_type_id;
+            const rateId = roomData.channex_rate_plan_id;
 
             // 2. Calculate dates
             const startDate = new Date(payload.check_in);
@@ -173,7 +174,7 @@ export async function createBookingServer(bookingData: any) {
                 if (!countError) {
                     const currentCount = count !== null ? count : 0;
                     const remaining = Math.max(0, totalRooms - currentCount);
-                    await updateAvailability(channexId, dateStr, remaining);
+                    await updateAvailability(channexId, rateId, dateStr, remaining);
                 }
             }));
         }
