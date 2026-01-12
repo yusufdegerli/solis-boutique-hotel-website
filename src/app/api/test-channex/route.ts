@@ -45,7 +45,7 @@ export async function GET() {
         'apikey': channexKey
     };
 
-    const authCheckUrl = 'https://app.channex.io/api/v1/properties';
+    const authCheckUrl = 'https://staging.channex.io/api/v1/properties';
     const authResponse = await fetch(authCheckUrl, { method: 'GET', headers });
     
     const authStatus = authResponse.status;

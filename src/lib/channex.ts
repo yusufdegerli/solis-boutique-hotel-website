@@ -12,7 +12,7 @@ export const updateAvailability = async (
       throw new Error('Channex API Configuration missing (API_KEY_CHANNEX or HOTEL_BOUTIQUE_ID)');
     }
 
-    const url = 'https://app.channex.io/api/v1/availability';
+    const url = 'https://staging.channex.io/api/v1/availability';
 
     console.log(`Channex Request: ${url} Room: ${roomTypeId} Rate: ${ratePlanId} Date: ${date} Count: ${count}`);
 
