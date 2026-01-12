@@ -12,7 +12,7 @@ export const updateAvailability = async (
     }
 
     // Channex API v1 standard endpoint for updating availability is /availability
-    const url = 'https://api.channex.io/api/v1/availability';
+    const url = 'https://app.channex.io/api/v1/availability';
 
     console.log(`Channex Request: ${url} for Room: ${roomTypeId} Date: ${date} Count: ${count}`);
 
