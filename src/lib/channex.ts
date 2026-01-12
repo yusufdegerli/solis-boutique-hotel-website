@@ -11,8 +11,9 @@ export const updateAvailability = async (
       throw new Error('Channex API Configuration missing (API_KEY_CHANNEX or HOTEL_BOUTIQUE_ID)');
     }
 
-    // Channex API v1 standard endpoint for updating availability is /availability
     const url = 'https://api.channex.io/api/v1/availability';
+
+    console.log(`Channex Request: ${url} for Room: ${roomTypeId} Date: ${date} Count: ${count}`);
 
     const payload = {
       values: [
@@ -20,8 +21,8 @@ export const updateAvailability = async (
           property_id: propertyId,
           room_type_id: roomTypeId,
           date_from: date,
-          date_to: date, // Update for a single day
-          availability: count // This is the REMAINING availability (not the booked amount)
+          date_to: date, 
+          availability: count 
         }
       ]
     };
@@ -35,16 +36,30 @@ export const updateAvailability = async (
       body: JSON.stringify(payload)
     });
 
-    const data = await response.json();
+    // Yanıtın JSON olup olmadığını kontrol et
+    const contentType = response.headers.get("content-type");
+    let data;
+    if (contentType && contentType.indexOf("application/json") !== -1) {
+      data = await response.json();
+    } else {
+      const text = await response.text();
+      data = { message: text };
+    }
 
     if (!response.ok) {
-      throw new Error(data?.message || data?.error || 'Channex API request failed');
+      console.error('Channex API Fail Response:', data);
+      throw new Error(data?.message || JSON.stringify(data) || 'Channex API request failed');
     }
 
     return { success: true, data };
 
   } catch (error: any) {
-    console.error('Channex Sync Error:', error.message);
-    return { success: false, error: error.message };
+    // Detaylı hata analizi
+    let errorMsg = error.message;
+    if (error.cause) {
+        errorMsg += ` | Cause: ${JSON.stringify(error.cause)}`;
+    }
+    console.error('Channex Sync Error Full:', error);
+    return { success: false, error: errorMsg };
   }
 };
