@@ -37,12 +37,10 @@ const serverBookingSchema = z.object({
 });
 
 export async function createBookingServer(bookingData: any) {
-  // ... existing code ...
   console.log('--- SERVER ACTION START ---');
   console.log('Received Payload:', JSON.stringify(bookingData, null, 2));
   
   // 1. Zod Validation
-  // Ensure we handle "NaN" or string numbers correctly
   const result = serverBookingSchema.safeParse({
     hotel_id: Number(bookingData.hotel_id), // Explicit cast
     room_id: Number(bookingData.room_id),   // Explicit cast
@@ -57,7 +55,6 @@ export async function createBookingServer(bookingData: any) {
 
   if (!result.success) {
     console.error('Validation Failed:', JSON.stringify(result.error, null, 2));
-    // Try to extract messages from the formatted error or the flat errors
     const formatted = result.error.format();
     const flatErrors = result.error.flatten();
     
@@ -88,46 +85,83 @@ export async function createBookingServer(bookingData: any) {
     };
   }
 
-      // --- ATOMIC BOOKING CREATION (Via RPC) ---
-    try {
-      const { data: rpcResult, error: rpcError } = await supabase.rpc('create_booking_safe', {
-        p_hotel_id: payload.hotel_id, // NEW
-        p_room_id: payload.room_id,
-        p_customer_name: payload.customer_name,
-        p_customer_email: payload.customer_email,
-        p_customer_phone: payload.customer_phone || "",
-        p_check_in: payload.check_in,
-        p_check_out: payload.check_out,
-        p_guests_count: payload.guests_count,
-        p_total_price: payload.total_price // NEW PARAM
-      });
+  // --- REPLACED RPC WITH DIRECT DB OPERATIONS TO FIX TYPE MISMATCH BUG ---
+  // The 'create_booking_safe' RPC function had a type mismatch (bigint vs uuid) for the returned ID.
+  // We now perform the check and insert here in the server action using the privileged Service Role Key.
   
-      if (rpcError) {
-        console.error('RPC Error:', rpcError);
-        return { success: false, error: 'İşlem sırasında bir hata oluştu: ' + rpcError.message };
+  try {
+      // 1. Get Room Info (for validation and hotel_id)
+      const { data: roomInfo, error: roomInfoError } = await supabase
+          .from('Rooms_Information')
+          .select('id, quantity, hotel_id')
+          .eq('id', payload.room_id)
+          .single();
+
+      if (roomInfoError || !roomInfo) {
+          console.error('Room Fetch Error:', roomInfoError);
+          return { success: false, error: 'Oda bilgisi bulunamadı.' };
       }
-  
-      // Handle RPC response
-      // The new RPC returns { success: bool, data: { id: number, token: string }, error: string }
-      // But rpc returns an array of rows. Since we use RETURN QUERY SELECT..., it might be [ { success:..., data:..., error:... } ]
-      
-      const row = Array.isArray(rpcResult) ? rpcResult[0] : rpcResult;
-      
-      if (!row || !row.success) {
-        return { success: false, error: row?.error || 'Rezervasyon oluşturulamadı.' };
+
+      const roomQuantity = roomInfo.quantity;
+      const hotelId = payload.hotel_id || roomInfo.hotel_id; // Prefer payload, fallback to DB
+
+      // 2. Check Availability (Overlapping bookings)
+      // "Overlapping" means: (StartA < EndB) and (EndA > StartB)
+      const { count, error: countError } = await supabase
+          .from('Reservation_Information')
+          .select('*', { count: 'exact', head: true })
+          .eq('room_id', payload.room_id)
+          .neq('room_status', 'cancelled')
+          .neq('room_status', 'checked_out')
+          .neq('room_status', 'completed')
+          .lt('check_in', payload.check_out)
+          .gt('check_out', payload.check_in);
+
+      if (countError) {
+          console.error('Availability Check Error:', countError);
+          return { success: false, error: 'Müsaitlik kontrolü başarısız.' };
       }
-  
-      const resultData = row.data; // This is now { id: ..., token: ... }
-      const bookingId = resultData.id;
-      const cancellationToken = resultData.token;
-  
-      // --- NOTIFICATION TRIGGER (NEW) ---
+
+      if ((count || 0) >= roomQuantity) {
+          return { success: false, error: 'Seçilen tarihlerde boş oda yok.' };
+      }
+
+      // 3. Create Booking
+      // Generate UUID for cancellation token
+      const cancellationToken = crypto.randomUUID();
+
+      const { data: newBooking, error: insertError } = await supabase
+          .from('Reservation_Information')
+          .insert({
+              hotel_id: hotelId,
+              room_id: payload.room_id,
+              customer_name: payload.customer_name,
+              customer_email: payload.customer_email,
+              customer_phone: payload.customer_phone || "",
+              check_in: payload.check_in,
+              check_out: payload.check_out,
+              guests_count: payload.guests_count,
+              total_price: payload.total_price,
+              room_status: 'pending',
+              cancellation_token: cancellationToken
+          })
+          .select()
+          .single();
+
+      if (insertError) {
+          console.error('Insert Error:', insertError);
+          return { success: false, error: 'Rezervasyon oluşturulamadı: ' + insertError.message };
+      }
+
+      const bookingId = newBooking.id;
+
+      // --- NOTIFICATION TRIGGER ---
       const notificationPayload = {
         id: bookingId,
         customer_name: payload.customer_name,
         customer_email: payload.customer_email,
         customer_phone: payload.customer_phone,
-        cancellation_token: cancellationToken // Pass token to notification
+        cancellation_token: cancellationToken
       };
       
       // Send "Pending" notification
@@ -136,6 +170,7 @@ export async function createBookingServer(bookingData: any) {
       // --- CHANNEX SYNC START ---
       try {
         // 1. Get Room Details for Channex ID
+        // Note: We already fetched roomInfo but need channex fields now
         const { data: roomData, error: roomError } = await supabase
           .from('Rooms_Information')
           .select('quantity, channex_room_type_id, channex_rate_plan_id')
@@ -186,8 +221,9 @@ export async function createBookingServer(bookingData: any) {
 
       return { success: true, data: [{ id: bookingId }] };
   
-    } catch (err) {    console.error('Unexpected error in createBookingServer:', err);
-    return { success: false, error: 'Beklenmedik bir hata oluştu.' };
+    } catch (err: any) {
+    console.error('Unexpected error in createBookingServer:', err);
+    return { success: false, error: 'Beklenmedik bir hata oluştu: ' + err.message };
   }
 }
 
