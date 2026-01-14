@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 import { z } from "zod";
 import { sendBookingNotification } from '@/services/notificationService';
 import { sendConfirmationEmail } from '@/services/mailService'; // Keep for now or remove if unused later
-import { updateAvailability } from '@/lib/channex';
+import { updateAvailability, createChannexBooking } from '@/lib/channex';
 import { eachDayOfInterval, format, subDays } from 'date-fns';
 
 // Initialize Supabase client
@@ -84,16 +84,12 @@ export async function createBookingServer(bookingData: any) {
       error: 'Sunucu yapılandırma hatası: Rezervasyon sistemi şu an devre dışı.' 
     };
   }
-
-  // --- REPLACED RPC WITH DIRECT DB OPERATIONS TO FIX TYPE MISMATCH BUG ---
-  // The 'create_booking_safe' RPC function had a type mismatch (bigint vs uuid) for the returned ID.
-  // We now perform the check and insert here in the server action using the privileged Service Role Key.
   
   try {
       // 1. Get Room Info (for validation and hotel_id)
       const { data: roomInfo, error: roomInfoError } = await supabase
           .from('Rooms_Information')
-          .select('id, quantity, hotel_id')
+          .select('id, quantity, hotel_id, channex_room_type_id, channex_rate_plan_id')
           .eq('id', payload.room_id)
           .single();
 
@@ -106,7 +102,6 @@ export async function createBookingServer(bookingData: any) {
       const hotelId = payload.hotel_id || roomInfo.hotel_id; // Prefer payload, fallback to DB
 
       // 2. Check Availability (Overlapping bookings)
-      // "Overlapping" means: (StartA < EndB) and (EndA > StartB)
       const { count, error: countError } = await supabase
           .from('Reservation_Information')
           .select('*', { count: 'exact', head: true })
@@ -126,8 +121,7 @@ export async function createBookingServer(bookingData: any) {
           return { success: false, error: 'Seçilen tarihlerde boş oda yok.' };
       }
 
-      // 3. Create Booking
-      // Generate UUID for cancellation token
+      // 3. Create Booking (Supabase)
       const cancellationToken = crypto.randomUUID();
 
       const { data: newBooking, error: insertError } = await supabase
@@ -155,6 +149,43 @@ export async function createBookingServer(bookingData: any) {
 
       const bookingId = newBooking.id;
 
+      // --- CHANNEX BOOKING CREATE START (NEW) ---
+      // We do this BEFORE the availability loop to ensure the booking exists in Channex first, 
+      // although they are somewhat independent.
+      let channexBookingId = null;
+      if (roomInfo.channex_room_type_id && roomInfo.channex_rate_plan_id) {
+         console.log('--- CHANNEX BOOKING SYNC START ---');
+         const channexResult = await createChannexBooking({
+            arrival_date: payload.check_in,
+            departure_date: payload.check_out,
+            room_type_id: roomInfo.channex_room_type_id,
+            rate_plan_id: roomInfo.channex_rate_plan_id,
+            guests_count: payload.guests_count,
+            total_price: payload.total_price || 0,
+            customer: {
+               name: payload.customer_name,
+               email: payload.customer_email,
+               phone: payload.customer_phone,
+               country: 'TR' // Default to TR or extract if available
+            },
+            unique_id: bookingId // Use our UUID as reference
+         });
+
+         if (channexResult.success && channexResult.data?.data) {
+             channexBookingId = channexResult.data.data.id;
+             console.log('Channex Booking ID:', channexBookingId);
+
+             // Update Supabase record with Channex ID
+             await supabase
+                .from('Reservation_Information')
+                .update({ channex_booking_id: channexBookingId })
+                .eq('id', bookingId);
+         } else {
+             console.error('Channex Booking Creation Failed (Non-blocking):', channexResult.error);
+         }
+      }
+      // --- CHANNEX BOOKING CREATE END ---
+
       // --- NOTIFICATION TRIGGER ---
       const notificationPayload = {
         id: bookingId,
@@ -164,38 +195,26 @@ export async function createBookingServer(bookingData: any) {
         cancellation_token: cancellationToken
       };
       
-      // Send "Pending" notification
       sendBookingNotification(notificationPayload, 'pending').catch(err => console.error('Notification Error:', err));
       
-      // --- CHANNEX SYNC START ---
+      // --- CHANNEX AVAILABILITY SYNC (Existing Logic) ---
+      // Still useful to sync exact counts even if Channex handles it, 
+      // ensuring double safety or custom logic.
       try {
-        // 1. Get Room Details for Channex ID
-        // Note: We already fetched roomInfo but need channex fields now
-        const { data: roomData, error: roomError } = await supabase
-          .from('Rooms_Information')
-          .select('quantity, channex_room_type_id, channex_rate_plan_id')
-          .eq('id', payload.room_id)
-          .single();
+        if (roomInfo.channex_room_type_id && roomInfo.channex_rate_plan_id) {
+            const totalRooms = roomInfo.quantity;
+            const channexId = roomInfo.channex_room_type_id;
+            const rateId = roomInfo.channex_rate_plan_id;
 
-        if (!roomError && roomData && roomData.channex_room_type_id && roomData.channex_rate_plan_id) {
-            const totalRooms = roomData.quantity;
-            const channexId = roomData.channex_room_type_id;
-            const rateId = roomData.channex_rate_plan_id;
-
-            // 2. Calculate dates
             const startDate = new Date(payload.check_in);
             const endDate = new Date(payload.check_out);
             const nights = eachDayOfInterval({
               start: startDate,
-              end: subDays(endDate, 1) // Exclude checkout day
+              end: subDays(endDate, 1) 
             });
 
-            // 3. Update availability for each night
-            // We use Promise.all to speed up multiple requests
             await Promise.all(nights.map(async (date) => {
                 const dateStr = format(date, 'yyyy-MM-dd');
-
-                // Count active bookings for this specific night
                 const { count, error: countError } = await supabase
                   .from('Reservation_Information')
                   .select('*', { count: 'exact', head: true })
@@ -215,9 +234,7 @@ export async function createBookingServer(bookingData: any) {
         }
       } catch (channexErr) {
           console.error('Channex Sync Error:', channexErr);
-          // We do NOT block the user booking success if Channex fails, just log it.
       }
-      // --- CHANNEX SYNC END ---
 
       return { success: true, data: [{ id: bookingId }] };
   
@@ -257,13 +274,7 @@ export async function updateBookingStatusServer(id: string, status: string, deta
        return { success: false, error: "Kayıt bulunamadı veya güncellenemedi." };
     }
 
-    // --- NOTIFICATION LOGIC ---
-    // Trigger notification for ANY status change that we care about
     const booking = data[0];
-    // Check if status actually changed or if it's just an update of details? 
-    // The function argument 'status' is the target status.
-    
-    // Send notification (async)
     sendBookingNotification(booking, status).catch(err => console.error('Update Notification Error:', err));
 
     return { success: true, data };
