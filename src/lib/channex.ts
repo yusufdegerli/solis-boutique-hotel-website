@@ -93,44 +93,36 @@ export const createChannexBooking = async (bookingData: {
 
     const url = 'https://staging.channex.io/api/v1/bookings';
 
+    // Handle Name Split
+    const fullName = bookingData.customer.name.trim();
+    const lastSpaceIndex = fullName.lastIndexOf(" ");
+
     const payload = {
       booking: {
         status: "new",
-        ota_name: "Website", // Required field
+        ota_name: "Website",
         property_id: propertyId,
+        reservation_id: bookingData.unique_id,
         arrival_date: bookingData.arrival_date,
         departure_date: bookingData.departure_date,
         rooms: [
           {
             room_type_id: bookingData.room_type_id,
             rate_plan_id: bookingData.rate_plan_id,
-            occupancy: Math.floor(bookingData.guests_count), // Keep strictly integer
-            // days: [] // Removed empty days array to prevent 422 error
+            occupancy: Math.floor(bookingData.guests_count)
           }
         ],
         customer: {
-          name: bookingData.customer.name,
-          surname: "", // Channex might split name or require surname. We'll handle split below.
-          email: bookingData.customer.email,
+          name: fullName.substring(0, lastSpaceIndex) || fullName,
+          surname: lastSpaceIndex > 0 ? fullName.substring(lastSpaceIndex + 1) : "Surname",
+          mail: bookingData.customer.email,
           phone: bookingData.customer.phone || "",
           country: bookingData.customer.country || "TR"
         },
-        amount: bookingData.total_price, // Total booking amount
-        currency: bookingData.currency || "EUR",
-        unique_id: bookingData.unique_id // Our Supabase UUID reference
+        amount: bookingData.total_price,
+        currency: bookingData.currency || "EUR"
       }
     };
-
-    // Handle Name Split
-    const fullName = bookingData.customer.name.trim();
-    const lastSpaceIndex = fullName.lastIndexOf(" ");
-    if (lastSpaceIndex > 0) {
-      payload.booking.customer.name = fullName.substring(0, lastSpaceIndex);
-      payload.booking.customer.surname = fullName.substring(lastSpaceIndex + 1);
-    } else {
-      payload.booking.customer.name = fullName;
-      payload.booking.customer.surname = "."; // Fallback
-    }
 
     console.log(`Channex Create Booking Request: ${JSON.stringify(payload, null, 2)}`);
 
