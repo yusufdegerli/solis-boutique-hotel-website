@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 import { z } from "zod";
 import { sendBookingNotification } from '@/services/notificationService';
 import { sendConfirmationEmail } from '@/services/mailService'; // Keep for now or remove if unused later
-import { updateAvailability, createChannexBooking } from '@/lib/channex';
+import { updateAvailability, createChannexBooking, cancelChannexBooking } from '@/lib/channex';
 import { eachDayOfInterval, format, subDays } from 'date-fns';
 
 // Initialize Supabase client
@@ -21,6 +21,9 @@ const serverBookingSchema = z.object({
   customer_name: z.string().min(2, "İsim en az 2 karakter olmalıdır"),
   customer_email: z.string().email("Geçersiz e-posta adresi").or(z.literal("no-email@provided.com")),
   customer_phone: z.string().optional(),
+  customer_city: z.string().optional(),
+  customer_address: z.string().optional(),
+  notes: z.string().optional(),
   check_in: z.string().refine((date) => new Date(date) >= new Date(new Date().setHours(0,0,0,0)), {
     message: "Giriş tarihi bugünden eski olamaz",
   }),
@@ -47,6 +50,9 @@ export async function createBookingServer(bookingData: any) {
     customer_name: bookingData.customer_name,
     customer_email: bookingData.customer_email || "no-email@provided.com",
     customer_phone: bookingData.customer_phone,
+    customer_city: bookingData.customer_city,
+    customer_address: bookingData.customer_address,
+    notes: bookingData.notes,
     check_in: bookingData.check_in,
     check_out: bookingData.check_out,
     guests_count: Number(bookingData.guests_count) || 1,
@@ -132,12 +138,15 @@ export async function createBookingServer(bookingData: any) {
               customer_name: payload.customer_name,
               customer_email: payload.customer_email,
               customer_phone: payload.customer_phone || "",
+              customer_city: payload.customer_city,
+              customer_address: payload.customer_address,
               check_in: payload.check_in,
               check_out: payload.check_out,
               guests_count: payload.guests_count,
               total_price: payload.total_price,
               room_status: 'pending',
-              cancellation_token: cancellationToken
+              cancellation_token: cancellationToken,
+              check_in_notes: payload.notes // Mapping notes to check_in_notes
           })
           .select()
           .single();
@@ -166,8 +175,11 @@ export async function createBookingServer(bookingData: any) {
                name: payload.customer_name,
                email: payload.customer_email,
                phone: payload.customer_phone,
-               country: 'TR' // Default to TR or extract if available
+               country: 'TR', // Default to TR or extract if available
+               city: payload.customer_city,
+               address: payload.customer_address
             },
+            notes: payload.notes,
             unique_id: bookingId // Use our UUID as reference
          });
 
@@ -275,6 +287,13 @@ export async function updateBookingStatusServer(id: string, status: string, deta
     }
 
     const booking = data[0];
+    
+    // Sync with Channex if cancelled
+    if (status === 'cancelled' && booking.channex_booking_id) {
+       console.log(`Syncing cancellation to Channex for Booking ID: ${booking.channex_booking_id}`);
+       await cancelChannexBooking(booking.channex_booking_id);
+    }
+
     sendBookingNotification(booking, status).catch(err => console.error('Update Notification Error:', err));
 
     return { success: true, data };

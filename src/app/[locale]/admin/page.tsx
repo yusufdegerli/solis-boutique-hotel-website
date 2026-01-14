@@ -1100,6 +1100,21 @@ export default function AdminDashboard() {
                <button onClick={() => setCheckInModal({isOpen: false, bookingId: null})} className="text-gray-400 hover:text-gray-600"><X className="w-5 h-5" /></button>
              </div>
              <form onSubmit={submitCheckIn} className="p-6 space-y-4">
+                {/* Customer Info Summary */}
+                {(() => {
+                    const b = bookings.find(bk => bk.id === checkInModal.bookingId);
+                    if (b && (b.customer_city || b.customer_address)) {
+                        return (
+                            <div className="bg-blue-50 p-3 rounded-lg text-sm text-blue-800 mb-4 border border-blue-100">
+                                <p className="font-bold mb-1">Müşteri Bilgileri:</p>
+                                {b.customer_city && <p>Şehir: {b.customer_city}</p>}
+                                {b.customer_address && <p>Adres: {b.customer_address}</p>}
+                            </div>
+                        );
+                    }
+                    return null;
+                })()}
+
                 <div>
                    <label className="block text-sm font-medium text-gray-700 mb-1">TC Kimlik / Pasaport No</label>
                    <input 

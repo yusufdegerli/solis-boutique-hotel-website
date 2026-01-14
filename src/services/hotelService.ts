@@ -242,6 +242,9 @@ export interface Booking {
   customer_name: string;
   customer_email: string;
   customer_phone?: string; // NEW: Phone number
+  customer_city?: string; // NEW: City
+  customer_address?: string; // NEW: Address
+  notes?: string; // NEW: Customer notes
   check_in: string;
   check_out: string;
   total_price: number;
@@ -312,6 +315,9 @@ export const createBooking = async (booking: Partial<Booking>) => {
     customer_name: booking.guest_name || booking.customer_name,
     customer_email: booking.email || booking.customer_email || "no-email@provided.com",
     customer_phone: booking.phone || booking.customer_phone || "",
+    customer_city: booking.customer_city || "",
+    customer_address: booking.customer_address || "",
+    notes: booking.notes || "",
     check_in: booking.check_in,
     check_out: booking.check_out,
     guests_count: booking.guests_count || 1,

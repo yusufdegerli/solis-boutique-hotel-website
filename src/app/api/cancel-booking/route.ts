@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
+import { cancelChannexBooking } from '@/lib/channex';
 
 export async function POST(request: Request) {
   try {
@@ -33,13 +34,20 @@ export async function POST(request: Request) {
     }
 
     // 2. Cancel Booking
-    const { error: updateError } = await supabase
+    const { data: updatedData, error: updateError } = await supabase
       .from('Reservation_Information')
       .update({ room_status: 'cancelled' })
-      .eq('id', booking.id);
+      .eq('id', booking.id)
+      .select('channex_booking_id')
+      .single();
 
     if (updateError) {
       return NextResponse.json({ success: false, error: 'Güncelleme hatası: ' + updateError.message }, { status: 500 });
+    }
+
+    if (updatedData?.channex_booking_id) {
+        console.log(`Syncing user cancellation to Channex for Booking ID: ${updatedData.channex_booking_id}`);
+        await cancelChannexBooking(updatedData.channex_booking_id);
     }
 
     // Optional: Send Notification to Admin

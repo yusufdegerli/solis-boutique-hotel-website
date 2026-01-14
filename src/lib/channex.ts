@@ -77,11 +77,14 @@ export const createChannexBooking = async (bookingData: {
     email: string;
     phone?: string;
     country?: string;
+    city?: string;
+    address?: string;
   };
   guests_count: number;
   total_price: number;
   currency?: string;
   unique_id?: string; // Our internal UUID
+  notes?: string;
 }): Promise<{ success: boolean; data?: any; error?: string }> => {
   try {
     const apiKey = process.env.API_KEY_CHANNEX;
@@ -109,16 +112,22 @@ export const createChannexBooking = async (bookingData: {
           {
             room_type_id: bookingData.room_type_id,
             rate_plan_id: bookingData.rate_plan_id,
-            occupancy: Math.floor(bookingData.guests_count)
+            occupancy: Math.floor(bookingData.guests_count),
+            amount: bookingData.total_price,
+            currency: bookingData.currency || "EUR",
+            guest_name: fullName // Added guest_name to room as required
           }
         ],
         customer: {
           name: fullName.substring(0, lastSpaceIndex) || fullName,
           surname: lastSpaceIndex > 0 ? fullName.substring(lastSpaceIndex + 1) : "Surname",
-          mail: bookingData.customer.email,
+          email: bookingData.customer.email, // Changed from mail to email
           phone: bookingData.customer.phone || "",
-          country: bookingData.customer.country || "TR"
+          country: bookingData.customer.country || "TR",
+          city: bookingData.customer.city || "",
+          address: bookingData.customer.address || ""
         },
+        notes: bookingData.notes || "",
         amount: bookingData.total_price,
         currency: bookingData.currency || "EUR"
       }
@@ -156,6 +165,56 @@ export const createChannexBooking = async (bookingData: {
 
   } catch (error: any) {
     console.error('Channex Booking Error:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+export const cancelChannexBooking = async (channexBookingId: string): Promise<{ success: boolean; data?: any; error?: string }> => {
+  try {
+    const apiKey = process.env.API_KEY_CHANNEX;
+    if (!apiKey) {
+      throw new Error('Channex API Configuration missing (API_KEY_CHANNEX)');
+    }
+
+    const url = `https://staging.channex.io/api/v1/bookings/${channexBookingId}`;
+    console.log(`Channex Cancel Request: ${url}`);
+
+    const payload = {
+      booking: {
+        status: "cancelled"
+      }
+    };
+
+    const response = await fetch(url, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'user-api-key': apiKey,
+        'apikey': apiKey,
+        'User-Agent': 'SolisHotelWebsite/1.0 (Vercel; Node.js)'
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const contentType = response.headers.get("content-type");
+    let data;
+    if (contentType && contentType.indexOf("application/json") !== -1) {
+      data = await response.json();
+    } else {
+      const text = await response.text();
+      data = { message: text };
+    }
+
+    if (!response.ok) {
+      console.error('Channex Cancel Booking Fail:', response.status, JSON.stringify(data, null, 2));
+      throw new Error(data?.message || 'Channex Booking Cancellation Failed');
+    }
+
+    console.log('Channex Booking Cancelled Successfully:', data);
+    return { success: true, data };
+
+  } catch (error: any) {
+    console.error('Channex Cancel Booking Error:', error);
     return { success: false, error: error.message };
   }
 };

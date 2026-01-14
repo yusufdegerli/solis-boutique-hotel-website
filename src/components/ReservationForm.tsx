@@ -36,6 +36,9 @@ export default function ReservationForm({
   const [guestName, setGuestName] = useState(""); 
   const [customerEmail, setCustomerEmail] = useState("");
   const [customerPhone, setCustomerPhone] = useState(""); 
+  const [customerCity, setCustomerCity] = useState("");
+  const [customerAddress, setCustomerAddress] = useState("");
+  const [customerNotes, setCustomerNotes] = useState("");
   const [totalPrice, setTotalPrice] = useState<number | null>(null);
   const [discount, setDiscount] = useState<number>(0);
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -108,6 +111,9 @@ export default function ReservationForm({
       customer_name: guestName,
       customer_email: customerEmail,
       customer_phone: customerPhone,
+      customer_city: customerCity,
+      customer_address: customerAddress,
+      notes: customerNotes,
       check_in: checkIn,
       check_out: checkOut,
       guests_count: guests,
@@ -123,6 +129,9 @@ export default function ReservationForm({
         guest_name: guestName,
         email: customerEmail,
         phone: customerPhone,
+        customer_city: customerCity,
+        customer_address: customerAddress,
+        notes: customerNotes,
         check_in: checkIn,
         check_out: checkOut,
         guests_count: guests,
@@ -159,7 +168,7 @@ export default function ReservationForm({
           {t('successMessage')}
         </p>
         <button 
-          onClick={() => { setIsSubmitted(false); setGuestName(""); setCustomerEmail(""); setCustomerPhone(""); setCheckIn(""); setCheckOut(""); setSelectedRoom(""); setTotalPrice(null); }}
+          onClick={() => { setIsSubmitted(false); setGuestName(""); setCustomerEmail(""); setCustomerPhone(""); setCustomerCity(""); setCustomerAddress(""); setCustomerNotes(""); setCheckIn(""); setCheckOut(""); setSelectedRoom(""); setTotalPrice(null); }}
           className="text-green-700 font-medium hover:underline mt-4 block mx-auto"
         >
           {t('newBooking')}
@@ -217,6 +226,41 @@ export default function ReservationForm({
                onChange={(e) => setCustomerPhone(e.target.value)}
                placeholder="+90 555 123 45 67"
                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[var(--gold)] focus:border-transparent outline-none transition-all text-gray-700"
+             />
+        </div>
+
+        {/* NEW: City & Address & Notes */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+             <div className="space-y-2">
+                 <label className="text-sm font-medium text-gray-700">Şehir</label>
+                 <input
+                   type="text"
+                   value={customerCity}
+                   onChange={(e) => setCustomerCity(e.target.value)}
+                   placeholder="İstanbul"
+                   className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[var(--gold)] focus:border-transparent outline-none transition-all text-gray-700"
+                 />
+             </div>
+             <div className="space-y-2">
+                 <label className="text-sm font-medium text-gray-700">Adres</label>
+                 <input
+                   type="text"
+                   value={customerAddress}
+                   onChange={(e) => setCustomerAddress(e.target.value)}
+                   placeholder="Tam adresiniz..."
+                   className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[var(--gold)] focus:border-transparent outline-none transition-all text-gray-700"
+                 />
+             </div>
+        </div>
+        
+        <div className="space-y-2">
+             <label className="text-sm font-medium text-gray-700">Notlar (Opsiyonel)</label>
+             <textarea
+               value={customerNotes}
+               onChange={(e) => setCustomerNotes(e.target.value)}
+               placeholder="Varsa özel istekleriniz..."
+               rows={2}
+               className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[var(--gold)] focus:border-transparent outline-none transition-all text-gray-700 resize-none"
              />
         </div>
 
