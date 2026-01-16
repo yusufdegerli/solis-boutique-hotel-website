@@ -1,3 +1,7 @@
+import { eachDayOfInterval, format, parseISO, differenceInCalendarDays } from 'date-fns';
+
+const BASE_URL = process.env.CHANNEX_API_BASE_URL || 'https://app.channex.io/api/v1';
+
 export const updateAvailability = async (
   roomTypeId: string, 
   ratePlanId: string, 
@@ -12,7 +16,7 @@ export const updateAvailability = async (
       throw new Error('Channex API Configuration missing (API_KEY_CHANNEX or HOTEL_BOUTIQUE_ID)');
     }
 
-    const url = 'https://staging.channex.io/api/v1/availability';
+    const url = `${BASE_URL}/availability`;
 
     console.log(`Channex Request: ${url} Room: ${roomTypeId} Rate: ${ratePlanId} Date: ${date} Count: ${count}`);
 
@@ -94,46 +98,82 @@ export const createChannexBooking = async (bookingData: {
       throw new Error('Channex API Configuration missing (API_KEY_CHANNEX or HOTEL_BOUTIQUE_ID)');
     }
 
-    const url = 'https://staging.channex.io/api/v1/bookings';
+    const url = `${BASE_URL}/bookings`;
+
+    // --- DEBUG: Environment Check ---
+    console.log('--- CHANNEX CONFIG CHECK ---');
+    console.log(`Property ID: ${propertyId ? propertyId : 'MISSING'}`);
+    console.log(`API Key: ${apiKey ? apiKey.substring(0, 5) + '...' : 'MISSING'}`);
+    // --------------------------------
 
     // Handle Name Split
     const fullName = bookingData.customer.name.trim();
     const lastSpaceIndex = fullName.lastIndexOf(" ");
+    const name = fullName.substring(0, lastSpaceIndex) || fullName;
+    const surname = lastSpaceIndex > 0 ? fullName.substring(lastSpaceIndex + 1) : "Surname";
+
+    // Date Calculation
+    const arrivalDate = parseISO(bookingData.arrival_date);
+    const departureDate = parseISO(bookingData.departure_date);
+    const nightsCount = differenceInCalendarDays(departureDate, arrivalDate);
+    const safeNightsCount = nightsCount > 0 ? nightsCount : 1;
+    const dailyRate = (bookingData.total_price / safeNightsCount).toFixed(2);
+
+    // Generate Days Object
+    const daysInterval = eachDayOfInterval({
+      start: arrivalDate,
+      end: new Date(departureDate.getTime() - 86400000) // Subtract 1 day to exclude checkout date
+    });
+
+    const daysObject: Record<string, string> = {};
+    daysInterval.forEach((day) => {
+      daysObject[format(day, 'yyyy-MM-dd')] = dailyRate;
+    });
 
     const payload = {
       booking: {
         status: "new",
         ota_name: "Website",
         property_id: propertyId,
-        reservation_id: bookingData.unique_id,
+        ota_reservation_code: bookingData.unique_id,
         arrival_date: bookingData.arrival_date,
         departure_date: bookingData.departure_date,
+        currency: bookingData.currency || "EUR",
+        notes: bookingData.notes || "",
+        customer: {
+          name: name,
+          surname: surname,
+          mail: bookingData.customer.email, // Mapped to 'mail' as per Channex requirement
+          phone: bookingData.customer.phone || "",
+          country: bookingData.customer.country || "TR",
+          city: bookingData.customer.city || "",
+          address: bookingData.customer.address || "",
+          zip: "" // Optional but good to have in structure
+        },
         rooms: [
           {
             room_type_id: bookingData.room_type_id,
             rate_plan_id: bookingData.rate_plan_id,
-            occupancy: Math.floor(bookingData.guests_count),
-            amount: bookingData.total_price,
-            currency: bookingData.currency || "EUR",
-            guest_name: fullName // Added guest_name to room as required
+            occupancy: {
+              adults: Math.floor(bookingData.guests_count),
+              children: 0,
+              infants: 0
+            },
+            days: daysObject,
+            guests: [
+              {
+                name: name,
+                surname: surname
+              }
+            ]
           }
-        ],
-        customer: {
-          name: fullName.substring(0, lastSpaceIndex) || fullName,
-          surname: lastSpaceIndex > 0 ? fullName.substring(lastSpaceIndex + 1) : "Surname",
-          email: bookingData.customer.email, // Changed from mail to email
-          phone: bookingData.customer.phone || "",
-          country: bookingData.customer.country || "TR",
-          city: bookingData.customer.city || "",
-          address: bookingData.customer.address || ""
-        },
-        notes: bookingData.notes || "",
-        amount: bookingData.total_price,
-        currency: bookingData.currency || "EUR"
+        ]
       }
     };
 
-    console.log(`Channex Create Booking Request: ${JSON.stringify(payload, null, 2)}`);
+    console.log('--- CHANNEX PAYLOAD START ---');
+    console.log(JSON.stringify(payload, null, 2));
+    console.log('--- CHANNEX PAYLOAD END ---');
 
     const response = await fetch(url, {
       method: 'POST',
@@ -156,8 +196,24 @@ export const createChannexBooking = async (bookingData: {
     }
 
     if (!response.ok) {
-      console.error('Channex Create Booking Fail:', response.status, JSON.stringify(data, null, 2));
-      throw new Error(data?.message || 'Channex Booking Creation Failed');
+      console.error('--- CHANNEX ERROR RESPONSE START ---');
+      console.error('Status:', response.status);
+      console.error('Body:', JSON.stringify(data, null, 2));
+      
+      let detailedError = data?.message || 'Channex Booking Creation Failed';
+      
+      // Try to extract specific validation errors if available
+      if (data?.errors && Array.isArray(data.errors)) {
+          const validationMessages = data.errors.map((e: any) => 
+              typeof e === 'string' ? e : JSON.stringify(e)
+          ).join(' | ');
+          detailedError += ` (Details: ${validationMessages})`;
+      }
+      
+      console.error('Detailed Error:', detailedError);
+      console.error('--- CHANNEX ERROR RESPONSE END ---');
+      
+      throw new Error(detailedError);
     }
 
     console.log('Channex Booking Created Successfully:', data);
@@ -176,7 +232,7 @@ export const cancelChannexBooking = async (channexBookingId: string): Promise<{ 
       throw new Error('Channex API Configuration missing (API_KEY_CHANNEX)');
     }
 
-    const url = `https://staging.channex.io/api/v1/bookings/${channexBookingId}`;
+    const url = `${BASE_URL}/bookings/${channexBookingId}`;
     console.log(`Channex Cancel Request: ${url}`);
 
     const payload = {
