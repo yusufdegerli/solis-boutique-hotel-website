@@ -294,6 +294,49 @@ export async function updateBookingStatusServer(id: string, status: string, deta
        await cancelChannexBooking(booking.channex_booking_id);
     }
 
+    // Restore availability when cancelled
+    if (status === 'cancelled') {
+       try {
+           // Get room info for Channex IDs
+           const { data: roomInfo } = await supabase
+               .from('Rooms_Information')
+               .select('channex_room_type_id, channex_rate_plan_id, quantity')
+               .eq('id', booking.room_id)
+               .single();
+
+           if (roomInfo?.channex_room_type_id && roomInfo?.channex_rate_plan_id) {
+               const startDate = new Date(booking.check_in);
+               const endDate = new Date(booking.check_out);
+               const nights = eachDayOfInterval({
+                   start: startDate,
+                   end: subDays(endDate, 1)
+               });
+
+               // For each night, recalculate and update availability
+               await Promise.all(nights.map(async (date) => {
+                   const dateStr = format(date, 'yyyy-MM-dd');
+                   
+                   // Count active bookings for this date (excluding cancelled/completed)
+                   const { count } = await supabase
+                       .from('Reservation_Information')
+                       .select('*', { count: 'exact', head: true })
+                       .eq('room_id', booking.room_id)
+                       .neq('room_status', 'cancelled')
+                       .neq('room_status', 'checked_out')
+                       .neq('room_status', 'completed')
+                       .lte('check_in', dateStr)
+                       .gt('check_out', dateStr);
+
+                   const remaining = Math.max(0, roomInfo.quantity - (count || 0));
+                   console.log(`Restoring availability for ${dateStr}: ${remaining} rooms`);
+                   await updateAvailability(roomInfo.channex_room_type_id, roomInfo.channex_rate_plan_id, dateStr, remaining);
+               }));
+           }
+       } catch (availErr) {
+           console.error('Availability restore error (non-blocking):', availErr);
+       }
+    }
+
     sendBookingNotification(booking, status).catch(err => console.error('Update Notification Error:', err));
 
     return { success: true, data };
