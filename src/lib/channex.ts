@@ -3,9 +3,9 @@ import { eachDayOfInterval, format, parseISO, differenceInCalendarDays } from 'd
 const BASE_URL = process.env.CHANNEX_API_BASE_URL || 'https://app.channex.io/api/v1';
 
 export const updateAvailability = async (
-  roomTypeId: string, 
-  ratePlanId: string, 
-  date: string, 
+  roomTypeId: string,
+  ratePlanId: string,
+  date: string,
   count: number
 ): Promise<{ success: boolean; data?: any; error?: string }> => {
   try {
@@ -25,10 +25,10 @@ export const updateAvailability = async (
         {
           property_id: propertyId,
           room_type_id: roomTypeId,
-          rate_plan_id: ratePlanId, 
+          rate_plan_id: ratePlanId,
           date_from: date,
-          date_to: date, 
-          availability: count 
+          date_to: date,
+          availability: count
         }
       ]
     };
@@ -64,7 +64,7 @@ export const updateAvailability = async (
   } catch (error: any) {
     let errorMsg = error.message;
     if (error.cause) {
-        errorMsg += ` | Cause: ${JSON.stringify(error.cause)}`;
+      errorMsg += ` | Cause: ${JSON.stringify(error.cause)}`;
     }
     console.error('Channex Sync Error Full:', error);
     return { success: false, error: errorMsg };
@@ -85,6 +85,7 @@ export const createChannexBooking = async (bookingData: {
     address?: string;
   };
   guests_count: number;
+  guest_names?: string[]; // ["Ad Soyad", "Ad2 Soyad2", ...]
   total_price: number;
   currency?: string;
   unique_id?: string; // Our internal UUID
@@ -145,7 +146,7 @@ export const createChannexBooking = async (bookingData: {
         customer: {
           name: name,
           surname: surname,
-          mail: bookingData.customer.email,
+          email: bookingData.customer.email,
           phone: bookingData.customer.phone || "",
           country: bookingData.customer.country || "TR"
         },
@@ -159,10 +160,21 @@ export const createChannexBooking = async (bookingData: {
               infants: 0
             },
             days: daysObject,
-            guests: Array.from({ length: guestsCount }).map((_, i) => ({
-              name: i === 0 ? name : `Guest`,
-              surname: i === 0 ? surname : `${i + 1}`
-            }))
+            guests: Array.from({ length: guestsCount }).map((_, i) => {
+              // Use guest_names if provided, otherwise fallback to customer name for first guest
+              if (bookingData.guest_names && bookingData.guest_names[i]) {
+                const guestFullName = bookingData.guest_names[i].trim();
+                const lastSpace = guestFullName.lastIndexOf(" ");
+                return {
+                  name: lastSpace > 0 ? guestFullName.substring(0, lastSpace) : guestFullName,
+                  surname: lastSpace > 0 ? guestFullName.substring(lastSpace + 1) : "Guest"
+                };
+              }
+              return {
+                name: i === 0 ? name : `Guest`,
+                surname: i === 0 ? surname : `${i + 1}`
+              };
+            })
           }
         ]
       }
@@ -196,20 +208,20 @@ export const createChannexBooking = async (bookingData: {
       console.error('--- CHANNEX ERROR RESPONSE START ---');
       console.error('Status:', response.status);
       console.error('Body:', JSON.stringify(data, null, 2));
-      
+
       let detailedError = data?.message || 'Channex Booking Creation Failed';
-      
+
       // Try to extract specific validation errors if available
       if (data?.errors && Array.isArray(data.errors)) {
-          const validationMessages = data.errors.map((e: any) => 
-              typeof e === 'string' ? e : JSON.stringify(e)
-          ).join(' | ');
-          detailedError += ` (Details: ${validationMessages})`;
+        const validationMessages = data.errors.map((e: any) =>
+          typeof e === 'string' ? e : JSON.stringify(e)
+        ).join(' | ');
+        detailedError += ` (Details: ${validationMessages})`;
       }
-      
+
       console.error('Detailed Error:', detailedError);
       console.error('--- CHANNEX ERROR RESPONSE END ---');
-      
+
       throw new Error(detailedError);
     }
 

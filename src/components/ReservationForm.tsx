@@ -18,12 +18,12 @@ import { useTranslations } from "next-intl";
 import { bookingSchema } from "@/lib/validations/booking";
 import toast from 'react-hot-toast';
 
-export default function ReservationForm({ 
-  preSelectedHotelId, 
+export default function ReservationForm({
+  preSelectedHotelId,
   hotels,
-  allRooms 
-}: { 
-  preSelectedHotelId?: string, 
+  allRooms
+}: {
+  preSelectedHotelId?: string,
   hotels: Hotel[],
   allRooms: Room[]
 }) {
@@ -33,9 +33,10 @@ export default function ReservationForm({
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
   const [guests, setGuests] = useState(1);
-  const [guestName, setGuestName] = useState(""); 
+  const [guestNames, setGuestNames] = useState<string[]>(['']); // Array of guest names
+  const [guestName, setGuestName] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
-  const [customerPhone, setCustomerPhone] = useState(""); 
+  const [customerPhone, setCustomerPhone] = useState("");
   const [customerCity, setCustomerCity] = useState("");
   const [customerAddress, setCustomerAddress] = useState("");
   const [customerNotes, setCustomerNotes] = useState("");
@@ -62,17 +63,17 @@ export default function ReservationForm({
       if (room) {
         const start = new Date(checkIn);
         const end = new Date(checkOut);
-        
+
         if (end > start) {
           const diffTime = Math.abs(end.getTime() - start.getTime());
-          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-          
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
           const baseTotal = diffDays * room.price;
-          
+
           // --- CAMPAIGN LOGIC (SIMULATED) ---
-          const discountRate = 0.15; 
+          const discountRate = 0.15;
           const discountAmount = baseTotal * discountRate;
-          
+
           setDiscount(discountAmount);
           setTotalPrice(baseTotal - discountAmount);
         } else {
@@ -95,10 +96,19 @@ export default function ReservationForm({
   useEffect(() => {
     if (checkIn && checkOut) {
       if (checkIn >= checkOut) {
-        setCheckOut(""); 
+        setCheckOut("");
       }
     }
   }, [checkIn]);
+
+  // Sync guestNames array with guests count
+  useEffect(() => {
+    setGuestNames(prev => {
+      const newArr = [...prev];
+      while (newArr.length < guests) newArr.push('');
+      return newArr.slice(0, guests);
+    });
+  }, [guests]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -124,7 +134,7 @@ export default function ReservationForm({
       bookingSchema.parse(formData);
 
       const result = await createBooking({
-        hotel_id: parseInt(selectedHotel), 
+        hotel_id: parseInt(selectedHotel),
         room_id: parseInt(selectedRoom),
         guest_name: guestName,
         email: customerEmail,
@@ -135,6 +145,7 @@ export default function ReservationForm({
         check_in: checkIn,
         check_out: checkOut,
         guests_count: guests,
+        guest_names: guestNames.filter(n => n.trim() !== ''), // Filter empty names
         total_price: totalPrice || 0,
         room_status: 'pending'
       });
@@ -146,14 +157,15 @@ export default function ReservationForm({
       }
 
       setIsSubmitted(true);
-        } catch (err: any) {
-          if (err instanceof z.ZodError) {
-            const firstError = err.issues[0];
-            toast.error(firstError.message);
-          } else {
-            toast.error("Beklenmedik bir hata oluştu.");
-          }
-        } finally {      setIsLoading(false);
+    } catch (err: any) {
+      if (err instanceof z.ZodError) {
+        const firstError = err.issues[0];
+        toast.error(firstError.message);
+      } else {
+        toast.error("Beklenmedik bir hata oluştu.");
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -167,7 +179,7 @@ export default function ReservationForm({
         <p className="text-green-700">
           {t('successMessage')}
         </p>
-        <button 
+        <button
           onClick={() => { setIsSubmitted(false); setGuestName(""); setCustomerEmail(""); setCustomerPhone(""); setCustomerCity(""); setCustomerAddress(""); setCustomerNotes(""); setCheckIn(""); setCheckOut(""); setSelectedRoom(""); setTotalPrice(null); }}
           className="text-green-700 font-medium hover:underline mt-4 block mx-auto"
         >
@@ -193,75 +205,75 @@ export default function ReservationForm({
 
         {/* Guest Name & Email */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">{t('nameLabel')}</label>
-                <input
-                type="text"
-                value={guestName}
-                onChange={(e) => setGuestName(e.target.value)}
-                required
-                placeholder={t('namePlaceholder')}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[var(--gold)] focus:border-transparent outline-none transition-all text-gray-700"
-                />
-            </div>
-            <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">{t('emailLabel')}</label>
-                <input
-                type="email"
-                value={customerEmail}
-                onChange={(e) => setCustomerEmail(e.target.value)}
-                required
-                placeholder={t('emailPlaceholder')}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[var(--gold)] focus:border-transparent outline-none transition-all text-gray-700"
-                />
-            </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-700">{t('nameLabel')}</label>
+            <input
+              type="text"
+              value={guestName}
+              onChange={(e) => setGuestName(e.target.value)}
+              required
+              placeholder={t('namePlaceholder')}
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[var(--gold)] focus:border-transparent outline-none transition-all text-gray-700"
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-700">{t('emailLabel')}</label>
+            <input
+              type="email"
+              value={customerEmail}
+              onChange={(e) => setCustomerEmail(e.target.value)}
+              required
+              placeholder={t('emailPlaceholder')}
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[var(--gold)] focus:border-transparent outline-none transition-all text-gray-700"
+            />
+          </div>
         </div>
-        
+
         {/* NEW: Phone Number Field */}
         <div className="space-y-2">
-             <label className="text-sm font-medium text-gray-700">Telefon Numarası</label>
-             <input
-               type="tel"
-               value={customerPhone}
-               onChange={(e) => setCustomerPhone(e.target.value)}
-               placeholder="+90 555 123 45 67"
-               className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[var(--gold)] focus:border-transparent outline-none transition-all text-gray-700"
-             />
+          <label className="text-sm font-medium text-gray-700">Telefon Numarası</label>
+          <input
+            type="tel"
+            value={customerPhone}
+            onChange={(e) => setCustomerPhone(e.target.value)}
+            placeholder="+90 555 123 45 67"
+            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[var(--gold)] focus:border-transparent outline-none transition-all text-gray-700"
+          />
         </div>
 
         {/* NEW: City & Address & Notes */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-             <div className="space-y-2">
-                 <label className="text-sm font-medium text-gray-700">Şehir</label>
-                 <input
-                   type="text"
-                   value={customerCity}
-                   onChange={(e) => setCustomerCity(e.target.value)}
-                   placeholder="İstanbul"
-                   className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[var(--gold)] focus:border-transparent outline-none transition-all text-gray-700"
-                 />
-             </div>
-             <div className="space-y-2">
-                 <label className="text-sm font-medium text-gray-700">Adres</label>
-                 <input
-                   type="text"
-                   value={customerAddress}
-                   onChange={(e) => setCustomerAddress(e.target.value)}
-                   placeholder="Tam adresiniz..."
-                   className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[var(--gold)] focus:border-transparent outline-none transition-all text-gray-700"
-                 />
-             </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-700">Şehir</label>
+            <input
+              type="text"
+              value={customerCity}
+              onChange={(e) => setCustomerCity(e.target.value)}
+              placeholder="İstanbul"
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[var(--gold)] focus:border-transparent outline-none transition-all text-gray-700"
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-700">Adres</label>
+            <input
+              type="text"
+              value={customerAddress}
+              onChange={(e) => setCustomerAddress(e.target.value)}
+              placeholder="Tam adresiniz..."
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[var(--gold)] focus:border-transparent outline-none transition-all text-gray-700"
+            />
+          </div>
         </div>
-        
+
         <div className="space-y-2">
-             <label className="text-sm font-medium text-gray-700">Notlar (Opsiyonel)</label>
-             <textarea
-               value={customerNotes}
-               onChange={(e) => setCustomerNotes(e.target.value)}
-               placeholder="Varsa özel istekleriniz..."
-               rows={2}
-               className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[var(--gold)] focus:border-transparent outline-none transition-all text-gray-700 resize-none"
-             />
+          <label className="text-sm font-medium text-gray-700">Notlar (Opsiyonel)</label>
+          <textarea
+            value={customerNotes}
+            onChange={(e) => setCustomerNotes(e.target.value)}
+            placeholder="Varsa özel istekleriniz..."
+            rows={2}
+            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[var(--gold)] focus:border-transparent outline-none transition-all text-gray-700 resize-none"
+          />
         </div>
 
         {/* Hotel Selection */}
@@ -312,7 +324,7 @@ export default function ReservationForm({
             </div>
           </div>
           {selectedHotel && availableRooms.length === 0 && (
-             <p className="text-xs text-red-500 mt-1">{t('noRoomsDefined')}</p>
+            <p className="text-xs text-red-500 mt-1">{t('noRoomsDefined')}</p>
           )}
         </div>
 
@@ -332,7 +344,7 @@ export default function ReservationForm({
               <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             </div>
           </div>
-          
+
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700">{t('checkOut')}</label>
             <div className="relative">
@@ -369,31 +381,55 @@ export default function ReservationForm({
           </div>
         </div>
 
+        {/* Guest Names (when more than 1 guest) */}
+        {guests > 1 && (
+          <div className="space-y-3 bg-gray-50 p-4 rounded-lg border border-gray-200">
+            <label className="text-sm font-medium text-gray-700 block">Misafir İsimleri</label>
+            <p className="text-xs text-gray-500 -mt-2 mb-2">Odada kalacak diğer misafirlerin ad ve soyadlarını girin</p>
+            {guestNames.slice(1).map((name, index) => (
+              <div key={index + 1} className="space-y-1">
+                <label className="text-xs text-gray-500">{index + 2}. Misafir</label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => {
+                    const newNames = [...guestNames];
+                    newNames[index + 1] = e.target.value;
+                    setGuestNames(newNames);
+                  }}
+                  placeholder={`Misafir ${index + 2} Ad Soyad`}
+                  className="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-[var(--gold)] focus:border-transparent outline-none transition-all text-gray-700 text-sm"
+                />
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* PRICE SUMMARY CARD */}
         {totalPrice !== null && (
-            <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 animate-fadeIn">
-                <h4 className="text-lg font-bold text-gray-800 mb-2 border-b border-gray-200 pb-2">Ödeme Özeti</h4>
-                
-                {discount > 0 && (
-                    <div className="flex justify-between items-center text-sm text-gray-500 mb-1">
-                        <span>Oda Fiyatı (İndirimsiz):</span>
-                        <span className="line-through">€{(totalPrice + discount).toLocaleString('en-US')}</span>
-                    </div>
-                )}
-                
-                {discount > 0 && (
-                    <div className="flex justify-between items-center text-sm text-green-600 mb-1">
-                        <span>Sezon Sonu İndirimi (%15):</span>
-                        <span>-€{discount.toLocaleString('en-US')}</span>
-                    </div>
-                )}
+          <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 animate-fadeIn">
+            <h4 className="text-lg font-bold text-gray-800 mb-2 border-b border-gray-200 pb-2">Ödeme Özeti</h4>
 
-                <div className="flex justify-between items-center mt-2 pt-2 border-t border-gray-200">
-                    <span className="font-bold text-gray-900 text-lg">Toplam Tutar:</span>
-                    <span className="font-bold text-[var(--gold)] text-2xl">€{totalPrice.toLocaleString('en-US')}</span>
-                </div>
-                <p className="text-xs text-gray-400 mt-2 text-right">Vergiler dahildir.</p>
+            {discount > 0 && (
+              <div className="flex justify-between items-center text-sm text-gray-500 mb-1">
+                <span>Oda Fiyatı (İndirimsiz):</span>
+                <span className="line-through">€{(totalPrice + discount).toLocaleString('en-US')}</span>
+              </div>
+            )}
+
+            {discount > 0 && (
+              <div className="flex justify-between items-center text-sm text-green-600 mb-1">
+                <span>Sezon Sonu İndirimi (%15):</span>
+                <span>-€{discount.toLocaleString('en-US')}</span>
+              </div>
+            )}
+
+            <div className="flex justify-between items-center mt-2 pt-2 border-t border-gray-200">
+              <span className="font-bold text-gray-900 text-lg">Toplam Tutar:</span>
+              <span className="font-bold text-[var(--gold)] text-2xl">€{totalPrice.toLocaleString('en-US')}</span>
             </div>
+            <p className="text-xs text-gray-400 mt-2 text-right">Vergiler dahildir.</p>
+          </div>
         )}
 
       </div>

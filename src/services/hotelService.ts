@@ -214,8 +214,8 @@ function mapDbHotelToModel(hotel: any): Hotel {
 
 function mapDbRoomToModel(room: any): Room {
   // Use 'images' array if exists, otherwise fallback to single 'image_url' wrap, otherwise default
-  const images = room.images && room.images.length > 0 
-    ? room.images 
+  const images = room.images && room.images.length > 0
+    ? room.images
     : (room.image_url ? [room.image_url] : ["https://images.unsplash.com/photo-1611892440504-42a792e24d32?auto=format&fit=crop&w=800&q=80"]);
 
   return {
@@ -250,8 +250,9 @@ export interface Booking {
   total_price: number;
   room_status: 'pending' | 'confirmed' | 'cancelled' | 'checked_in' | 'checked_out'; // reservation_status enum
   // Frontend helpers (not in DB)
-  hotel_id?: number; 
-  guests_count?: number; 
+  hotel_id?: number;
+  guests_count?: number;
+  guest_names?: string[]; // Array of guest names for room occupants
   email?: string; // alias for customer_email from form
   guest_name?: string; // alias for customer_name from form
   phone?: string; // alias for customer_phone from form
@@ -321,8 +322,9 @@ export const createBooking = async (booking: Partial<Booking>) => {
     check_in: booking.check_in,
     check_out: booking.check_out,
     guests_count: booking.guests_count || 1,
+    guest_names: booking.guest_names || [],
     total_price: booking.total_price, // NEW: Pass calculated price
-    room_status: 'pending' 
+    room_status: 'pending'
   };
 
   console.log('Delegating to Server Action with payload:', payload);
@@ -334,20 +336,20 @@ export const createBooking = async (booking: Partial<Booking>) => {
     // Return the error directly instead of throwing
     return { success: false, error: result.error };
   }
-  
+
   return { success: true, data: result.data };
 };
 
 export const updateBookingStatus = async (id: string, status: string, details?: Partial<Booking>) => {
   const updatePayload: any = { room_status: status };
-  
+
   if (details) {
-      if (details.guest_id_number !== undefined) updatePayload.guest_id_number = details.guest_id_number;
-      if (details.guest_nationality !== undefined) updatePayload.guest_nationality = details.guest_nationality;
-      if (details.check_in_notes !== undefined) updatePayload.check_in_notes = details.check_in_notes;
-      if (details.extra_charges !== undefined) updatePayload.extra_charges = details.extra_charges;
-      if (details.damage_report !== undefined) updatePayload.damage_report = details.damage_report;
-      if (details.payment_status !== undefined) updatePayload.payment_status = details.payment_status;
+    if (details.guest_id_number !== undefined) updatePayload.guest_id_number = details.guest_id_number;
+    if (details.guest_nationality !== undefined) updatePayload.guest_nationality = details.guest_nationality;
+    if (details.check_in_notes !== undefined) updatePayload.check_in_notes = details.check_in_notes;
+    if (details.extra_charges !== undefined) updatePayload.extra_charges = details.extra_charges;
+    if (details.damage_report !== undefined) updatePayload.damage_report = details.damage_report;
+    if (details.payment_status !== undefined) updatePayload.payment_status = details.payment_status;
   }
 
   const { data, error } = await supabase
