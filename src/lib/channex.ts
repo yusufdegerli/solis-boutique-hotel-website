@@ -130,6 +130,8 @@ export const createChannexBooking = async (bookingData: {
       daysObject[format(day, 'yyyy-MM-dd')] = dailyRate;
     });
 
+    const guestsCount = Math.max(1, Math.floor(bookingData.guests_count || 1));
+
     const payload = {
       booking: {
         status: "new",
@@ -143,29 +145,24 @@ export const createChannexBooking = async (bookingData: {
         customer: {
           name: name,
           surname: surname,
-          mail: bookingData.customer.email, // Mapped to 'mail' as per Channex requirement
+          mail: bookingData.customer.email,
           phone: bookingData.customer.phone || "",
-          country: bookingData.customer.country || "TR",
-          city: bookingData.customer.city || "",
-          address: bookingData.customer.address || "",
-          zip: "" // Optional but good to have in structure
+          country: bookingData.customer.country || "TR"
         },
         rooms: [
           {
             room_type_id: bookingData.room_type_id,
             rate_plan_id: bookingData.rate_plan_id,
             occupancy: {
-              adults: Math.floor(bookingData.guests_count),
+              adults: guestsCount,
               children: 0,
               infants: 0
             },
             days: daysObject,
-            guests: [
-              {
-                name: name,
-                surname: surname
-              }
-            ]
+            guests: Array.from({ length: guestsCount }).map((_, i) => ({
+              name: i === 0 ? name : `Guest`,
+              surname: i === 0 ? surname : `${i + 1}`
+            }))
           }
         ]
       }

@@ -24,18 +24,20 @@ export async function POST(request: Request) {
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
     const supabase = createClient(supabaseUrl, serviceKey);
 
-    // 2. Extract Room Info
-    // Channex bookings can have multiple rooms, but usually 1 for simple mapping.
-    // We will take the first room to map to our system.
-    const channexRoom = payload.rooms && payload.rooms[0];
+    // 2. Extract Booking Data from Payload
+    // If the payload has a 'booking' wrapper, use it. Otherwise use payload directly.
+    const booking = payload.booking || payload;
+    
+    const channexRooms = booking.rooms || [];
+    const channexRoom = channexRooms[0];
     
     if (!channexRoom) {
-         console.error('Webhook: No room details found in payload.');
+         console.error('Webhook: No room details found in booking payload.');
          return NextResponse.json({ message: 'No room details' });
     }
 
     const channexRoomTypeId = channexRoom.room_type_id;
-    const channexBookingId = payload.id; // The unique ID from Channex
+    const channexBookingId = booking.id || payload.id; // Channex Booking UUID
 
     // 3. Find Matching Room in Our DB
     const { data: localRoom, error: roomError } = await supabase
@@ -53,19 +55,27 @@ export async function POST(request: Request) {
 
     // 4. Map Status
     let status = 'confirmed'; // Default for new bookings from OTAs
-    if (eventType === 'booking_cancellation' || payload.status === 'cancelled') {
+    if (eventType === 'booking_cancellation' || booking.status === 'cancelled') {
         status = 'cancelled';
-    } else if (payload.status === 'modified') {
-        status = 'confirmed'; // Modified usually means confirmed with new dates
+    } else if (booking.status === 'modified') {
+        status = 'confirmed'; 
     }
 
     // 5. Prepare Data
-    const customer = payload.customer || {};
-    const checkIn = payload.arrival_date;
-    const checkOut = payload.departure_date;
-    const totalPrice = payload.total_price;
-    const guestCount = payload.guests || 1;
-    const notes = `Source: ${payload.source || 'OTA'} | Channex ID: ${channexBookingId}`;
+    const customer = booking.customer || {};
+    const checkIn = booking.arrival_date;
+    const checkOut = booking.departure_date;
+    const totalPrice = booking.total_price || 0;
+    
+    // Calculate total guests from occupancy or guests array
+    let guestCount = 1;
+    if (channexRoom.occupancy) {
+        guestCount = (channexRoom.occupancy.adults || 0) + (channexRoom.occupancy.children || 0);
+    } else if (channexRoom.guests) {
+        guestCount = channexRoom.guests.length;
+    }
+    
+    const notes = `Source: ${booking.ota_name || 'OTA'} | OTA Ref: ${booking.ota_reservation_code || 'N/A'} | Channex ID: ${channexBookingId}`;
 
     // 6. Database Operation (Upsert Logic)
     // We try to update first based on channex_booking_id. If not found, we insert.
