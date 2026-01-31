@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 import { z } from "zod";
 import { sendBookingNotification } from '@/services/notificationService';
 import { sendConfirmationEmail } from '@/services/mailService'; // Keep for now or remove if unused later
-import { updateAvailability, createChannexBooking, cancelChannexBooking } from '@/lib/channex';
+import { updateAvailability, createBeds24Booking, cancelBeds24Booking } from '@/lib/beds24';
 import { eachDayOfInterval, format, subDays } from 'date-fns';
 
 // Initialize Supabase client
@@ -95,7 +95,7 @@ export async function createBookingServer(bookingData: any) {
     // 1. Get Room Info (for validation and hotel_id)
     const { data: roomInfo, error: roomInfoError } = await supabase
       .from('Rooms_Information')
-      .select('id, quantity, hotel_id, channex_room_type_id, channex_rate_plan_id')
+      .select('id, quantity, hotel_id, beds24_room_id')
       .eq('id', payload.room_id)
       .single();
 
@@ -158,17 +158,15 @@ export async function createBookingServer(bookingData: any) {
 
     const bookingId = newBooking.id;
 
-    // --- CHANNEX BOOKING CREATE START (NEW) ---
-    // We do this BEFORE the availability loop to ensure the booking exists in Channex first, 
-    // although they are somewhat independent.
-    let channexBookingId = null;
-    if (roomInfo.channex_room_type_id && roomInfo.channex_rate_plan_id) {
-      console.log('--- CHANNEX BOOKING SYNC START ---');
-      const channexResult = await createChannexBooking({
+    // --- BEDS24 BOOKING CREATE START ---
+    // Create booking in Beds24 channel manager
+    let beds24BookingId = null;
+    if (roomInfo.beds24_room_id) {
+      console.log('--- BEDS24 BOOKING SYNC START ---');
+      const beds24Result = await createBeds24Booking({
         arrival_date: payload.check_in,
         departure_date: payload.check_out,
-        room_type_id: roomInfo.channex_room_type_id,
-        rate_plan_id: roomInfo.channex_rate_plan_id,
+        room_id: roomInfo.beds24_room_id,
         guests_count: payload.guests_count,
         guest_names: bookingData.guest_names || [],
         total_price: payload.total_price || 0,
@@ -176,28 +174,28 @@ export async function createBookingServer(bookingData: any) {
           name: payload.customer_name,
           email: payload.customer_email,
           phone: payload.customer_phone,
-          country: 'TR', // Default to TR or extract if available
+          country: 'TR',
           city: payload.customer_city,
           address: payload.customer_address
         },
         notes: payload.notes,
-        unique_id: bookingId // Use our UUID as reference
+        unique_id: bookingId
       });
 
-      if (channexResult.success && channexResult.data?.data) {
-        channexBookingId = channexResult.data.data.id;
-        console.log('Channex Booking ID:', channexBookingId);
+      if (beds24Result.success && beds24Result.data?.bookId) {
+        beds24BookingId = beds24Result.data.bookId;
+        console.log('Beds24 Booking ID:', beds24BookingId);
 
-        // Update Supabase record with Channex ID
+        // Update Supabase record with Beds24 ID
         await supabase
           .from('Reservation_Information')
-          .update({ channex_booking_id: channexBookingId })
+          .update({ beds24_booking_id: beds24BookingId })
           .eq('id', bookingId);
       } else {
-        console.error('Channex Booking Creation Failed (Non-blocking):', channexResult.error);
+        console.error('Beds24 Booking Creation Failed (Non-blocking):', beds24Result.error);
       }
     }
-    // --- CHANNEX BOOKING CREATE END ---
+    // --- BEDS24 BOOKING CREATE END ---
 
     // --- NOTIFICATION TRIGGER ---
     const notificationPayload = {
@@ -210,14 +208,12 @@ export async function createBookingServer(bookingData: any) {
 
     sendBookingNotification(notificationPayload, 'pending').catch(err => console.error('Notification Error:', err));
 
-    // --- CHANNEX AVAILABILITY SYNC (Existing Logic) ---
-    // Still useful to sync exact counts even if Channex handles it, 
-    // ensuring double safety or custom logic.
+    // --- BEDS24 AVAILABILITY SYNC ---
+    // Sync availability to Beds24 for each night of the booking
     try {
-      if (roomInfo.channex_room_type_id && roomInfo.channex_rate_plan_id) {
+      if (roomInfo.beds24_room_id) {
         const totalRooms = roomInfo.quantity;
-        const channexId = roomInfo.channex_room_type_id;
-        const rateId = roomInfo.channex_rate_plan_id;
+        const beds24RoomId = roomInfo.beds24_room_id;
 
         const startDate = new Date(payload.check_in);
         const endDate = new Date(payload.check_out);
@@ -241,12 +237,12 @@ export async function createBookingServer(bookingData: any) {
           if (!countError) {
             const currentCount = count !== null ? count : 0;
             const remaining = Math.max(0, totalRooms - currentCount);
-            await updateAvailability(channexId, rateId, dateStr, remaining);
+            await updateAvailability(beds24RoomId, dateStr, remaining);
           }
         }));
       }
-    } catch (channexErr) {
-      console.error('Channex Sync Error:', channexErr);
+    } catch (beds24Err) {
+      console.error('Beds24 Sync Error:', beds24Err);
     }
 
     return { success: true, data: [{ id: bookingId }] };
@@ -289,23 +285,23 @@ export async function updateBookingStatusServer(id: string, status: string, deta
 
     const booking = data[0];
 
-    // Sync with Channex if cancelled
-    if (status === 'cancelled' && booking.channex_booking_id) {
-      console.log(`Syncing cancellation to Channex for Booking ID: ${booking.channex_booking_id}`);
-      await cancelChannexBooking(booking.channex_booking_id);
+    // Sync with Beds24 if cancelled
+    if (status === 'cancelled' && booking.beds24_booking_id) {
+      console.log(`Syncing cancellation to Beds24 for Booking ID: ${booking.beds24_booking_id}`);
+      await cancelBeds24Booking(booking.beds24_booking_id);
     }
 
     // Restore availability when cancelled
     if (status === 'cancelled') {
       try {
-        // Get room info for Channex IDs
+        // Get room info for Beds24 ID
         const { data: roomInfo } = await supabase
           .from('Rooms_Information')
-          .select('channex_room_type_id, channex_rate_plan_id, quantity')
+          .select('beds24_room_id, quantity')
           .eq('id', booking.room_id)
           .single();
 
-        if (roomInfo?.channex_room_type_id && roomInfo?.channex_rate_plan_id) {
+        if (roomInfo?.beds24_room_id) {
           const startDate = new Date(booking.check_in);
           const endDate = new Date(booking.check_out);
           const nights = eachDayOfInterval({
@@ -330,7 +326,7 @@ export async function updateBookingStatusServer(id: string, status: string, deta
 
             const remaining = Math.max(0, roomInfo.quantity - (count || 0));
             console.log(`Restoring availability for ${dateStr}: ${remaining} rooms`);
-            await updateAvailability(roomInfo.channex_room_type_id, roomInfo.channex_rate_plan_id, dateStr, remaining);
+            await updateAvailability(roomInfo.beds24_room_id, dateStr, remaining);
           }));
         }
       } catch (availErr) {

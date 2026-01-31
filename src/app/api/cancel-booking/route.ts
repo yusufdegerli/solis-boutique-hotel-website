@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
-import { cancelChannexBooking } from '@/lib/channex';
+import { cancelBeds24Booking } from '@/lib/beds24';
 
 export async function POST(request: Request) {
   try {
@@ -30,7 +30,7 @@ export async function POST(request: Request) {
     }
 
     if (booking.room_status === 'completed' || booking.room_status === 'checked_out') {
-        return NextResponse.json({ success: false, error: 'Tamamlanmış rezervasyonlar iptal edilemez.' }, { status: 400 });
+      return NextResponse.json({ success: false, error: 'Tamamlanmış rezervasyonlar iptal edilemez.' }, { status: 400 });
     }
 
     // 2. Cancel Booking
@@ -38,16 +38,16 @@ export async function POST(request: Request) {
       .from('Reservation_Information')
       .update({ room_status: 'cancelled' })
       .eq('id', booking.id)
-      .select('channex_booking_id')
+      .select('beds24_booking_id')
       .single();
 
     if (updateError) {
       return NextResponse.json({ success: false, error: 'Güncelleme hatası: ' + updateError.message }, { status: 500 });
     }
 
-    if (updatedData?.channex_booking_id) {
-        console.log(`Syncing user cancellation to Channex for Booking ID: ${updatedData.channex_booking_id}`);
-        await cancelChannexBooking(updatedData.channex_booking_id);
+    if (updatedData?.beds24_booking_id) {
+      console.log(`Syncing user cancellation to Beds24 for Booking ID: ${updatedData.beds24_booking_id}`);
+      await cancelBeds24Booking(updatedData.beds24_booking_id);
     }
 
     // Optional: Send Notification to Admin
