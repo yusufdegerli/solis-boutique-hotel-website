@@ -104,6 +104,13 @@ export async function createBookingServer(bookingData: any) {
       return { success: false, error: 'Oda bilgisi bulunamadı.' };
     }
 
+    // DEBUG: Log room info to see if beds24_room_id exists
+    console.log('--- ROOM INFO FROM DATABASE ---');
+    console.log('Room ID:', roomInfo.id);
+    console.log('beds24_room_id:', roomInfo.beds24_room_id);
+    console.log('Full roomInfo:', JSON.stringify(roomInfo, null, 2));
+    console.log('--- END ROOM INFO ---');
+
     const roomQuantity = roomInfo.quantity;
     const hotelId = payload.hotel_id || roomInfo.hotel_id; // Prefer payload, fallback to DB
 
