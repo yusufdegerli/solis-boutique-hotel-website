@@ -5,9 +5,10 @@ export const dynamic = 'force-dynamic';
 
 // Map local database room IDs to Beds24 room IDs
 const roomIdMap: Record<number, string> = {
-    18: "646874", // Single Room
-    19: "646866", // Twinbed
-    // Diğer odalarını da buraya ekle
+    17: "646875", // Family Room
+    18: "646866", // Twinbed
+    19: "646874", // Single Room
+    24: "646877", // Double Room
 };
 
 /**

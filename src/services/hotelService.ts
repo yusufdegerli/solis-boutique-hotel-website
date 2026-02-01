@@ -295,7 +295,7 @@ export const getUserBookings = async (email: string): Promise<Booking[]> => {
   return data as Booking[];
 };
 
-import { createBookingServer } from "@/actions/bookingActions";
+import { createBookingServer, updateBookingStatusServer } from "@/actions/bookingActions";
 
 // ... existing imports ...
 
@@ -341,23 +341,14 @@ export const createBooking = async (booking: Partial<Booking>) => {
 };
 
 export const updateBookingStatus = async (id: string, status: string, details?: Partial<Booking>) => {
-  const updatePayload: any = { room_status: status };
+  console.log(`Updating booking ${id} to status ${status}`);
 
-  if (details) {
-    if (details.guest_id_number !== undefined) updatePayload.guest_id_number = details.guest_id_number;
-    if (details.guest_nationality !== undefined) updatePayload.guest_nationality = details.guest_nationality;
-    if (details.check_in_notes !== undefined) updatePayload.check_in_notes = details.check_in_notes;
-    if (details.extra_charges !== undefined) updatePayload.extra_charges = details.extra_charges;
-    if (details.damage_report !== undefined) updatePayload.damage_report = details.damage_report;
-    if (details.payment_status !== undefined) updatePayload.payment_status = details.payment_status;
+  // Call the server action which handles Beds24 sync
+  const result = await updateBookingStatusServer(id, status, details);
+
+  if (!result.success) {
+    throw new Error(result.error || 'Rezervasyon güncellenemedi');
   }
 
-  const { data, error } = await supabase
-    .from('Reservation_Information')
-    .update(updatePayload)
-    .eq('id', id)
-    .select();
-
-  if (error) throw error;
-  return data;
+  return result.data;
 };

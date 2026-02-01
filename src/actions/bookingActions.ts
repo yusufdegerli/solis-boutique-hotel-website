@@ -285,6 +285,54 @@ export async function updateBookingStatusServer(id: string, status: string, deta
 
     const booking = data[0];
 
+    // Sync with Beds24 if confirmed and not yet synced
+    if (status === 'confirmed' && !booking.beds24_booking_id) {
+      console.log(`Creating Beds24 booking for confirmed reservation ID: ${booking.id}`);
+
+      try {
+        // Get room info for Beds24 room ID
+        const { data: roomInfo } = await supabase
+          .from('Rooms_Information')
+          .select('beds24_room_id')
+          .eq('id', booking.room_id)
+          .single();
+
+        if (roomInfo?.beds24_room_id) {
+          const beds24Result = await createBeds24Booking({
+            arrival_date: booking.check_in,
+            departure_date: booking.check_out,
+            room_id: roomInfo.beds24_room_id,
+            guests_count: booking.guests_count || 2,
+            total_price: booking.total_price || 0,
+            customer: {
+              name: booking.customer_name,
+              email: booking.customer_email,
+              phone: booking.customer_phone || '',
+              country: 'TR',
+              city: booking.customer_city || '',
+              address: booking.customer_address || ''
+            },
+            notes: booking.check_in_notes || '',
+            unique_id: booking.id.toString()
+          });
+
+          if (beds24Result.success && beds24Result.data?.bookId) {
+            // Update Supabase record with Beds24 ID
+            await supabase
+              .from('Reservation_Information')
+              .update({ beds24_booking_id: beds24Result.data.bookId })
+              .eq('id', booking.id);
+
+            console.log(`Beds24 booking created successfully: ${beds24Result.data.bookId}`);
+          } else {
+            console.error('Beds24 booking creation failed (non-blocking):', beds24Result.error);
+          }
+        }
+      } catch (beds24Err) {
+        console.error('Beds24 sync error during confirmation (non-blocking):', beds24Err);
+      }
+    }
+
     // Sync with Beds24 if cancelled
     if (status === 'cancelled' && booking.beds24_booking_id) {
       console.log(`Syncing cancellation to Beds24 for Booking ID: ${booking.beds24_booking_id}`);
