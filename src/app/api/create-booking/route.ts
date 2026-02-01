@@ -4,10 +4,10 @@ import { createBeds24Booking } from '@/lib/beds24';
 export const dynamic = 'force-dynamic';
 
 // Map local database room IDs to Beds24 room IDs
-const LOCAL_TO_BEDS24_ROOM_MAP: Record<string, string> = {
-    '19': '646866',  // Twin Bed Room
-    '20': '646874',  // Single Room
-    // Add more mappings as needed
+const roomIdMap: Record<number, string> = {
+    18: "646874", // Single Room
+    19: "646866", // Twinbed
+    // Diğer odalarını da buraya ekle
 };
 
 /**
@@ -63,9 +63,10 @@ export async function POST(request: NextRequest) {
         }
 
         // Map local room ID to Beds24 room ID
-        const beds24RoomId = LOCAL_TO_BEDS24_ROOM_MAP[roomId.toString()];
+        const roomIdNumber = typeof roomId === 'string' ? parseInt(roomId) : roomId;
+        const realBeds24Id = roomIdMap[roomIdNumber];
 
-        if (!beds24RoomId) {
+        if (!realBeds24Id) {
             return NextResponse.json(
                 {
                     success: false,
@@ -75,13 +76,13 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        console.log(`Mapping local room ID ${roomId} to Beds24 room ID ${beds24RoomId}`);
+        console.log(`Mapping local room ID ${roomId} to Beds24 room ID ${realBeds24Id}`);
 
         // Create booking data
         const bookingData = {
             arrival_date: checkIn,
             departure_date: checkOut,
-            room_id: beds24RoomId,  // Use Beds24 room ID instead of local ID
+            room_id: realBeds24Id,  // Use Beds24 room ID instead of local ID
             customer: {
                 name: guestName,
                 email: guestEmail,
