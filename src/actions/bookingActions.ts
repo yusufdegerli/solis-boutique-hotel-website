@@ -135,6 +135,7 @@ export async function createBookingServer(bookingData: any) {
     }
 
     // 3. Create Booking (Supabase)
+    console.log('--- SUPABASE INSERT START ---');
     const cancellationToken = crypto.randomUUID();
 
     const { data: newBooking, error: insertError } = await supabase
@@ -163,10 +164,17 @@ export async function createBookingServer(bookingData: any) {
       return { success: false, error: 'Rezervasyon oluşturulamadı: ' + insertError.message };
     }
 
+    console.log('--- SUPABASE INSERT SUCCESS ---');
+    console.log('New Booking ID:', newBooking.id);
+
     const bookingId = newBooking.id;
 
     // --- BEDS24 BOOKING CREATE START ---
     // Create booking in Beds24 channel manager
+    console.log('--- CHECKING BEDS24 ROOM ID ---');
+    console.log('beds24_room_id value:', roomInfo.beds24_room_id);
+    console.log('beds24_room_id truthy?:', !!roomInfo.beds24_room_id);
+
     let beds24BookingId = null;
     if (roomInfo.beds24_room_id) {
       console.log('--- BEDS24 BOOKING SYNC START ---');
