@@ -3,6 +3,13 @@ import { createBeds24Booking } from '@/lib/beds24';
 
 export const dynamic = 'force-dynamic';
 
+// Map local database room IDs to Beds24 room IDs
+const LOCAL_TO_BEDS24_ROOM_MAP: Record<string, string> = {
+    '19': '646866',  // Twin Bed Room
+    '20': '646874',  // Single Room
+    // Add more mappings as needed
+};
+
 /**
  * POST /api/create-booking
  * Create a new booking in Beds24
@@ -55,11 +62,26 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        // Map local room ID to Beds24 room ID
+        const beds24RoomId = LOCAL_TO_BEDS24_ROOM_MAP[roomId.toString()];
+
+        if (!beds24RoomId) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: `Room ID ${roomId} not found in Beds24 mapping. Please contact support.`
+                },
+                { status: 400 }
+            );
+        }
+
+        console.log(`Mapping local room ID ${roomId} to Beds24 room ID ${beds24RoomId}`);
+
         // Create booking data
         const bookingData = {
             arrival_date: checkIn,
             departure_date: checkOut,
-            room_id: roomId,
+            room_id: beds24RoomId,  // Use Beds24 room ID instead of local ID
             customer: {
                 name: guestName,
                 email: guestEmail,
