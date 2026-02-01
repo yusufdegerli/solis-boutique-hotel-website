@@ -1,6 +1,119 @@
 import { eachDayOfInterval, format, parseISO, differenceInCalendarDays } from 'date-fns';
 
 const BEDS24_API_URL = 'https://beds24.com/api/v2';
+const BEDS24_JSON_API_URL = 'https://api.beds24.com/json';
+
+// Room ID Mapping
+const ROOM_ID_MAP: Record<string, string> = {
+  "646866": "Twin Bed Room",
+  "646874": "Single Room",
+  "646875": "Family Room",
+  "646877": "Double Room"
+};
+
+// TypeScript Types
+export interface Beds24Room {
+  roomId: string;
+  roomName: string;
+  available: number;
+}
+
+export interface Beds24AvailabilityResponse {
+  [key: string]: any;
+}
+
+/**
+ * Parse Beds24 API Response
+ * Beds24 returns data as an Object keyed by room ID, not an Array.
+ * This function transforms it into a clean TypeScript array.
+ */
+export const parseBeds24Response = (response: Beds24AvailabilityResponse): Beds24Room[] => {
+  const rooms: Beds24Room[] = [];
+  
+  // Filter out non-numeric keys (like "checkIn", "propId", etc.)
+  Object.keys(response).forEach(key => {
+    // Check if key is a number (room ID)
+    if (!isNaN(Number(key))) {
+      const roomData = response[key];
+      rooms.push({
+        roomId: key,
+        roomName: ROOM_ID_MAP[key] || `Room ${key}`,
+        available: roomData.roomsavail || 0
+      });
+    }
+  });
+  
+  return rooms;
+};
+
+/**
+ * Get room availability from Beds24
+ * @param checkIn - Check-in date in YYYYMMDD format
+ * @param checkOut - Check-out date in YYYYMMDD format
+ * @param adults - Number of adults
+ */
+export const getAvailabilities = async (
+  checkIn: string,
+  checkOut: string,
+  adults: number = 2
+): Promise<{ success: boolean; rooms?: Beds24Room[]; error?: string }> => {
+  try {
+    const apiKey = process.env.BEDS24_API_KEY;
+    const propKey = process.env.BEDS24_PROP_KEY;
+
+    if (!apiKey || !propKey) {
+      throw new Error('Beds24 API Configuration missing (BEDS24_API_KEY or BEDS24_PROP_KEY)');
+    }
+
+    const url = `${BEDS24_JSON_API_URL}/getAvailabilities`;
+
+    console.log(`Beds24 Availability Query: ${checkIn} to ${checkOut}, Adults: ${adults}`);
+
+    const payload = {
+      authentication: {
+        apiKey: apiKey,
+        propKey: propKey
+      },
+      checkIn: checkIn,
+      checkOut: checkOut,
+      propId: propKey,
+      numAdult: String(adults)
+    };
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'User-Agent': 'SolisHotelWebsite/1.0'
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const contentType = response.headers.get("content-type");
+    let data;
+    if (contentType && contentType.indexOf("application/json") !== -1) {
+      data = await response.json();
+    } else {
+      const text = await response.text();
+      throw new Error(`Unexpected response format: ${text}`);
+    }
+
+    if (!response.ok) {
+      console.error('Beds24 Availability API Error:', response.status, data);
+      throw new Error(data?.message || 'Failed to fetch availability');
+    }
+
+    // Parse the response
+    const rooms = parseBeds24Response(data);
+    
+    console.log('Beds24 Availability Success:', rooms);
+    return { success: true, rooms };
+
+  } catch (error: any) {
+    console.error('Beds24 Availability Error:', error);
+    return { success: false, error: error.message };
+  }
+};
 
 /**
  * Update room availability in Beds24
