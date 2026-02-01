@@ -11,8 +11,8 @@ async function testAvailability() {
     console.log('\n=== TEST 1: Check Availability ===');
 
     const payload = {
-        checkIn: '20260601',
-        checkOut: '20260605',
+        checkIn: '20260520',
+        checkOut: '20260524',
         adults: 2
     };
 
@@ -50,8 +50,8 @@ async function testCreateBooking(roomId: string) {
         guestName: 'Test User',
         guestEmail: 'test@example.com',
         guestPhone: '+905551234567',
-        checkIn: '2026-06-01',
-        checkOut: '2026-06-05',
+        checkIn: '2026-05-20',
+        checkOut: '2026-05-24',
         price: 500,
         adults: 2,
         notes: 'Test booking - DO NOT CONFIRM'
