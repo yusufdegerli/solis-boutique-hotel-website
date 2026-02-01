@@ -29,7 +29,7 @@ export interface Beds24AvailabilityResponse {
  */
 export const parseBeds24Response = (response: Beds24AvailabilityResponse): Beds24Room[] => {
   const rooms: Beds24Room[] = [];
-  
+
   // Filter out non-numeric keys (like "checkIn", "propId", etc.)
   Object.keys(response).forEach(key => {
     // Check if key is a number (room ID)
@@ -42,7 +42,7 @@ export const parseBeds24Response = (response: Beds24AvailabilityResponse): Beds2
       });
     }
   });
-  
+
   return rooms;
 };
 
@@ -69,16 +69,26 @@ export const getAvailabilities = async (
 
     console.log(`Beds24 Availability Query: ${checkIn} to ${checkOut}, Adults: ${adults}`);
 
-    const payload = {
+    // Check if propKey is numeric (Property ID) or alphanumeric (Property Key)
+    const isNumeric = /^\d+$/.test(propKey);
+
+    const payload: any = {
       authentication: {
-        apiKey: apiKey,
-        propKey: propKey
+        apiKey: apiKey
       },
       checkIn: checkIn,
       checkOut: checkOut,
-      propId: propKey,
       numAdult: String(adults)
     };
+
+    // Add both propKey and propId for compatibility
+    if (isNumeric) {
+      payload.authentication.propId = propKey;
+      payload.propId = propKey;
+    } else {
+      payload.authentication.propKey = propKey;
+      payload.propId = propKey;
+    }
 
     const response = await fetch(url, {
       method: 'POST',
@@ -105,7 +115,7 @@ export const getAvailabilities = async (
 
     // Parse the response
     const rooms = parseBeds24Response(data);
-    
+
     console.log('Beds24 Availability Success:', rooms);
     return { success: true, rooms };
 
@@ -185,7 +195,7 @@ export const updateAvailability = async (
 };
 
 /**
- * Create a new booking in Beds24
+ * Create a new booking in Beds24 using JSON API
  */
 export const createBeds24Booking = async (bookingData: {
   arrival_date: string;
@@ -214,43 +224,58 @@ export const createBeds24Booking = async (bookingData: {
       throw new Error('Beds24 API Configuration missing (BEDS24_API_KEY or BEDS24_PROP_KEY)');
     }
 
-    const url = `${BEDS24_API_URL}/bookings`;
+    // Use JSON API setBooking endpoint
+    const url = `${BEDS24_JSON_API_URL}/setBooking`;
 
     console.log('--- BEDS24 BOOKING CREATE START ---');
     console.log(`Property Key: ${propKey}`);
     console.log(`API Key: ${apiKey ? apiKey.substring(0, 5) + '...' : 'MISSING'}`);
 
-    // Calculate number of nights
+    // Calculate last night (departure - 1 day)
     const arrivalDate = parseISO(bookingData.arrival_date);
     const departureDate = parseISO(bookingData.departure_date);
-    const nightsCount = differenceInCalendarDays(departureDate, arrivalDate);
-    const safeNightsCount = nightsCount > 0 ? nightsCount : 1;
+    const lastNightDate = new Date(departureDate);
+    lastNightDate.setDate(lastNightDate.getDate() - 1);
 
-    const payload = {
+    // Format dates for Beds24 JSON API (YYYY-MM-DD)
+    const firstNight = format(arrivalDate, 'yyyy-MM-dd');
+    const lastNight = format(lastNightDate, 'yyyy-MM-dd');
+
+    // Check if propKey is numeric (Property ID) or alphanumeric (Property Key)
+    const isNumeric = /^\d+$/.test(propKey);
+
+    // JSON API payload structure
+    const payload: any = {
       authentication: {
-        apiKey: apiKey,
-        propKey: propKey
+        apiKey: apiKey
       },
-      booking: {
-        roomId: bookingData.room_id,
-        arrival: bookingData.arrival_date,
-        departure: bookingData.departure_date,
-        numAdult: bookingData.guests_count,
-        numChild: 0,
-        guestFirstName: bookingData.customer.name.split(' ')[0] || bookingData.customer.name,
-        guestName: bookingData.customer.name,
-        guestEmail: bookingData.customer.email,
-        guestPhone: bookingData.customer.phone || '',
-        guestAddress: bookingData.customer.address || '',
-        guestCity: bookingData.customer.city || '',
-        guestCountry: bookingData.customer.country || 'TR',
-        price: bookingData.total_price,
-        currency: bookingData.currency || 'EUR',
-        notes: bookingData.notes || '',
-        referer: 'Website',
-        bookId: bookingData.unique_id // Our internal reference
-      }
+      roomId: bookingData.room_id,
+      firstNight: firstNight,
+      lastNight: lastNight,
+      numAdult: bookingData.guests_count,
+      numChild: 0,
+      guestFirstName: bookingData.customer.name.split(' ')[0] || bookingData.customer.name,
+      guestName: bookingData.customer.name,
+      guestEmail: bookingData.customer.email,
+      guestPhone: bookingData.customer.phone || '',
+      guestAddress: bookingData.customer.address || '',
+      guestCity: bookingData.customer.city || '',
+      guestCountry: bookingData.customer.country || 'TR',
+      price: bookingData.total_price,
+      notes: bookingData.notes || '',
+      refererEditable: 'Website',
+      status: '1', // 1 = New Booking
+      notifyGuest: false,
+      notifyHost: false,
+      checkAvailability: false
     };
+
+    // Add propKey or propId based on format
+    if (isNumeric) {
+      payload.authentication.propId = propKey;
+    } else {
+      payload.authentication.propKey = propKey;
+    }
 
     console.log('--- BEDS24 PAYLOAD START ---');
     console.log(JSON.stringify(payload, null, 2));
@@ -295,7 +320,9 @@ export const createBeds24Booking = async (bookingData: {
     }
 
     console.log('Beds24 Booking Created Successfully:', data);
-    return { success: true, data };
+
+    // JSON API returns bookId in the response
+    return { success: true, data: { bookId: data.bookId || bookingData.unique_id, ...data } };
 
   } catch (error: any) {
     console.error('Beds24 Booking Error:', error);
