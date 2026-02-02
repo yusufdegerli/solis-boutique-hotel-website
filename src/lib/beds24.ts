@@ -126,7 +126,44 @@ export const getAvailabilities = async (
 };
 
 /**
- * Update room availability in Beds24
+ * Get or refresh the Beds24 API v2 token
+ * Token expires after 24 hours, so we need to refresh it periodically
+ */
+export const refreshBeds24Token = async (): Promise<{ success: boolean; token?: string; error?: string }> => {
+  try {
+    const refreshToken = process.env.BEDS24_REFRESH_TOKEN;
+
+    if (!refreshToken) {
+      throw new Error('BEDS24_REFRESH_TOKEN is missing');
+    }
+
+    const url = `${BEDS24_API_URL}/authentication/token`;
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'accept': 'application/json',
+        'refreshToken': refreshToken
+      }
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data?.error || 'Failed to refresh token');
+    }
+
+    console.log('Beds24 Token Refreshed Successfully');
+    return { success: true, token: data.token };
+
+  } catch (error: any) {
+    console.error('Beds24 Token Refresh Error:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Update room availability in Beds24 using API v2
  * @param roomId - Beds24 room ID
  * @param date - Date in YYYY-MM-DD format
  * @param count - Number of available rooms
@@ -137,32 +174,37 @@ export const updateAvailability = async (
   count: number
 ): Promise<{ success: boolean; data?: any; error?: string }> => {
   try {
-    const apiKey = process.env.BEDS24_API_KEY;
-    const propKey = process.env.BEDS24_PROP_KEY;
+    let token = process.env.BEDS24_TOKEN;
 
-    if (!apiKey || !propKey) {
-      throw new Error('Beds24 API Configuration missing (BEDS24_API_KEY or BEDS24_PROP_KEY)');
+    if (!token) {
+      // Try to get a new token using refresh token
+      const refreshResult = await refreshBeds24Token();
+      if (refreshResult.success && refreshResult.token) {
+        token = refreshResult.token;
+      } else {
+        throw new Error('Beds24 API Configuration missing (BEDS24_TOKEN)');
+      }
     }
 
     const url = `${BEDS24_API_URL}/inventory`;
 
     console.log(`Beds24 Availability Update: Room ${roomId}, Date ${date}, Count ${count}`);
 
-    const payload = {
-      authentication: {
-        apiKey: apiKey,
-        propKey: propKey
-      },
+    // API v2 uses array of inventory updates
+    const payload = [{
       roomId: roomId,
-      date: date,
-      numAvailable: count
-    };
+      inventory: [{
+        date: date,
+        numRoom: count
+      }]
+    }];
 
     const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'User-Agent': 'SolisHotelWebsite/1.0'
+        'accept': 'application/json',
+        'token': token
       },
       body: JSON.stringify(payload)
     });
@@ -179,7 +221,31 @@ export const updateAvailability = async (
     if (!response.ok) {
       console.error('Beds24 API Fail Status', response.status);
       console.error('Beds24 API Fail Response:', JSON.stringify(data, null, 2));
-      throw new Error(data?.message || JSON.stringify(data) || 'Beds24 API request failed');
+
+      // If token expired, try refreshing
+      if (response.status === 401) {
+        console.log('Token expired, attempting refresh...');
+        const refreshResult = await refreshBeds24Token();
+        if (refreshResult.success && refreshResult.token) {
+          // Retry with new token
+          const retryResponse = await fetch(url, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'accept': 'application/json',
+              'token': refreshResult.token
+            },
+            body: JSON.stringify(payload)
+          });
+
+          const retryData = await retryResponse.json();
+          if (retryResponse.ok) {
+            return { success: true, data: retryData };
+          }
+        }
+      }
+
+      throw new Error(data?.error || data?.message || JSON.stringify(data) || 'Beds24 API request failed');
     }
 
     return { success: true, data };
@@ -195,7 +261,7 @@ export const updateAvailability = async (
 };
 
 /**
- * Create a new booking in Beds24 using JSON API
+ * Create a new booking in Beds24 using API v2
  */
 export const createBeds24Booking = async (bookingData: {
   arrival_date: string;
@@ -217,38 +283,35 @@ export const createBeds24Booking = async (bookingData: {
   notes?: string;
 }): Promise<{ success: boolean; data?: any; error?: string }> => {
   try {
-    const apiKey = process.env.BEDS24_API_KEY;
-    const propKey = process.env.BEDS24_PROP_KEY;
+    let token = process.env.BEDS24_TOKEN;
 
-    if (!apiKey || !propKey) {
-      throw new Error('Beds24 API Configuration missing (BEDS24_API_KEY or BEDS24_PROP_KEY)');
+    if (!token) {
+      const refreshResult = await refreshBeds24Token();
+      if (refreshResult.success && refreshResult.token) {
+        token = refreshResult.token;
+      } else {
+        throw new Error('Beds24 API Configuration missing (BEDS24_TOKEN)');
+      }
     }
 
-    // Use JSON API setBooking endpoint
-    const url = `${BEDS24_JSON_API_URL}/setBooking`;
+    // Use API v2 bookings endpoint
+    const url = `${BEDS24_API_URL}/bookings`;
 
     console.log('--- BEDS24 BOOKING CREATE START ---');
-    console.log(`Property Key: ${propKey}`);
-    console.log(`API Key: ${apiKey ? apiKey.substring(0, 5) + '...' : 'MISSING'}`);
+    console.log(`Room ID: ${bookingData.room_id}`);
 
-    // Calculate last night (departure - 1 day)
+    // Calculate last night (departure - 1 day) for Beds24
     const arrivalDate = parseISO(bookingData.arrival_date);
     const departureDate = parseISO(bookingData.departure_date);
     const lastNightDate = new Date(departureDate);
     lastNightDate.setDate(lastNightDate.getDate() - 1);
 
-    // Format dates for Beds24 JSON API (YYYY-MM-DD)
+    // Format dates for Beds24 API v2 (YYYY-MM-DD)
     const firstNight = format(arrivalDate, 'yyyy-MM-dd');
     const lastNight = format(lastNightDate, 'yyyy-MM-dd');
 
-    // Check if propKey is numeric (Property ID) or alphanumeric (Property Key)
-    const isNumeric = /^\d+$/.test(propKey);
-
-    // JSON API payload structure
-    const payload: any = {
-      authentication: {
-        apiKey: apiKey
-      },
+    // API v2 uses array format for booking creation
+    const payload = [{
       roomId: bookingData.room_id,
       firstNight: firstNight,
       lastNight: lastNight,
@@ -263,19 +326,9 @@ export const createBeds24Booking = async (bookingData: {
       guestCountry: bookingData.customer.country || 'TR',
       price: bookingData.total_price,
       notes: bookingData.notes || '',
-      refererEditable: 'Website',
-      status: '1', // 1 = New Booking
-      notifyGuest: false,
-      notifyHost: false,
-      checkAvailability: false
-    };
-
-    // Add propKey or propId based on format
-    if (isNumeric) {
-      payload.authentication.propId = propKey;
-    } else {
-      payload.authentication.propKey = propKey;
-    }
+      referer: 'Website',
+      status: 1  // 1 = New Booking
+    }];
 
     console.log('--- BEDS24 PAYLOAD START ---');
     console.log(JSON.stringify(payload, null, 2));
@@ -285,7 +338,8 @@ export const createBeds24Booking = async (bookingData: {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'User-Agent': 'SolisHotelWebsite/1.0'
+        'accept': 'application/json',
+        'token': token
       },
       body: JSON.stringify(payload)
     });
@@ -304,7 +358,33 @@ export const createBeds24Booking = async (bookingData: {
       console.error('Status:', response.status);
       console.error('Body:', JSON.stringify(data, null, 2));
 
-      let detailedError = data?.message || 'Beds24 Booking Creation Failed';
+      // If token expired, try refreshing and retry
+      if (response.status === 401) {
+        console.log('Token expired, attempting refresh...');
+        const refreshResult = await refreshBeds24Token();
+        if (refreshResult.success && refreshResult.token) {
+          const retryResponse = await fetch(url, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'accept': 'application/json',
+              'token': refreshResult.token
+            },
+            body: JSON.stringify(payload)
+          });
+
+          const retryData = await retryResponse.json();
+          if (retryResponse.ok) {
+            console.log('Beds24 Booking Created Successfully (after token refresh):', retryData);
+            const bookId = Array.isArray(retryData) && retryData[0]?.id
+              ? retryData[0].id
+              : bookingData.unique_id;
+            return { success: true, data: { bookId, ...retryData } };
+          }
+        }
+      }
+
+      let detailedError = data?.error || data?.message || 'Beds24 Booking Creation Failed';
 
       if (data?.errors && Array.isArray(data.errors)) {
         const validationMessages = data.errors.map((e: any) =>
@@ -321,8 +401,12 @@ export const createBeds24Booking = async (bookingData: {
 
     console.log('Beds24 Booking Created Successfully:', data);
 
-    // JSON API returns bookId in the response
-    return { success: true, data: { bookId: data.bookId || bookingData.unique_id, ...data } };
+    // API v2 returns array with booking info including id
+    const bookId = Array.isArray(data) && data[0]?.id
+      ? data[0].id
+      : bookingData.unique_id;
+
+    return { success: true, data: { bookId, ...data } };
 
   } catch (error: any) {
     console.error('Beds24 Booking Error:', error);
@@ -331,34 +415,36 @@ export const createBeds24Booking = async (bookingData: {
 };
 
 /**
- * Cancel a booking in Beds24
+ * Cancel a booking in Beds24 using API v2
  */
 export const cancelBeds24Booking = async (beds24BookingId: string): Promise<{ success: boolean; data?: any; error?: string }> => {
   try {
-    const apiKey = process.env.BEDS24_API_KEY;
-    const propKey = process.env.BEDS24_PROP_KEY;
+    let token = process.env.BEDS24_TOKEN;
 
-    if (!apiKey || !propKey) {
-      throw new Error('Beds24 API Configuration missing (BEDS24_API_KEY or BEDS24_PROP_KEY)');
+    if (!token) {
+      const refreshResult = await refreshBeds24Token();
+      if (refreshResult.success && refreshResult.token) {
+        token = refreshResult.token;
+      } else {
+        throw new Error('Beds24 API Configuration missing (BEDS24_TOKEN)');
+      }
     }
 
     const url = `${BEDS24_API_URL}/bookings`;
     console.log(`Beds24 Cancel Request: Booking ID ${beds24BookingId}`);
 
-    const payload = {
-      authentication: {
-        apiKey: apiKey,
-        propKey: propKey
-      },
-      bookId: beds24BookingId,
-      status: 'cancelled'
-    };
+    // API v2 uses array format for booking updates
+    const payload = [{
+      id: beds24BookingId,
+      status: 3  // 3 = Cancelled in Beds24
+    }];
 
     const response = await fetch(url, {
-      method: 'PUT',
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'User-Agent': 'SolisHotelWebsite/1.0'
+        'accept': 'application/json',
+        'token': token
       },
       body: JSON.stringify(payload)
     });
@@ -374,7 +460,29 @@ export const cancelBeds24Booking = async (beds24BookingId: string): Promise<{ su
 
     if (!response.ok) {
       console.error('Beds24 Cancel Booking Fail:', response.status, JSON.stringify(data, null, 2));
-      throw new Error(data?.message || 'Beds24 Booking Cancellation Failed');
+
+      // If token expired, try refreshing
+      if (response.status === 401) {
+        const refreshResult = await refreshBeds24Token();
+        if (refreshResult.success && refreshResult.token) {
+          const retryResponse = await fetch(url, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'accept': 'application/json',
+              'token': refreshResult.token
+            },
+            body: JSON.stringify(payload)
+          });
+
+          const retryData = await retryResponse.json();
+          if (retryResponse.ok) {
+            return { success: true, data: retryData };
+          }
+        }
+      }
+
+      throw new Error(data?.error || data?.message || 'Beds24 Booking Cancellation Failed');
     }
 
     console.log('Beds24 Booking Cancelled Successfully:', data);
