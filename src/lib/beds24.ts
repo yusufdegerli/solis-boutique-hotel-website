@@ -306,6 +306,11 @@ export const createBeds24Booking = async (bookingData: {
     const arrival = format(arrivalDate, 'yyyy-MM-dd');
     const departure = format(departureDate, 'yyyy-MM-dd');
 
+    // Split name into first and last name
+    const nameParts = bookingData.customer.name.trim().split(' ');
+    const firstName = nameParts[0] || '';
+    const lastName = nameParts.slice(1).join(' ') || '';
+
     // API v2 uses array format for booking creation
     // Status codes: 0=Cancelled, 1=Confirmed, 2=New, 3=Request
     const payload = [{
@@ -314,15 +319,21 @@ export const createBeds24Booking = async (bookingData: {
       departure: departure,
       numAdult: bookingData.guests_count,
       numChild: 0,
-      guestFirstName: bookingData.customer.name.split(' ')[0] || bookingData.customer.name,
-      guestName: bookingData.customer.name,
+      // Guest name fields
+      guestFirstName: firstName,
+      guestName: lastName,  // In Beds24, guestName is actually Last Name
+      // Contact info
       email: bookingData.customer.email,
       guestPhone: bookingData.customer.phone || '',
+      guestMobile: bookingData.customer.phone || '',
+      // Address info
       guestAddress: bookingData.customer.address || '',
       guestCity: bookingData.customer.city || '',
       guestCountry: bookingData.customer.country || 'TR',
+      // Booking info
       price: bookingData.total_price,
-      notes: bookingData.notes || '',
+      guestComments: bookingData.notes || '',
+      notesGuest: bookingData.notes || '',
       referer: 'Website',
       status: 2  // 2 = New (Pending)
     }];
@@ -398,10 +409,25 @@ export const createBeds24Booking = async (bookingData: {
 
     console.log('Beds24 Booking Created Successfully:', data);
 
-    // API v2 returns array with booking info including id
-    const bookId = Array.isArray(data) && data[0]?.id
-      ? data[0].id
-      : bookingData.unique_id;
+    // API v2 returns array with booking info
+    // The actual Beds24 booking ID is in data[0].new.id
+    let bookId = null;
+    if (Array.isArray(data) && data[0]) {
+      // New booking ID is in the 'new' object
+      if (data[0].new?.id) {
+        bookId = data[0].new.id;
+      } else if (data[0].id) {
+        bookId = data[0].id;
+      }
+    }
+
+    // Fallback to unique_id only if no Beds24 ID found
+    if (!bookId) {
+      console.warn('Could not extract Beds24 booking ID from response');
+      bookId = bookingData.unique_id;
+    }
+
+    console.log('Extracted Beds24 Booking ID:', bookId);
 
     return { success: true, data: { bookId, ...data } };
 
