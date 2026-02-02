@@ -307,6 +307,7 @@ export const createBeds24Booking = async (bookingData: {
     const departure = format(departureDate, 'yyyy-MM-dd');
 
     // API v2 uses array format for booking creation
+    // Status codes: 0=Cancelled, 1=Confirmed, 2=New, 3=Request
     const payload = [{
       roomId: bookingData.room_id,
       arrival: arrival,
@@ -315,14 +316,15 @@ export const createBeds24Booking = async (bookingData: {
       numChild: 0,
       guestFirstName: bookingData.customer.name.split(' ')[0] || bookingData.customer.name,
       guestName: bookingData.customer.name,
-      guestEmail: bookingData.customer.email,
+      email: bookingData.customer.email,
       guestPhone: bookingData.customer.phone || '',
       guestAddress: bookingData.customer.address || '',
       guestCity: bookingData.customer.city || '',
       guestCountry: bookingData.customer.country || 'TR',
       price: bookingData.total_price,
       notes: bookingData.notes || '',
-      referer: 'Website'
+      referer: 'Website',
+      status: 2  // 2 = New (Pending)
     }];
 
     console.log('--- BEDS24 PAYLOAD START ---');
@@ -429,9 +431,10 @@ export const cancelBeds24Booking = async (beds24BookingId: string): Promise<{ su
     console.log(`Beds24 Cancel Request: Booking ID ${beds24BookingId}`);
 
     // API v2 uses array format for booking updates
+    // Status codes: 0=Cancelled, 1=Confirmed, 2=New, 3=Request
     const payload = [{
       id: beds24BookingId,
-      status: 3  // 3 = Cancelled in Beds24
+      status: 0  // 0 = Cancelled
     }];
 
     const response = await fetch(url, {
@@ -485,6 +488,82 @@ export const cancelBeds24Booking = async (beds24BookingId: string): Promise<{ su
 
   } catch (error: any) {
     console.error('Beds24 Cancel Booking Error:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Update booking status in Beds24 using API v2
+ * Status codes: 0=Cancelled, 1=Confirmed, 2=New, 3=Request
+ */
+export const updateBeds24BookingStatus = async (
+  beds24BookingId: string,
+  status: number
+): Promise<{ success: boolean; data?: any; error?: string }> => {
+  try {
+    let token = process.env.BEDS24_TOKEN;
+
+    if (!token) {
+      const refreshResult = await refreshBeds24Token();
+      if (refreshResult.success && refreshResult.token) {
+        token = refreshResult.token;
+      } else {
+        throw new Error('Beds24 API Configuration missing (BEDS24_TOKEN)');
+      }
+    }
+
+    const url = `${BEDS24_API_URL}/bookings`;
+    console.log(`Beds24 Update Status: Booking ID ${beds24BookingId}, Status ${status}`);
+
+    const payload = [{
+      id: beds24BookingId,
+      status: status
+    }];
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'accept': 'application/json',
+        'token': token
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error('Beds24 Update Status Fail:', response.status, JSON.stringify(data, null, 2));
+
+      if (response.status === 401) {
+        const refreshResult = await refreshBeds24Token();
+        if (refreshResult.success && refreshResult.token) {
+          const retryResponse = await fetch(url, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'accept': 'application/json',
+              'token': refreshResult.token
+            },
+            body: JSON.stringify(payload)
+          });
+
+          const retryData = await retryResponse.json();
+          if (retryResponse.ok) {
+            console.log('Beds24 Status Updated Successfully (after refresh):', retryData);
+            return { success: true, data: retryData };
+          }
+        }
+      }
+
+      throw new Error(data?.error || data?.message || 'Beds24 Status Update Failed');
+    }
+
+    console.log('Beds24 Status Updated Successfully:', data);
+    return { success: true, data };
+
+  } catch (error: any) {
+    console.error('Beds24 Update Status Error:', error);
     return { success: false, error: error.message };
   }
 };

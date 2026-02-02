@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 import { z } from "zod";
 import { sendBookingNotification } from '@/services/notificationService';
 import { sendConfirmationEmail } from '@/services/mailService'; // Keep for now or remove if unused later
-import { updateAvailability, createBeds24Booking, cancelBeds24Booking } from '@/lib/beds24';
+import { updateAvailability, createBeds24Booking, cancelBeds24Booking, updateBeds24BookingStatus } from '@/lib/beds24';
 import { eachDayOfInterval, format, subDays } from 'date-fns';
 
 // Initialize Supabase client
@@ -300,10 +300,8 @@ export async function updateBookingStatusServer(id: string, status: string, deta
 
     const booking = data[0];
 
-    // Sync with Beds24 if confirmed and not yet synced
-    if (status === 'confirmed' && !booking.beds24_booking_id) {
-      console.log(`Creating Beds24 booking for confirmed reservation ID: ${booking.id}`);
-
+    // Sync with Beds24 if confirmed
+    if (status === 'confirmed') {
       try {
         // Get room info for Beds24 room ID
         const { data: roomInfo } = await supabase
@@ -313,34 +311,44 @@ export async function updateBookingStatusServer(id: string, status: string, deta
           .single();
 
         if (roomInfo?.beds24_room_id) {
-          const beds24Result = await createBeds24Booking({
-            arrival_date: booking.check_in,
-            departure_date: booking.check_out,
-            room_id: roomInfo.beds24_room_id,
-            guests_count: booking.guests_count || 2,
-            total_price: booking.total_price || 0,
-            customer: {
-              name: booking.customer_name,
-              email: booking.customer_email,
-              phone: booking.customer_phone || '',
-              country: 'TR',
-              city: booking.customer_city || '',
-              address: booking.customer_address || ''
-            },
-            notes: booking.check_in_notes || '',
-            unique_id: booking.id.toString()
-          });
-
-          if (beds24Result.success && beds24Result.data?.bookId) {
-            // Update Supabase record with Beds24 ID
-            await supabase
-              .from('Reservation_Information')
-              .update({ beds24_booking_id: beds24Result.data.bookId })
-              .eq('id', booking.id);
-
-            console.log(`Beds24 booking created successfully: ${beds24Result.data.bookId}`);
+          if (booking.beds24_booking_id) {
+            // Booking already exists in Beds24, just update status to Confirmed
+            console.log(`Updating Beds24 booking status to Confirmed for ID: ${booking.beds24_booking_id}`);
+            await updateBeds24BookingStatus(booking.beds24_booking_id, 1); // 1 = Confirmed
           } else {
-            console.error('Beds24 booking creation failed (non-blocking):', beds24Result.error);
+            // Create new booking in Beds24 with Confirmed status
+            console.log(`Creating Beds24 booking for confirmed reservation ID: ${booking.id}`);
+            const beds24Result = await createBeds24Booking({
+              arrival_date: booking.check_in,
+              departure_date: booking.check_out,
+              room_id: roomInfo.beds24_room_id,
+              guests_count: booking.guests_count || 2,
+              total_price: booking.total_price || 0,
+              customer: {
+                name: booking.customer_name,
+                email: booking.customer_email,
+                phone: booking.customer_phone || '',
+                country: 'TR',
+                city: booking.customer_city || '',
+                address: booking.customer_address || ''
+              },
+              notes: booking.check_in_notes || '',
+              unique_id: booking.id.toString()
+            });
+
+            if (beds24Result.success && beds24Result.data?.bookId) {
+              // Update Supabase record with Beds24 ID
+              await supabase
+                .from('Reservation_Information')
+                .update({ beds24_booking_id: beds24Result.data.bookId })
+                .eq('id', booking.id);
+
+              // Update status to Confirmed in Beds24
+              await updateBeds24BookingStatus(beds24Result.data.bookId, 1); // 1 = Confirmed
+              console.log(`Beds24 booking created and confirmed: ${beds24Result.data.bookId}`);
+            } else {
+              console.error('Beds24 booking creation failed (non-blocking):', beds24Result.error);
+            }
           }
         }
       } catch (beds24Err) {
