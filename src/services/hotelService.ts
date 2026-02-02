@@ -252,6 +252,8 @@ export interface Booking {
   // Frontend helpers (not in DB)
   hotel_id?: number;
   guests_count?: number;
+  num_adults?: number;
+  num_children?: number;
   guest_names?: string[]; // Array of guest names for room occupants
   email?: string; // alias for customer_email from form
   guest_name?: string; // alias for customer_name from form
@@ -322,6 +324,8 @@ export const createBooking = async (booking: Partial<Booking>) => {
     check_in: booking.check_in,
     check_out: booking.check_out,
     guests_count: booking.guests_count || 1,
+    num_adults: booking.num_adults || 1,
+    num_children: booking.num_children || 0,
     guest_names: booking.guest_names || [],
     total_price: booking.total_price, // NEW: Pass calculated price
     room_status: 'pending'
