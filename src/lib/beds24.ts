@@ -337,8 +337,9 @@ export const createBeds24Booking = async (bookingData: {
       price: bookingData.total_price,
       comments: bookingData.notes || '',
       notes: bookingData.notes || '',
-      referer: 'Website',
-      status: 3  // 3 = Request (Pending approval)
+      referer: 'Website'
+      // Note: status field removed - Beds24 rejects custom status values
+      // Bookings will use Beds24's default status setting for the property
     }];
 
     console.log('--- BEDS24 PAYLOAD START ---');
@@ -432,17 +433,8 @@ export const createBeds24Booking = async (bookingData: {
 
     console.log('Extracted Beds24 Booking ID:', bookId);
 
-    // Beds24 ignores status field during creation, so we need to update it separately
-    // Set status to 3 (Request) immediately after creation
-    if (bookId && typeof bookId === 'number') {
-      console.log(`Setting Beds24 booking ${bookId} status to Request (3)...`);
-      const statusUpdateResult = await updateBeds24BookingStatus(String(bookId), 3);
-      if (statusUpdateResult.success) {
-        console.log(`Beds24 booking ${bookId} status updated to Request`);
-      } else {
-        console.warn(`Failed to update Beds24 booking status: ${statusUpdateResult.error}`);
-      }
-    }
+    // Note: Status update removed - Beds24 rejects custom status values for this property
+    // The booking will use Beds24's default status setting
 
     return { success: true, data: { bookId, ...data } };
 

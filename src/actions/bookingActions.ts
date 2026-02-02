@@ -319,9 +319,9 @@ export async function updateBookingStatusServer(id: string, status: string, deta
 
         if (roomInfo?.beds24_room_id) {
           if (booking.beds24_booking_id) {
-            // Booking already exists in Beds24, just update status to Confirmed
-            console.log(`Updating Beds24 booking status to Confirmed for ID: ${booking.beds24_booking_id}`);
-            await updateBeds24BookingStatus(booking.beds24_booking_id, 1); // 1 = Confirmed
+            // Note: Status update disabled - Beds24 rejects status changes via API for this property
+            // Manage booking status directly in Beds24 panel
+            console.log(`Beds24 booking exists (ID: ${booking.beds24_booking_id}) - status must be updated in Beds24 panel`);
           } else {
             // Create new booking in Beds24 with Confirmed status
             console.log(`Creating Beds24 booking for confirmed reservation ID: ${booking.id}`);
@@ -351,9 +351,8 @@ export async function updateBookingStatusServer(id: string, status: string, deta
                 .update({ beds24_booking_id: beds24Result.data.bookId })
                 .eq('id', booking.id);
 
-              // Update status to Confirmed in Beds24
-              await updateBeds24BookingStatus(beds24Result.data.bookId, 1); // 1 = Confirmed
-              console.log(`Beds24 booking created and confirmed: ${beds24Result.data.bookId}`);
+              // Note: Status update disabled - Beds24 rejects status changes via API
+              console.log(`Beds24 booking created: ${beds24Result.data.bookId} - confirm status in Beds24 panel`);
             } else {
               console.error('Beds24 booking creation failed (non-blocking):', beds24Result.error);
             }
@@ -364,10 +363,11 @@ export async function updateBookingStatusServer(id: string, status: string, deta
       }
     }
 
-    // Sync with Beds24 if cancelled
+    // Note: Beds24 status update disabled - API rejects status changes for this property
+    // Cancelled bookings must be updated directly in Beds24 panel
     if (status === 'cancelled' && booking.beds24_booking_id) {
-      console.log(`Syncing cancellation to Beds24 for Booking ID: ${booking.beds24_booking_id}`);
-      await cancelBeds24Booking(booking.beds24_booking_id);
+      console.log(`Booking ${booking.beds24_booking_id} cancelled in admin - update status in Beds24 panel`);
+      // cancelBeds24Booking disabled due to 'invalid value' error
     }
 
     // Restore availability when cancelled
