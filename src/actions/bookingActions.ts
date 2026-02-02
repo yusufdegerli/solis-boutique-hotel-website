@@ -29,6 +29,8 @@ const serverBookingSchema = z.object({
   }),
   check_out: z.string(),
   guests_count: z.coerce.number().min(1).max(10),
+  num_adults: z.coerce.number().min(1).max(10).optional(),
+  num_children: z.coerce.number().min(0).max(10).optional(),
   total_price: z.coerce.number().optional(), // NEW
 }).refine((data) => {
   const start = new Date(data.check_in);
@@ -56,6 +58,8 @@ export async function createBookingServer(bookingData: any) {
     check_in: bookingData.check_in,
     check_out: bookingData.check_out,
     guests_count: Number(bookingData.guests_count) || 1,
+    num_adults: Number(bookingData.num_adults) || 1,
+    num_children: Number(bookingData.num_children) || 0,
     total_price: Number(bookingData.total_price) // Explicit cast
   });
 
@@ -151,6 +155,8 @@ export async function createBookingServer(bookingData: any) {
         check_in: payload.check_in,
         check_out: payload.check_out,
         guests_count: payload.guests_count,
+        num_adults: payload.num_adults || 1,
+        num_children: payload.num_children || 0,
         total_price: payload.total_price,
         room_status: 'pending',
         cancellation_token: cancellationToken,
@@ -182,7 +188,8 @@ export async function createBookingServer(bookingData: any) {
         arrival_date: payload.check_in,
         departure_date: payload.check_out,
         room_id: roomInfo.beds24_room_id,
-        guests_count: payload.guests_count,
+        num_adults: payload.num_adults || payload.guests_count,
+        num_children: payload.num_children || 0,
         guest_names: bookingData.guest_names || [],
         total_price: payload.total_price || 0,
         customer: {
@@ -322,7 +329,8 @@ export async function updateBookingStatusServer(id: string, status: string, deta
               arrival_date: booking.check_in,
               departure_date: booking.check_out,
               room_id: roomInfo.beds24_room_id,
-              guests_count: booking.guests_count || 2,
+              num_adults: booking.num_adults || booking.guests_count || 2,
+              num_children: booking.num_children || 0,
               total_price: booking.total_price || 0,
               customer: {
                 name: booking.customer_name,

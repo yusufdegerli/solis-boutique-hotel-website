@@ -275,7 +275,8 @@ export const createBeds24Booking = async (bookingData: {
     city?: string;
     address?: string;
   };
-  guests_count: number;
+  num_adults: number;
+  num_children: number;
   guest_names?: string[];
   total_price: number;
   currency?: string;
@@ -318,8 +319,8 @@ export const createBeds24Booking = async (bookingData: {
       roomId: bookingData.room_id,
       arrival: arrival,
       departure: departure,
-      numAdult: bookingData.guests_count,
-      numChild: 0,
+      numAdult: bookingData.num_adults,
+      numChild: bookingData.num_children,
       // Guest name fields (API v2 uses firstName/lastName, NOT guestFirstName/guestName)
       firstName: firstName,
       lastName: lastName,

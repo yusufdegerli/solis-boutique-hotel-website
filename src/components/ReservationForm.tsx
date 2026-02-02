@@ -32,7 +32,8 @@ export default function ReservationForm({
   const [selectedRoom, setSelectedRoom] = useState("");
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
-  const [guests, setGuests] = useState(1);
+  const [adults, setAdults] = useState(1);
+  const [children, setChildren] = useState(0);
   const [guestNames, setGuestNames] = useState<string[]>(['']); // Array of guest names
   const [guestName, setGuestName] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
@@ -101,14 +102,31 @@ export default function ReservationForm({
     }
   }, [checkIn]);
 
-  // Sync guestNames array with guests count
+  // Get selected room's capacity
+  const selectedRoomData = useMemo(() => {
+    if (!selectedRoom) return null;
+    return availableRooms.find(r => r.id === selectedRoom);
+  }, [selectedRoom, availableRooms]);
+
+  const roomCapacity = useMemo(() => {
+    if (!selectedRoomData?.capacity) return 10; // Default max
+    // Parse capacity string like "2 Yetişkin" or "4"
+    const match = selectedRoomData.capacity.match(/\d+/);
+    return match ? parseInt(match[0]) : 10;
+  }, [selectedRoomData]);
+
+  // Validate total guests against room capacity
+  const totalGuests = adults + children;
+  const isOverCapacity = totalGuests > roomCapacity;
+
+  // Sync guestNames array with total guests count
   useEffect(() => {
     setGuestNames(prev => {
       const newArr = [...prev];
-      while (newArr.length < guests) newArr.push('');
-      return newArr.slice(0, guests);
+      while (newArr.length < totalGuests) newArr.push('');
+      return newArr.slice(0, totalGuests);
     });
-  }, [guests]);
+  }, [totalGuests]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -126,7 +144,9 @@ export default function ReservationForm({
       notes: customerNotes,
       check_in: checkIn,
       check_out: checkOut,
-      guests_count: guests,
+      guests_count: totalGuests,
+      num_adults: adults,
+      num_children: children,
       total_price: totalPrice || 0,
     };
 
@@ -144,7 +164,9 @@ export default function ReservationForm({
         notes: customerNotes,
         check_in: checkIn,
         check_out: checkOut,
-        guests_count: guests,
+        guests_count: totalGuests,
+        num_adults: adults,
+        num_children: children,
         guest_names: guestNames.filter(n => n.trim() !== ''), // Filter empty names
         total_price: totalPrice || 0,
         room_status: 'pending'
@@ -180,7 +202,7 @@ export default function ReservationForm({
           {t('successMessage')}
         </p>
         <button
-          onClick={() => { setIsSubmitted(false); setGuestName(""); setCustomerEmail(""); setCustomerPhone(""); setCustomerCity(""); setCustomerAddress(""); setCustomerNotes(""); setCheckIn(""); setCheckOut(""); setSelectedRoom(""); setTotalPrice(null); }}
+          onClick={() => { setIsSubmitted(false); setGuestName(""); setCustomerEmail(""); setCustomerPhone(""); setCustomerCity(""); setCustomerAddress(""); setCustomerNotes(""); setCheckIn(""); setCheckOut(""); setSelectedRoom(""); setTotalPrice(null); setAdults(1); setChildren(0); }}
           className="text-green-700 font-medium hover:underline mt-4 block mx-auto"
         >
           {t('newBooking')}
@@ -361,28 +383,62 @@ export default function ReservationForm({
           </div>
         </div>
 
-        {/* Guests */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">{t('guests')}</label>
-          <div className="relative">
-            <input
-              type="number"
-              min="1"
-              max="10"
-              value={guests || ""}
-              onChange={(e) => {
-                const val = parseInt(e.target.value);
-                setGuests(isNaN(val) ? 0 : val);
-              }}
-              required
-              className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[var(--gold)] focus:border-transparent outline-none transition-all text-gray-700"
-            />
-            <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+        {/* Adults & Children */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-700">Yetişkin Sayısı</label>
+            <div className="relative">
+              <input
+                type="number"
+                min="1"
+                max={roomCapacity}
+                value={adults || ""}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value);
+                  setAdults(isNaN(val) ? 1 : Math.max(1, val));
+                }}
+                required
+                className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[var(--gold)] focus:border-transparent outline-none transition-all text-gray-700"
+              />
+              <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-700">Çocuk Sayısı</label>
+            <div className="relative">
+              <input
+                type="number"
+                min="0"
+                max={Math.max(0, roomCapacity - adults)}
+                value={children}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value);
+                  setChildren(isNaN(val) ? 0 : Math.max(0, val));
+                }}
+                className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[var(--gold)] focus:border-transparent outline-none transition-all text-gray-700"
+              />
+              <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            </div>
           </div>
         </div>
 
+        {/* Capacity Warning */}
+        {isOverCapacity && selectedRoom && (
+          <div className="p-3 bg-red-50 text-red-600 text-sm rounded-lg flex items-center gap-2">
+            <AlertCircle className="w-4 h-4" />
+            <span>Oda kapasitesi {roomCapacity} kişidir. Lütfen misafir sayısını azaltın.</span>
+          </div>
+        )}
+
+        {/* Room Capacity Info */}
+        {selectedRoom && !isOverCapacity && (
+          <div className="text-xs text-gray-500">
+            Seçilen oda kapasitesi: {roomCapacity} kişi (Toplam: {totalGuests} kişi)
+          </div>
+        )}
+
         {/* Guest Names (when more than 1 guest) */}
-        {guests > 1 && (
+        {totalGuests > 1 && (
           <div className="space-y-3 bg-gray-50 p-4 rounded-lg border border-gray-200">
             <label className="text-sm font-medium text-gray-700 block">Misafir İsimleri</label>
             <p className="text-xs text-gray-500 -mt-2 mb-2">Odada kalacak diğer misafirlerin ad ve soyadlarını girin</p>
@@ -436,7 +492,7 @@ export default function ReservationForm({
 
       <button
         type="submit"
-        disabled={isLoading}
+        disabled={isLoading || isOverCapacity}
         className="w-full bg-[var(--gold)] text-white font-bold py-4 rounded-lg hover:bg-yellow-600 transition-colors shadow-md hover:shadow-lg transform active:scale-95 duration-200 flex items-center justify-center gap-2"
       >
         {isLoading ? (
