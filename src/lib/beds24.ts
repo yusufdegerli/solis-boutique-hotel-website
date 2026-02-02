@@ -540,6 +540,75 @@ export const cancelBeds24Booking = async (beds24BookingId: string): Promise<{ su
 };
 
 /**
+ * Cancel a booking in Beds24 using JSON API v1 (setBooking endpoint)
+ * This uses the apiKey/propKey authentication format
+ */
+export const cancelBeds24BookingV1 = async (beds24BookingId: string): Promise<{ success: boolean; data?: any; error?: string }> => {
+  try {
+    const apiKey = process.env.BEDS24_API_KEY;
+    const propKey = process.env.BEDS24_PROP_KEY;
+
+    if (!apiKey || !propKey) {
+      throw new Error('Beds24 API Configuration missing (BEDS24_API_KEY or BEDS24_PROP_KEY)');
+    }
+
+    const url = `${BEDS24_JSON_API_URL}/setBooking`;
+    console.log(`Beds24 Cancel Request (V1): Booking ID ${beds24BookingId}`);
+
+    // JSON API v1 format with authentication in body
+    const payload = {
+      authentication: {
+        apiKey: apiKey,
+        propKey: propKey
+      },
+      bookId: beds24BookingId,
+      status: "0"  // "0" = Cancelled (string format for v1)
+    };
+
+    console.log('Beds24 Cancel Payload:', JSON.stringify(payload, null, 2));
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'User-Agent': 'SolisHotelWebsite/1.0'
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const contentType = response.headers.get("content-type");
+    let data;
+    if (contentType && contentType.indexOf("application/json") !== -1) {
+      data = await response.json();
+    } else {
+      const text = await response.text();
+      data = { message: text };
+    }
+
+    console.log('Beds24 Cancel Response:', JSON.stringify(data, null, 2));
+
+    // Check for error in response
+    if (data?.error) {
+      console.error('Beds24 Cancel Error:', data.error);
+      throw new Error(data.error);
+    }
+
+    // V1 API returns booking info on success
+    if (data?.bookId || data?.status !== undefined) {
+      console.log('Beds24 Booking Cancelled Successfully (V1)');
+      return { success: true, data };
+    }
+
+    // If no clear success indicator, assume it worked if no error
+    return { success: true, data };
+
+  } catch (error: any) {
+    console.error('Beds24 Cancel Booking Error (V1):', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
  * Update booking status in Beds24 using API v2
  * Status codes: 0=Cancelled, 1=Confirmed, 2=New, 3=Request
  */

@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 import { z } from "zod";
 import { sendBookingNotification } from '@/services/notificationService';
 import { sendConfirmationEmail } from '@/services/mailService'; // Keep for now or remove if unused later
-import { updateAvailability, createBeds24Booking, cancelBeds24Booking, updateBeds24BookingStatus } from '@/lib/beds24';
+import { updateAvailability, createBeds24Booking, cancelBeds24Booking, cancelBeds24BookingV1, updateBeds24BookingStatus } from '@/lib/beds24';
 import { eachDayOfInterval, format, subDays } from 'date-fns';
 
 // Initialize Supabase client
@@ -363,11 +363,19 @@ export async function updateBookingStatusServer(id: string, status: string, deta
       }
     }
 
-    // Note: Beds24 status update disabled - API rejects status changes for this property
-    // Cancelled bookings must be updated directly in Beds24 panel
+    // Cancel booking in Beds24 when status is cancelled
     if (status === 'cancelled' && booking.beds24_booking_id) {
-      console.log(`Booking ${booking.beds24_booking_id} cancelled in admin - update status in Beds24 panel`);
-      // cancelBeds24Booking disabled due to 'invalid value' error
+      try {
+        console.log(`Cancelling Beds24 booking: ${booking.beds24_booking_id}`);
+        const cancelResult = await cancelBeds24BookingV1(booking.beds24_booking_id);
+        if (cancelResult.success) {
+          console.log('Beds24 booking cancelled successfully');
+        } else {
+          console.error('Beds24 cancel failed (non-blocking):', cancelResult.error);
+        }
+      } catch (beds24CancelErr) {
+        console.error('Beds24 cancel error (non-blocking):', beds24CancelErr);
+      }
     }
 
     // Restore availability when cancelled
