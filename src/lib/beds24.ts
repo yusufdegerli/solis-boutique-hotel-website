@@ -186,16 +186,16 @@ export const updateAvailability = async (
       }
     }
 
-    const url = `${BEDS24_API_URL}/inventory`;
+    const url = `${BEDS24_API_URL}/inventory/rooms/calendar`;
 
     console.log(`Beds24 Availability Update: Room ${roomId}, Date ${date}, Count ${count}`);
 
-    // API v2 uses array of inventory updates
+    // API v2 inventory/rooms/calendar format
     const payload = [{
       roomId: roomId,
-      inventory: [{
+      calendar: [{
         date: date,
-        numRoom: count
+        numAvail: count
       }]
     }];
 
