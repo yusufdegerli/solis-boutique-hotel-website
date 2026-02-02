@@ -337,7 +337,7 @@ export const createBeds24Booking = async (bookingData: {
       comments: bookingData.notes || '',
       notes: bookingData.notes || '',
       referer: 'Website',
-      status: 2  // 2 = New (Pending)
+      status: 3  // 3 = Request (Pending approval)
     }];
 
     console.log('--- BEDS24 PAYLOAD START ---');
