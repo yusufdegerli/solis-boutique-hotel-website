@@ -313,27 +313,29 @@ export const createBeds24Booking = async (bookingData: {
 
     // API v2 uses array format for booking creation
     // Status codes: 0=Cancelled, 1=Confirmed, 2=New, 3=Request
+    // Field names per API v2 schema: firstName, lastName, phone, mobile, address, city, country, comments, notes
     const payload = [{
       roomId: bookingData.room_id,
       arrival: arrival,
       departure: departure,
       numAdult: bookingData.guests_count,
       numChild: 0,
-      // Guest name fields
-      guestFirstName: firstName,
-      guestName: lastName,  // In Beds24, guestName is actually Last Name
-      // Contact info
+      // Guest name fields (API v2 uses firstName/lastName, NOT guestFirstName/guestName)
+      firstName: firstName,
+      lastName: lastName,
+      // Contact info (API v2 uses phone/mobile, NOT guestPhone/guestMobile)
       email: bookingData.customer.email,
-      guestPhone: bookingData.customer.phone || '',
-      guestMobile: bookingData.customer.phone || '',
-      // Address info
-      guestAddress: bookingData.customer.address || '',
-      guestCity: bookingData.customer.city || '',
-      guestCountry: bookingData.customer.country || 'TR',
+      phone: bookingData.customer.phone || '',
+      mobile: bookingData.customer.phone || '',
+      // Address info (API v2 uses address/city/country, NOT guestAddress/guestCity/guestCountry)
+      address: bookingData.customer.address || '',
+      city: bookingData.customer.city || '',
+      country: bookingData.customer.country || 'Turkey',
+      country2: 'TR',  // 2-letter country code
       // Booking info
       price: bookingData.total_price,
-      guestComments: bookingData.notes || '',
-      notesGuest: bookingData.notes || '',
+      comments: bookingData.notes || '',
+      notes: bookingData.notes || '',
       referer: 'Website',
       status: 2  // 2 = New (Pending)
     }];
