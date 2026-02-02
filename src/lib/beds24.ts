@@ -431,6 +431,18 @@ export const createBeds24Booking = async (bookingData: {
 
     console.log('Extracted Beds24 Booking ID:', bookId);
 
+    // Beds24 ignores status field during creation, so we need to update it separately
+    // Set status to 3 (Request) immediately after creation
+    if (bookId && typeof bookId === 'number') {
+      console.log(`Setting Beds24 booking ${bookId} status to Request (3)...`);
+      const statusUpdateResult = await updateBeds24BookingStatus(String(bookId), 3);
+      if (statusUpdateResult.success) {
+        console.log(`Beds24 booking ${bookId} status updated to Request`);
+      } else {
+        console.warn(`Failed to update Beds24 booking status: ${statusUpdateResult.error}`);
+      }
+    }
+
     return { success: true, data: { bookId, ...data } };
 
   } catch (error: any) {
