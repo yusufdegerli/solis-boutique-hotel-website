@@ -524,7 +524,21 @@ export const cancelBeds24Booking = async (beds24BookingId: string): Promise<{ su
       throw new Error(data?.error || data?.message || 'Beds24 Booking Cancellation Failed');
     }
 
-    console.log('Beds24 Booking Cancelled Successfully:', data);
+    console.log('Beds24 Booking Cancelled Response:', JSON.stringify(data, null, 2));
+
+    // Check if Beds24 actually accepted the cancellation
+    if (Array.isArray(data) && data[0]) {
+      if (data[0].success === false) {
+        console.warn('Beds24 cancellation was NOT accepted!');
+        if (data[0].warnings) {
+          console.warn('Beds24 Warnings:', JSON.stringify(data[0].warnings, null, 2));
+        }
+        if (data[0].info) {
+          console.warn('Beds24 Info:', JSON.stringify(data[0].info, null, 2));
+        }
+      }
+    }
+
     return { success: true, data };
 
   } catch (error: any) {
@@ -600,7 +614,21 @@ export const updateBeds24BookingStatus = async (
       throw new Error(data?.error || data?.message || 'Beds24 Status Update Failed');
     }
 
-    console.log('Beds24 Status Updated Successfully:', data);
+    console.log('Beds24 Status Update Response:', JSON.stringify(data, null, 2));
+
+    // Check if Beds24 actually accepted the status update
+    if (Array.isArray(data) && data[0]) {
+      if (data[0].success === false) {
+        console.warn('Beds24 status update was NOT accepted!');
+        if (data[0].warnings) {
+          console.warn('Beds24 Warnings:', JSON.stringify(data[0].warnings, null, 2));
+        }
+        if (data[0].info) {
+          console.warn('Beds24 Info:', JSON.stringify(data[0].info, null, 2));
+        }
+      }
+    }
+
     return { success: true, data };
 
   } catch (error: any) {
