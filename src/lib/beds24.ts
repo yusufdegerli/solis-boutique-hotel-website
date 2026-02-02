@@ -300,21 +300,17 @@ export const createBeds24Booking = async (bookingData: {
     console.log('--- BEDS24 BOOKING CREATE START ---');
     console.log(`Room ID: ${bookingData.room_id}`);
 
-    // Calculate last night (departure - 1 day) for Beds24
+    // Format dates for Beds24 API v2 (YYYY-MM-DD)
     const arrivalDate = parseISO(bookingData.arrival_date);
     const departureDate = parseISO(bookingData.departure_date);
-    const lastNightDate = new Date(departureDate);
-    lastNightDate.setDate(lastNightDate.getDate() - 1);
-
-    // Format dates for Beds24 API v2 (YYYY-MM-DD)
-    const firstNight = format(arrivalDate, 'yyyy-MM-dd');
-    const lastNight = format(lastNightDate, 'yyyy-MM-dd');
+    const arrival = format(arrivalDate, 'yyyy-MM-dd');
+    const departure = format(departureDate, 'yyyy-MM-dd');
 
     // API v2 uses array format for booking creation
     const payload = [{
       roomId: bookingData.room_id,
-      firstNight: firstNight,
-      lastNight: lastNight,
+      arrival: arrival,
+      departure: departure,
       numAdult: bookingData.guests_count,
       numChild: 0,
       guestFirstName: bookingData.customer.name.split(' ')[0] || bookingData.customer.name,
@@ -326,8 +322,7 @@ export const createBeds24Booking = async (bookingData: {
       guestCountry: bookingData.customer.country || 'TR',
       price: bookingData.total_price,
       notes: bookingData.notes || '',
-      referer: 'Website',
-      status: 1  // 1 = New Booking
+      referer: 'Website'
     }];
 
     console.log('--- BEDS24 PAYLOAD START ---');
