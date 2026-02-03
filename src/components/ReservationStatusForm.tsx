@@ -322,11 +322,6 @@ export default function ReservationStatusForm({ locale }: { locale: string }) {
                                             <div className="text-gray-700">{reservation.check_in_notes}</div>
                                         </div>
                                     )}
-
-                                    {/* Reservation ID */}
-                                    <div className="text-center text-xs text-gray-400 pt-2 border-t border-gray-200">
-                                        Rezervasyon No: <span className="font-mono">{reservation.id}</span>
-                                    </div>
                                 </div>
                             )}
                         </div>
