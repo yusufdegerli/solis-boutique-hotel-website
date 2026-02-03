@@ -387,9 +387,28 @@ export const createBeds24Booking = async (bookingData: {
           const retryData = await retryResponse.json();
           if (retryResponse.ok) {
             console.log('Beds24 Booking Created Successfully (after token refresh):', retryData);
-            const bookId = Array.isArray(retryData) && retryData[0]?.id
-              ? retryData[0].id
-              : bookingData.unique_id;
+
+            // Extract booking ID correctly from new.id
+            let bookId = null;
+            if (Array.isArray(retryData) && retryData[0]) {
+              if (retryData[0].new?.id) {
+                bookId = retryData[0].new.id;
+              } else if (retryData[0].id) {
+                bookId = retryData[0].id;
+              }
+            }
+
+            // Update status to New after creation
+            if (bookId && typeof bookId === 'number') {
+              console.log('Updating booking status to New (2) after retry...');
+              const statusResult = await updateBeds24BookingStatusInternal(String(bookId), 2, refreshResult.token);
+              if (statusResult.success) {
+                console.log('Booking status updated to New successfully');
+              } else {
+                console.warn('Failed to update booking status:', statusResult.error);
+              }
+            }
+
             return { success: true, data: { bookId, ...retryData } };
           }
         }
@@ -432,8 +451,18 @@ export const createBeds24Booking = async (bookingData: {
 
     console.log('Extracted Beds24 Booking ID:', bookId);
 
-    // Note: Status update removed - Beds24 rejects custom status values for this property
-    // The booking will use Beds24's default status setting
+    // Beds24 doesn't accept status field during booking creation
+    // So we need to update the status separately after creation
+    if (bookId && typeof bookId === 'number') {
+      console.log('Updating booking status to New (2)...');
+      const statusResult = await updateBeds24BookingStatusInternal(String(bookId), 2, token);
+      if (statusResult.success) {
+        console.log('Booking status updated to New successfully');
+      } else {
+        console.warn('Failed to update booking status:', statusResult.error);
+        // Don't fail the whole booking if status update fails
+      }
+    }
 
     return { success: true, data: { bookId, ...data } };
 
@@ -603,6 +632,50 @@ export const cancelBeds24BookingV1 = async (beds24BookingId: string): Promise<{ 
 
   } catch (error: any) {
     console.error('Beds24 Cancel Booking Error (V1):', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Internal: Update booking status in Beds24 using API v2
+ * This version accepts token as a parameter for reuse within other functions
+ */
+const updateBeds24BookingStatusInternal = async (
+  beds24BookingId: string,
+  status: number,
+  token: string
+): Promise<{ success: boolean; data?: any; error?: string }> => {
+  try {
+    const url = `${BEDS24_API_URL}/bookings`;
+    console.log(`Beds24 Update Status (Internal): Booking ID ${beds24BookingId}, Status ${status}`);
+
+    const payload = [{
+      id: beds24BookingId,
+      status: status
+    }];
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'accept': 'application/json',
+        'token': token
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error('Beds24 Update Status Fail (Internal):', response.status, JSON.stringify(data, null, 2));
+      throw new Error(data?.error || data?.message || 'Beds24 Status Update Failed');
+    }
+
+    console.log('Beds24 Status Update Response (Internal):', JSON.stringify(data, null, 2));
+    return { success: true, data };
+
+  } catch (error: any) {
+    console.error('Beds24 Update Status Error (Internal):', error);
     return { success: false, error: error.message };
   }
 };
