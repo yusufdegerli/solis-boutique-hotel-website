@@ -181,7 +181,8 @@ export default function ReservationForm({
 
       // Save the booking ID to display to user
       // Server returns data as array: [{ id: bookingId }]
-      const returnedId = result.data?.[0]?.id || result.data?.id;
+      const dataArray = result.data as any;
+      const returnedId = Array.isArray(dataArray) ? dataArray[0]?.id : dataArray?.id;
       if (returnedId) {
         setBookingId(returnedId);
       }
