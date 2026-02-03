@@ -210,15 +210,6 @@ export default function ReservationForm({
           {t('successMessage')}
         </p>
 
-        {/* Reservation Number Display */}
-        {bookingId && (
-          <div className="bg-white p-4 rounded-lg border border-green-200 mt-4">
-            <p className="text-sm text-gray-600 mb-1">Rezervasyon Numaranız:</p>
-            <p className="text-lg font-mono font-bold text-[var(--gold)] select-all break-all">{bookingId}</p>
-            <p className="text-xs text-gray-500 mt-2">Bu numarayı saklayın. Rezervasyon durumunuzu sorgulamak için kullanabilirsiniz.</p>
-          </div>
-        )}
-
         <button
           onClick={() => { setIsSubmitted(false); setBookingId(null); setGuestName(""); setCustomerEmail(""); setCustomerPhone(""); setCustomerCity(""); setCustomerAddress(""); setCustomerNotes(""); setCheckIn(""); setCheckOut(""); setSelectedRoom(""); setTotalPrice(null); setAdults(1); setChildren(0); }}
           className="text-green-700 font-medium hover:underline mt-4 block mx-auto"
