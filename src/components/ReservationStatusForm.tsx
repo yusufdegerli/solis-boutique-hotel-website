@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useTranslations } from "next-intl";
-import { searchReservation } from "@/actions/reservationStatusActions";
+import { searchReservationsByEmail } from "@/actions/reservationStatusActions";
 import {
     Search,
     Loader2,
@@ -19,7 +19,9 @@ import {
     LogOut,
     ArrowLeft,
     User,
-    FileText
+    FileText,
+    ChevronDown,
+    ChevronUp
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -40,32 +42,33 @@ interface ReservationData {
     num_children?: number;
     guest_names?: string[];
     created_at?: string;
+    check_in_notes?: string;
 }
 
 export default function ReservationStatusForm({ locale }: { locale: string }) {
     const t = useTranslations("ReservationStatus");
     const [email, setEmail] = useState("");
-    const [reservationId, setReservationId] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [reservation, setReservation] = useState<ReservationData | null>(null);
+    const [reservations, setReservations] = useState<ReservationData[]>([]);
+    const [expandedId, setExpandedId] = useState<string | null>(null);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
         setError(null);
-        setReservation(null);
+        setReservations([]);
 
-        if (!email || !reservationId) {
+        if (!email) {
             setError(t('invalidInput'));
             setIsLoading(false);
             return;
         }
 
-        const result = await searchReservation(email, reservationId);
+        const result = await searchReservationsByEmail(email);
 
         if (result.success && result.data) {
-            setReservation(result.data as ReservationData);
+            setReservations(result.data as ReservationData[]);
         } else {
             setError(t('notFound'));
         }
@@ -75,12 +78,12 @@ export default function ReservationStatusForm({ locale }: { locale: string }) {
 
     const getStatusIcon = (status: string) => {
         switch (status) {
-            case 'confirmed': return <CheckCircle2 className="w-5 h-5 text-green-500" />;
-            case 'pending': return <Clock className="w-5 h-5 text-yellow-500" />;
-            case 'cancelled': return <XCircle className="w-5 h-5 text-red-500" />;
-            case 'checked_in': return <LogIn className="w-5 h-5 text-blue-500" />;
-            case 'checked_out': return <LogOut className="w-5 h-5 text-gray-500" />;
-            default: return <Clock className="w-5 h-5 text-gray-400" />;
+            case 'confirmed': return <CheckCircle2 className="w-4 h-4 text-green-500" />;
+            case 'pending': return <Clock className="w-4 h-4 text-yellow-500" />;
+            case 'cancelled': return <XCircle className="w-4 h-4 text-red-500" />;
+            case 'checked_in': return <LogIn className="w-4 h-4 text-blue-500" />;
+            case 'checked_out': return <LogOut className="w-4 h-4 text-gray-500" />;
+            default: return <Clock className="w-4 h-4 text-gray-400" />;
         }
     };
 
@@ -130,6 +133,10 @@ export default function ReservationStatusForm({ locale }: { locale: string }) {
         });
     };
 
+    const toggleExpand = (id: string) => {
+        setExpandedId(expandedId === id ? null : id);
+    };
+
     return (
         <div className="space-y-6">
             {/* Search Form */}
@@ -148,22 +155,6 @@ export default function ReservationStatusForm({ locale }: { locale: string }) {
                                 className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[var(--gold)] focus:border-transparent outline-none transition-all text-gray-700"
                             />
                             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                        </div>
-                    </div>
-
-                    {/* Reservation ID Input */}
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-700">{t('reservationIdLabel')}</label>
-                        <div className="relative">
-                            <input
-                                type="text"
-                                value={reservationId}
-                                onChange={(e) => setReservationId(e.target.value)}
-                                placeholder={t('reservationIdPlaceholder')}
-                                required
-                                className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[var(--gold)] focus:border-transparent outline-none transition-all text-gray-700"
-                            />
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                         </div>
                     </div>
 
@@ -196,153 +187,150 @@ export default function ReservationStatusForm({ locale }: { locale: string }) {
                 </div>
             </form>
 
-            {/* Reservation Result */}
-            {reservation && (
-                <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-xl border border-gray-100 animate-fadeIn">
-                    <h2 className="text-xl font-bold text-[var(--off-black)] mb-6 flex items-center gap-2">
+            {/* Reservations List */}
+            {reservations.length > 0 && (
+                <div className="space-y-4">
+                    <h2 className="text-xl font-bold text-[var(--off-black)] flex items-center gap-2">
                         <CheckCircle2 className="w-6 h-6 text-[var(--gold)]" />
-                        {t('resultTitle')}
+                        {t('resultTitle')} ({reservations.length})
                     </h2>
 
-                    <div className="space-y-6">
-                        {/* Status Badges */}
-                        <div className="flex flex-wrap gap-3">
-                            <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border ${getStatusColor(reservation.room_status)}`}>
-                                {getStatusIcon(reservation.room_status)}
-                                <span className="font-medium">{getStatusText(reservation.room_status)}</span>
-                            </div>
-                            <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${getPaymentStatusColor(reservation.payment_status)}`}>
-                                <CreditCard className="w-4 h-4" />
-                                <span className="font-medium">{getPaymentStatusText(reservation.payment_status)}</span>
-                            </div>
-                        </div>
+                    {reservations.map((reservation) => (
+                        <div
+                            key={reservation.id}
+                            className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden"
+                        >
+                            {/* Summary Header - Always visible */}
+                            <div
+                                className="p-4 sm:p-6 cursor-pointer hover:bg-gray-50 transition-colors"
+                                onClick={() => toggleExpand(reservation.id)}
+                            >
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-4">
+                                        {/* Status Badge */}
+                                        <div className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm border ${getStatusColor(reservation.room_status)}`}>
+                                            {getStatusIcon(reservation.room_status)}
+                                            <span className="font-medium">{getStatusText(reservation.room_status)}</span>
+                                        </div>
 
-                        {/* Main Info Grid */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {/* Guest Name */}
-                            <div className="bg-gray-50 p-4 rounded-lg">
-                                <div className="flex items-center gap-2 text-gray-500 text-sm mb-1">
-                                    <User className="w-4 h-4" />
-                                    {t('customerName')}
-                                </div>
-                                <div className="font-semibold text-gray-800">{reservation.customer_name}</div>
-                            </div>
-
-                            {/* Total Price */}
-                            <div className="bg-gray-50 p-4 rounded-lg">
-                                <div className="flex items-center gap-2 text-gray-500 text-sm mb-1">
-                                    <CreditCard className="w-4 h-4" />
-                                    {t('totalPrice')}
-                                </div>
-                                <div className="font-bold text-2xl text-[var(--gold)]">€{reservation.total_price?.toLocaleString('en-US')}</div>
-                            </div>
-
-                            {/* Check-in */}
-                            <div className="bg-gray-50 p-4 rounded-lg">
-                                <div className="flex items-center gap-2 text-gray-500 text-sm mb-1">
-                                    <Calendar className="w-4 h-4" />
-                                    {t('checkIn')}
-                                </div>
-                                <div className="font-semibold text-gray-800">{formatDate(reservation.check_in)}</div>
-                            </div>
-
-                            {/* Check-out */}
-                            <div className="bg-gray-50 p-4 rounded-lg">
-                                <div className="flex items-center gap-2 text-gray-500 text-sm mb-1">
-                                    <Calendar className="w-4 h-4" />
-                                    {t('checkOut')}
-                                </div>
-                                <div className="font-semibold text-gray-800">{formatDate(reservation.check_out)}</div>
-                            </div>
-
-                            {/* Guests */}
-                            <div className="bg-gray-50 p-4 rounded-lg">
-                                <div className="flex items-center gap-2 text-gray-500 text-sm mb-1">
-                                    <Users className="w-4 h-4" />
-                                    {t('guests')}
-                                </div>
-                                <div className="font-semibold text-gray-800">
-                                    {reservation.num_adults || 1} {t('adults')}
-                                    {(reservation.num_children || 0) > 0 && `, ${reservation.num_children} ${t('children')}`}
-                                </div>
-                            </div>
-
-                            {/* Phone */}
-                            {reservation.customer_phone && (
-                                <div className="bg-gray-50 p-4 rounded-lg">
-                                    <div className="flex items-center gap-2 text-gray-500 text-sm mb-1">
-                                        <Phone className="w-4 h-4" />
-                                        {t('phone')}
+                                        {/* Dates */}
+                                        <div className="hidden sm:flex items-center gap-2 text-gray-600">
+                                            <Calendar className="w-4 h-4" />
+                                            <span className="text-sm">
+                                                {formatDate(reservation.check_in)} - {formatDate(reservation.check_out)}
+                                            </span>
+                                        </div>
                                     </div>
-                                    <div className="font-semibold text-gray-800">{reservation.customer_phone}</div>
-                                </div>
-                            )}
 
-                            {/* Email */}
-                            <div className="bg-gray-50 p-4 rounded-lg">
-                                <div className="flex items-center gap-2 text-gray-500 text-sm mb-1">
-                                    <Mail className="w-4 h-4" />
-                                    {t('email')}
-                                </div>
-                                <div className="font-semibold text-gray-800">{reservation.customer_email}</div>
-                            </div>
-
-                            {/* City */}
-                            {reservation.customer_city && (
-                                <div className="bg-gray-50 p-4 rounded-lg">
-                                    <div className="flex items-center gap-2 text-gray-500 text-sm mb-1">
-                                        <MapPin className="w-4 h-4" />
-                                        {t('city')}
-                                    </div>
-                                    <div className="font-semibold text-gray-800">{reservation.customer_city}</div>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Address */}
-                        {reservation.customer_address && (
-                            <div className="bg-gray-50 p-4 rounded-lg">
-                                <div className="flex items-center gap-2 text-gray-500 text-sm mb-1">
-                                    <MapPin className="w-4 h-4" />
-                                    {t('address')}
-                                </div>
-                                <div className="font-semibold text-gray-800">{reservation.customer_address}</div>
-                            </div>
-                        )}
-
-                        {/* Guest Names */}
-                        {reservation.guest_names && reservation.guest_names.length > 0 && (
-                            <div className="bg-gray-50 p-4 rounded-lg">
-                                <div className="flex items-center gap-2 text-gray-500 text-sm mb-2">
-                                    <Users className="w-4 h-4" />
-                                    {t('guestNames')}
-                                </div>
-                                <div className="flex flex-wrap gap-2">
-                                    {reservation.guest_names.map((name, idx) => (
-                                        <span key={idx} className="bg-white px-3 py-1 rounded-full text-sm border border-gray-200 text-gray-700">
-                                            {name}
+                                    {/* Price & Expand */}
+                                    <div className="flex items-center gap-4">
+                                        <span className="font-bold text-lg text-[var(--gold)]">
+                                            €{reservation.total_price?.toLocaleString('en-US')}
                                         </span>
-                                    ))}
+                                        {expandedId === reservation.id ? (
+                                            <ChevronUp className="w-5 h-5 text-gray-400" />
+                                        ) : (
+                                            <ChevronDown className="w-5 h-5 text-gray-400" />
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Mobile Dates */}
+                                <div className="sm:hidden mt-2 flex items-center gap-2 text-gray-600">
+                                    <Calendar className="w-4 h-4" />
+                                    <span className="text-sm">
+                                        {formatDate(reservation.check_in)} - {formatDate(reservation.check_out)}
+                                    </span>
                                 </div>
                             </div>
-                        )}
 
-                        {/* Notes */}
-                        {reservation.notes && (
-                            <div className="bg-gray-50 p-4 rounded-lg">
-                                <div className="flex items-center gap-2 text-gray-500 text-sm mb-1">
-                                    <FileText className="w-4 h-4" />
-                                    {t('notes')}
+                            {/* Expanded Details */}
+                            {expandedId === reservation.id && (
+                                <div className="border-t border-gray-100 p-4 sm:p-6 bg-gray-50 space-y-4 animate-fadeIn">
+                                    {/* Status Badges */}
+                                    <div className="flex flex-wrap gap-2">
+                                        <div className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm ${getPaymentStatusColor(reservation.payment_status)}`}>
+                                            <CreditCard className="w-4 h-4" />
+                                            <span className="font-medium">{getPaymentStatusText(reservation.payment_status)}</span>
+                                        </div>
+                                    </div>
+
+                                    {/* Info Grid */}
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        {/* Guest Name */}
+                                        <div className="bg-white p-3 rounded-lg border border-gray-200">
+                                            <div className="flex items-center gap-2 text-gray-500 text-xs mb-1">
+                                                <User className="w-3 h-3" />
+                                                {t('customerName')}
+                                            </div>
+                                            <div className="font-semibold text-gray-800">{reservation.customer_name}</div>
+                                        </div>
+
+                                        {/* Guests */}
+                                        <div className="bg-white p-3 rounded-lg border border-gray-200">
+                                            <div className="flex items-center gap-2 text-gray-500 text-xs mb-1">
+                                                <Users className="w-3 h-3" />
+                                                {t('guests')}
+                                            </div>
+                                            <div className="font-semibold text-gray-800">
+                                                {reservation.num_adults || 1} {t('adults')}
+                                                {(reservation.num_children || 0) > 0 && `, ${reservation.num_children} ${t('children')}`}
+                                            </div>
+                                        </div>
+
+                                        {/* Phone */}
+                                        {reservation.customer_phone && (
+                                            <div className="bg-white p-3 rounded-lg border border-gray-200">
+                                                <div className="flex items-center gap-2 text-gray-500 text-xs mb-1">
+                                                    <Phone className="w-3 h-3" />
+                                                    {t('phone')}
+                                                </div>
+                                                <div className="font-semibold text-gray-800">{reservation.customer_phone}</div>
+                                            </div>
+                                        )}
+
+                                        {/* City */}
+                                        {reservation.customer_city && (
+                                            <div className="bg-white p-3 rounded-lg border border-gray-200">
+                                                <div className="flex items-center gap-2 text-gray-500 text-xs mb-1">
+                                                    <MapPin className="w-3 h-3" />
+                                                    {t('city')}
+                                                </div>
+                                                <div className="font-semibold text-gray-800">{reservation.customer_city}</div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Address */}
+                                    {reservation.customer_address && (
+                                        <div className="bg-white p-3 rounded-lg border border-gray-200">
+                                            <div className="flex items-center gap-2 text-gray-500 text-xs mb-1">
+                                                <MapPin className="w-3 h-3" />
+                                                {t('address')}
+                                            </div>
+                                            <div className="text-gray-800">{reservation.customer_address}</div>
+                                        </div>
+                                    )}
+
+                                    {/* Notes */}
+                                    {reservation.check_in_notes && (
+                                        <div className="bg-white p-3 rounded-lg border border-gray-200">
+                                            <div className="flex items-center gap-2 text-gray-500 text-xs mb-1">
+                                                <FileText className="w-3 h-3" />
+                                                {t('notes')}
+                                            </div>
+                                            <div className="text-gray-700">{reservation.check_in_notes}</div>
+                                        </div>
+                                    )}
+
+                                    {/* Reservation ID */}
+                                    <div className="text-center text-xs text-gray-400 pt-2 border-t border-gray-200">
+                                        Rezervasyon No: <span className="font-mono">{reservation.id}</span>
+                                    </div>
                                 </div>
-                                <div className="text-gray-700">{reservation.notes}</div>
-                            </div>
-                        )}
-
-                        {/* Reservation ID */}
-                        <div className="text-center text-xs text-gray-400 pt-4 border-t border-gray-100">
-                            Rezervasyon No: <span className="font-mono">{reservation.id}</span>
+                            )}
                         </div>
-                    </div>
+                    ))}
                 </div>
             )}
 

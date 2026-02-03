@@ -2,33 +2,33 @@
 
 import { supabase } from "@/lib/supabaseClient";
 
-export async function searchReservation(email: string, reservationId: string) {
+export async function searchReservationsByEmail(email: string) {
     try {
-        // Validate inputs
-        if (!email || !reservationId) {
-            return { success: false, error: "Missing email or reservation ID" };
+        // Validate input
+        if (!email) {
+            return { success: false, error: "Missing email" };
         }
 
-        // Search for reservation matching both email and ID
+        // Get today's date for filtering past reservations
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const todayStr = today.toISOString().split('T')[0];
+
+        // Search for all reservations matching email with check_out >= today
         const { data, error } = await supabase
             .from('Reservation_Information')
             .select('*')
-            .eq('id', reservationId)
             .eq('customer_email', email)
-            .single();
+            .gte('check_out', todayStr)
+            .order('check_in', { ascending: true });
 
-        if (error || !data) {
-            console.log('Reservation not found:', error);
-            return { success: false, error: "Reservation not found" };
+        if (error) {
+            console.log('Reservation search error:', error);
+            return { success: false, error: "Search failed" };
         }
 
-        // Check if reservation is in the past
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const checkOut = new Date(data.check_out);
-
-        if (checkOut < today) {
-            return { success: false, error: "Reservation has already passed" };
+        if (!data || data.length === 0) {
+            return { success: false, error: "No reservations found" };
         }
 
         return { success: true, data };
