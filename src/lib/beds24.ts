@@ -337,9 +337,8 @@ export const createBeds24Booking = async (bookingData: {
       price: bookingData.total_price,
       comments: bookingData.notes || '',
       notes: bookingData.notes || '',
-      referer: 'Website'
-      // Note: status field removed - Beds24 rejects custom status values
-      // Bookings will use Beds24's default status setting for the property
+      referer: 'Website',
+      status: 2  // 2 = New (Yeni) - Admin onaylayana kadar "New" durumunda kalacak
     }];
 
     console.log('--- BEDS24 PAYLOAD START ---');
