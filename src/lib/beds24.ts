@@ -335,8 +335,8 @@ export const createBeds24Booking = async (bookingData: {
       country2: 'TR',  // 2-letter country code
       // Booking info
       price: bookingData.total_price,
-      comments: bookingData.notes || '',
-      notes: bookingData.notes || '',
+      comments: '',  // Guest comments - bos birakildi
+      notes: bookingData.notes || '',  // Sadece notes kisminda gozukecek
       referer: 'Website',
       status: 2  // 2 = New (Yeni) - Admin onaylayana kadar "New" durumunda kalacak
     }];
