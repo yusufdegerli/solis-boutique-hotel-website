@@ -44,6 +44,7 @@ export default function ReservationForm({
   const [totalPrice, setTotalPrice] = useState<number | null>(null);
   const [discount, setDiscount] = useState<number>(0);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [bookingId, setBookingId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -178,6 +179,10 @@ export default function ReservationForm({
         return;
       }
 
+      // Save the booking ID to display to user
+      if (result.data?.id) {
+        setBookingId(result.data.id);
+      }
       setIsSubmitted(true);
     } catch (err: any) {
       if (err instanceof z.ZodError) {
@@ -201,8 +206,18 @@ export default function ReservationForm({
         <p className="text-green-700">
           {t('successMessage')}
         </p>
+
+        {/* Reservation Number Display */}
+        {bookingId && (
+          <div className="bg-white p-4 rounded-lg border border-green-200 mt-4">
+            <p className="text-sm text-gray-600 mb-1">Rezervasyon Numaranız:</p>
+            <p className="text-lg font-mono font-bold text-[var(--gold)] select-all break-all">{bookingId}</p>
+            <p className="text-xs text-gray-500 mt-2">Bu numarayı saklayın. Rezervasyon durumunuzu sorgulamak için kullanabilirsiniz.</p>
+          </div>
+        )}
+
         <button
-          onClick={() => { setIsSubmitted(false); setGuestName(""); setCustomerEmail(""); setCustomerPhone(""); setCustomerCity(""); setCustomerAddress(""); setCustomerNotes(""); setCheckIn(""); setCheckOut(""); setSelectedRoom(""); setTotalPrice(null); setAdults(1); setChildren(0); }}
+          onClick={() => { setIsSubmitted(false); setBookingId(null); setGuestName(""); setCustomerEmail(""); setCustomerPhone(""); setCustomerCity(""); setCustomerAddress(""); setCustomerNotes(""); setCheckIn(""); setCheckOut(""); setSelectedRoom(""); setTotalPrice(null); setAdults(1); setChildren(0); }}
           className="text-green-700 font-medium hover:underline mt-4 block mx-auto"
         >
           {t('newBooking')}
