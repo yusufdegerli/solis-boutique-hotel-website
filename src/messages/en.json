@@ -46,7 +46,8 @@
       "satisfactionDesc": "Your happiness is our priority."
     },
     "ctaTitle": "An Unforgettable Holiday Awaits You",
-    "ctaDesc": "Book your place now to take advantage of early booking opportunities."
+    "ctaDesc": "Book your place now to take advantage of early booking opportunities.",
+    "checkStatus": "Check Reservation"
   },
   "Footer": {
     "desc": "Where comfort meets luxury. We are waiting for you for an unforgettable accommodation experience.",
@@ -145,5 +146,44 @@
     "errorDateOrder": "Check-out date must be after check-in date.",
     "errorGuestsMin": "There must be at least 1 guest.",
     "errorGuestsMax": "Maximum 10 guests are accepted."
+  },
+  "ReservationStatus": {
+    "title": "Check Reservation Status",
+    "subtitle": "Enter your email and reservation number to check your reservation details.",
+    "emailLabel": "E-mail Address",
+    "emailPlaceholder": "example@email.com",
+    "reservationIdLabel": "Reservation Number",
+    "reservationIdPlaceholder": "Enter your reservation number",
+    "searchButton": "Search Reservation",
+    "searching": "Searching...",
+    "notFound": "No reservation found with this information.",
+    "invalidInput": "Please enter valid email and reservation number.",
+    "resultTitle": "Reservation Details",
+    "customerName": "Guest Name",
+    "status": "Status",
+    "paymentStatus": "Payment Status",
+    "totalPrice": "Total Price",
+    "discount": "Discount Applied",
+    "createdAt": "Reservation Date",
+    "checkIn": "Check-in",
+    "checkOut": "Check-out",
+    "guests": "Guests",
+    "adults": "Adults",
+    "children": "Children",
+    "guestNames": "Guest Names",
+    "phone": "Phone",
+    "email": "E-mail",
+    "address": "Address",
+    "city": "City",
+    "notes": "Notes",
+    "statusPending": "Pending",
+    "statusConfirmed": "Confirmed",
+    "statusCancelled": "Cancelled",
+    "statusCheckedIn": "Checked In",
+    "statusCheckedOut": "Checked Out",
+    "paymentPending": "Payment Pending",
+    "paymentPaid": "Paid",
+    "paymentRefunded": "Refunded",
+    "backToHome": "Back to Home"
   }
 }

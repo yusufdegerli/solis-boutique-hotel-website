@@ -23,13 +23,13 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
   return (
     <main className="min-h-screen flex flex-col bg-white overflow-x-hidden">
       <Navbar locale={locale} />
-      
+
       <Hero locale={locale} />
-      
+
       {/* Hotels Section */}
       <section id="hotels" className="py-32 bg-[var(--off-white)] relative">
         <div className="absolute top-0 inset-x-0 h-40 bg-gradient-to-b from-white to-transparent"></div>
-        
+
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center mb-20 space-y-4">
             <span className="text-[var(--gold)] font-serif italic text-xl">{t('collection')}</span>
@@ -38,7 +38,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
               {t('discoverDesc')}
             </p>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-16">
             {hotels.map((hotel, index) => (
               <div key={hotel.id} className={`h-full animate-fade-in-up delay-${(index + 1) * 100}`}>
@@ -70,11 +70,16 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
       <section className="py-24 bg-[var(--off-black)] text-center relative overflow-hidden">
         <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
         <div className="relative z-10 max-w-4xl mx-auto px-4">
-            <h2 className="text-3xl md:text-5xl font-serif text-white mb-8">{t('ctaTitle')}</h2>
-            <p className="text-gray-400 mb-10 text-lg font-light">{t('ctaDesc')}</p>
+          <h2 className="text-3xl md:text-5xl font-serif text-white mb-8">{t('ctaTitle')}</h2>
+          <p className="text-gray-400 mb-10 text-lg font-light">{t('ctaDesc')}</p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <a href={`/${locale}/reservation`} className="inline-block px-10 py-5 bg-[var(--gold)] text-white font-serif text-lg rounded-full hover:bg-white hover:text-[var(--off-black)] transition-all duration-300 shadow-2xl">
-                {tNav('book')}
+              {tNav('book')}
             </a>
+            <a href={`/${locale}/reservation-status`} className="inline-block px-10 py-5 bg-transparent border-2 border-[var(--gold)] text-[var(--gold)] font-serif text-lg rounded-full hover:bg-[var(--gold)] hover:text-white transition-all duration-300">
+              {t('checkStatus') || 'Rezervasyon Sorgula'}
+            </a>
+          </div>
         </div>
       </section>
 

@@ -46,7 +46,8 @@
       "satisfactionDesc": "Mutluluğunuz önceliğimizdir."
     },
     "ctaTitle": "Unutulmaz Bir Tatil Sizi Bekliyor",
-    "ctaDesc": "Erken rezervasyon fırsatlarından yararlanmak için hemen yerinizi ayırtın."
+    "ctaDesc": "Erken rezervasyon fırsatlarından yararlanmak için hemen yerinizi ayırtın.",
+    "checkStatus": "Rezervasyon Sorgula"
   },
   "Footer": {
     "desc": "Konforun ve lüksün buluştuğu nokta. Unutulmaz bir konaklama deneyimi için sizleri bekliyoruz.",
@@ -145,5 +146,44 @@
     "errorDateOrder": "Çıkış tarihi giriş tarihinden sonra olmalıdır.",
     "errorGuestsMin": "En az 1 misafir olmalıdır.",
     "errorGuestsMax": "En fazla 10 misafir kabul edilmektedir."
+  },
+  "ReservationStatus": {
+    "title": "Rezervasyon Durumu Sorgula",
+    "subtitle": "Rezervasyon detaylarınızı görmek için e-posta adresinizi ve rezervasyon numaranızı girin.",
+    "emailLabel": "E-posta Adresi",
+    "emailPlaceholder": "ornek@email.com",
+    "reservationIdLabel": "Rezervasyon Numarası",
+    "reservationIdPlaceholder": "Rezervasyon numaranızı girin",
+    "searchButton": "Rezervasyon Ara",
+    "searching": "Aranıyor...",
+    "notFound": "Bu bilgilerle eşleşen bir rezervasyon bulunamadı.",
+    "invalidInput": "Lütfen geçerli e-posta ve rezervasyon numarası girin.",
+    "resultTitle": "Rezervasyon Detayları",
+    "customerName": "Misafir Adı",
+    "status": "Durum",
+    "paymentStatus": "Ödeme Durumu",
+    "totalPrice": "Toplam Tutar",
+    "discount": "Uygulanan İndirim",
+    "createdAt": "Rezervasyon Tarihi",
+    "checkIn": "Giriş Tarihi",
+    "checkOut": "Çıkış Tarihi",
+    "guests": "Misafirler",
+    "adults": "Yetişkin",
+    "children": "Çocuk",
+    "guestNames": "Misafir İsimleri",
+    "phone": "Telefon",
+    "email": "E-posta",
+    "address": "Adres",
+    "city": "Şehir",
+    "notes": "Notlar",
+    "statusPending": "Beklemede",
+    "statusConfirmed": "Onaylandı",
+    "statusCancelled": "İptal Edildi",
+    "statusCheckedIn": "Giriş Yapıldı",
+    "statusCheckedOut": "Çıkış Yapıldı",
+    "paymentPending": "Ödeme Bekliyor",
+    "paymentPaid": "Ödendi",
+    "paymentRefunded": "İade Edildi",
+    "backToHome": "Ana Sayfaya Dön"
   }
 }
