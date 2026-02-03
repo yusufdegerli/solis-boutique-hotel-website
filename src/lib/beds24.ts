@@ -22,6 +22,71 @@ export interface Beds24AvailabilityResponse {
   [key: string]: any;
 }
 
+// ============================================
+// TOKEN CACHE SYSTEM
+// ============================================
+let cachedToken: string | null = null;
+let tokenExpiresAt: number | null = null;
+const TOKEN_LIFETIME_MS = 23 * 60 * 60 * 1000; // 23 hours (1 hour margin before 24h expiry)
+
+/**
+ * Get a valid Beds24 API v2 token
+ * Uses cached token if available and not expired, otherwise refreshes
+ */
+export const getValidToken = async (): Promise<string> => {
+  const now = Date.now();
+
+  // Check if we have a valid cached token
+  if (cachedToken && tokenExpiresAt && now < tokenExpiresAt) {
+    console.log('Using cached Beds24 token (expires in', Math.round((tokenExpiresAt - now) / 60000), 'minutes)');
+    return cachedToken;
+  }
+
+  console.log('Token expired or not cached, refreshing...');
+
+  // Try to get token from env first (for initial setup)
+  const envToken = process.env.BEDS24_TOKEN;
+  const refreshToken = process.env.BEDS24_REFRESH_TOKEN;
+
+  if (!refreshToken) {
+    throw new Error('BEDS24_REFRESH_TOKEN is missing');
+  }
+
+  // Always refresh to get a fresh token
+  const url = `${BEDS24_API_URL}/authentication/token`;
+
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'accept': 'application/json',
+      'refreshToken': refreshToken
+    }
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data?.error || 'Failed to refresh token');
+  }
+
+  // Cache the new token
+  cachedToken = data.token;
+  tokenExpiresAt = now + TOKEN_LIFETIME_MS;
+
+  console.log('Beds24 Token refreshed and cached successfully');
+  return cachedToken!;
+};
+
+/**
+ * Invalidate the cached token (call this on 401 errors)
+ */
+export const invalidateToken = (): void => {
+  console.log('Invalidating cached Beds24 token');
+  cachedToken = null;
+  tokenExpiresAt = null;
+};
+// ============================================
+
 /**
  * Parse Beds24 API Response
  * Beds24 returns data as an Object keyed by room ID, not an Array.
@@ -174,17 +239,8 @@ export const updateAvailability = async (
   count: number
 ): Promise<{ success: boolean; data?: any; error?: string }> => {
   try {
-    let token = process.env.BEDS24_TOKEN;
-
-    if (!token) {
-      // Try to get a new token using refresh token
-      const refreshResult = await refreshBeds24Token();
-      if (refreshResult.success && refreshResult.token) {
-        token = refreshResult.token;
-      } else {
-        throw new Error('Beds24 API Configuration missing (BEDS24_TOKEN)');
-      }
-    }
+    // Use cached token system
+    const token = await getValidToken();
 
     const url = `${BEDS24_API_URL}/inventory/rooms/calendar`;
 
@@ -222,26 +278,25 @@ export const updateAvailability = async (
       console.error('Beds24 API Fail Status', response.status);
       console.error('Beds24 API Fail Response:', JSON.stringify(data, null, 2));
 
-      // If token expired, try refreshing
+      // If token expired, invalidate cache and retry once
       if (response.status === 401) {
-        console.log('Token expired, attempting refresh...');
-        const refreshResult = await refreshBeds24Token();
-        if (refreshResult.success && refreshResult.token) {
-          // Retry with new token
-          const retryResponse = await fetch(url, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'accept': 'application/json',
-              'token': refreshResult.token
-            },
-            body: JSON.stringify(payload)
-          });
+        console.log('Token expired, invalidating cache and retrying...');
+        invalidateToken();
+        const newToken = await getValidToken();
 
-          const retryData = await retryResponse.json();
-          if (retryResponse.ok) {
-            return { success: true, data: retryData };
-          }
+        const retryResponse = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'accept': 'application/json',
+            'token': newToken
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const retryData = await retryResponse.json();
+        if (retryResponse.ok) {
+          return { success: true, data: retryData };
         }
       }
 
@@ -284,16 +339,8 @@ export const createBeds24Booking = async (bookingData: {
   notes?: string;
 }): Promise<{ success: boolean; data?: any; error?: string }> => {
   try {
-    let token = process.env.BEDS24_TOKEN;
-
-    if (!token) {
-      const refreshResult = await refreshBeds24Token();
-      if (refreshResult.success && refreshResult.token) {
-        token = refreshResult.token;
-      } else {
-        throw new Error('Beds24 API Configuration missing (BEDS24_TOKEN)');
-      }
-    }
+    // Use cached token system
+    const token = await getValidToken();
 
     // Use API v2 bookings endpoint
     const url = `${BEDS24_API_URL}/bookings`;
@@ -369,48 +416,48 @@ export const createBeds24Booking = async (bookingData: {
       console.error('Status:', response.status);
       console.error('Body:', JSON.stringify(data, null, 2));
 
-      // If token expired, try refreshing and retry
+      // If token expired, invalidate cache and retry
       if (response.status === 401) {
-        console.log('Token expired, attempting refresh...');
-        const refreshResult = await refreshBeds24Token();
-        if (refreshResult.success && refreshResult.token) {
-          const retryResponse = await fetch(url, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'accept': 'application/json',
-              'token': refreshResult.token
-            },
-            body: JSON.stringify(payload)
-          });
+        console.log('Token expired, invalidating cache and retrying...');
+        invalidateToken();
+        const newToken = await getValidToken();
 
-          const retryData = await retryResponse.json();
-          if (retryResponse.ok) {
-            console.log('Beds24 Booking Created Successfully (after token refresh):', retryData);
+        const retryResponse = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'accept': 'application/json',
+            'token': newToken
+          },
+          body: JSON.stringify(payload)
+        });
 
-            // Extract booking ID correctly from new.id
-            let bookId = null;
-            if (Array.isArray(retryData) && retryData[0]) {
-              if (retryData[0].new?.id) {
-                bookId = retryData[0].new.id;
-              } else if (retryData[0].id) {
-                bookId = retryData[0].id;
-              }
+        const retryData = await retryResponse.json();
+        if (retryResponse.ok) {
+          console.log('Beds24 Booking Created Successfully (after token refresh):', retryData);
+
+          // Extract booking ID correctly from new.id
+          let bookId = null;
+          if (Array.isArray(retryData) && retryData[0]) {
+            if (retryData[0].new?.id) {
+              bookId = retryData[0].new.id;
+            } else if (retryData[0].id) {
+              bookId = retryData[0].id;
             }
-
-            // Update status to New after creation
-            if (bookId && typeof bookId === 'number') {
-              console.log('Updating booking status to New (2) after retry...');
-              const statusResult = await updateBeds24BookingStatusInternal(String(bookId), 2, refreshResult.token);
-              if (statusResult.success) {
-                console.log('Booking status updated to New successfully');
-              } else {
-                console.warn('Failed to update booking status:', statusResult.error);
-              }
-            }
-
-            return { success: true, data: { bookId, ...retryData } };
           }
+
+          // Update status to New after creation
+          if (bookId && typeof bookId === 'number') {
+            console.log('Updating booking status to New (2) after retry...');
+            const statusResult = await updateBeds24BookingStatusInternal(String(bookId), 2, newToken);
+            if (statusResult.success) {
+              console.log('Booking status updated to New successfully');
+            } else {
+              console.warn('Failed to update booking status:', statusResult.error);
+            }
+          }
+
+          return { success: true, data: { bookId, ...retryData } };
         }
       }
 
