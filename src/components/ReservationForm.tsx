@@ -38,6 +38,8 @@ export default function ReservationForm({
   const [guestName, setGuestName] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
+  const [phoneCountryCode, setPhoneCountryCode] = useState("+90"); // Default Turkey
+  const [phoneError, setPhoneError] = useState<string | null>(null);
   const [customerCity, setCustomerCity] = useState("");
   const [customerAddress, setCustomerAddress] = useState("");
   const [customerNotes, setCustomerNotes] = useState("");
@@ -48,6 +50,54 @@ export default function ReservationForm({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [honeypot, setHoneypot] = useState(""); // Hidden spam protection field
+
+  // Popular country codes
+  const countryCodes = [
+    { code: "+90", country: "TR", flag: "🇹🇷" },
+    { code: "+1", country: "US", flag: "🇺🇸" },
+    { code: "+44", country: "UK", flag: "🇬🇧" },
+    { code: "+49", country: "DE", flag: "🇩🇪" },
+    { code: "+33", country: "FR", flag: "🇫🇷" },
+    { code: "+7", country: "RU", flag: "🇷🇺" },
+    { code: "+971", country: "AE", flag: "🇦🇪" },
+    { code: "+966", country: "SA", flag: "🇸🇦" },
+    { code: "+40", country: "RO", flag: "🇷🇴" },
+    { code: "+36", country: "HU", flag: "🇭🇺" },
+    { code: "+39", country: "IT", flag: "🇮🇹" },
+    { code: "+34", country: "ES", flag: "🇪🇸" },
+    { code: "+31", country: "NL", flag: "🇳🇱" },
+    { code: "+32", country: "BE", flag: "🇧🇪" },
+    { code: "+48", country: "PL", flag: "🇵🇱" },
+    { code: "+30", country: "GR", flag: "🇬🇷" },
+  ];
+
+  // Format phone number (only digits)
+  const formatPhoneNumber = (value: string): string => {
+    // Remove all non-digit characters
+    const digitsOnly = value.replace(/\D/g, '');
+
+    // Format as: XXX XXX XX XX (for Turkish format)
+    if (digitsOnly.length <= 3) return digitsOnly;
+    if (digitsOnly.length <= 6) return `${digitsOnly.slice(0, 3)} ${digitsOnly.slice(3)}`;
+    if (digitsOnly.length <= 8) return `${digitsOnly.slice(0, 3)} ${digitsOnly.slice(3, 6)} ${digitsOnly.slice(6)}`;
+    return `${digitsOnly.slice(0, 3)} ${digitsOnly.slice(3, 6)} ${digitsOnly.slice(6, 8)} ${digitsOnly.slice(8, 10)}`;
+  };
+
+  // Validate phone number
+  const validatePhone = (phone: string): boolean => {
+    const digitsOnly = phone.replace(/\D/g, '');
+    return digitsOnly.length >= 10 && digitsOnly.length <= 15;
+  };
+
+  // Handle phone input change
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    const formatted = formatPhoneNumber(value);
+    setCustomerPhone(formatted);
+
+    // Clear error when typing
+    if (phoneError) setPhoneError(null);
+  };
 
   // Get today's date in YYYY-MM-DD format for min attributes
   const today = new Date().toLocaleDateString('en-CA');
@@ -160,7 +210,7 @@ export default function ReservationForm({
         room_id: parseInt(selectedRoom),
         guest_name: guestName,
         email: customerEmail,
-        phone: customerPhone,
+        phone: customerPhone ? `${phoneCountryCode} ${customerPhone}` : '', // Include country code
         customer_city: customerCity,
         customer_address: customerAddress,
         notes: customerNotes,
@@ -281,16 +331,42 @@ export default function ReservationForm({
           </div>
         </div>
 
-        {/* NEW: Phone Number Field */}
+        {/* Phone Number Field with Country Code */}
         <div className="space-y-2">
           <label className="text-sm font-medium text-gray-700">Telefon Numarası</label>
-          <input
-            type="tel"
-            value={customerPhone}
-            onChange={(e) => setCustomerPhone(e.target.value)}
-            placeholder="+90 555 123 45 67"
-            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[var(--gold)] focus:border-transparent outline-none transition-all text-gray-700"
-          />
+          <div className="flex gap-2">
+            {/* Country Code Selector */}
+            <select
+              value={phoneCountryCode}
+              onChange={(e) => setPhoneCountryCode(e.target.value)}
+              className="w-28 px-2 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[var(--gold)] focus:border-transparent outline-none transition-all text-gray-700"
+            >
+              {countryCodes.map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.flag} {c.code}
+                </option>
+              ))}
+            </select>
+            {/* Phone Number Input */}
+            <input
+              type="tel"
+              value={customerPhone}
+              onChange={handlePhoneChange}
+              onBlur={() => {
+                if (customerPhone && !validatePhone(customerPhone)) {
+                  setPhoneError('Geçerli bir telefon numarası girin (en az 10 rakam)');
+                }
+              }}
+              placeholder="555 123 45 67"
+              maxLength={15}
+              className={`flex-1 px-4 py-3 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-[var(--gold)] focus:border-transparent outline-none transition-all text-gray-700 ${phoneError ? 'border-red-400' : 'border-gray-200'
+                }`}
+            />
+          </div>
+          {phoneError && (
+            <p className="text-sm text-red-500">{phoneError}</p>
+          )}
+          <p className="text-xs text-gray-400">Örnek: {phoneCountryCode} 555 123 45 67</p>
         </div>
 
         {/* NEW: City & Address & Notes */}
