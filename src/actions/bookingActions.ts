@@ -6,6 +6,8 @@ import { sendBookingNotification } from '@/services/notificationService';
 import { sendConfirmationEmail } from '@/services/mailService'; // Keep for now or remove if unused later
 import { updateAvailability, createBeds24Booking, cancelBeds24Booking, cancelBeds24BookingV1, updateBeds24BookingStatus } from '@/lib/beds24';
 import { eachDayOfInterval, format, subDays } from 'date-fns';
+import { checkRateLimit } from '@/lib/rateLimit';
+import { headers } from 'next/headers';
 
 // Initialize Supabase client
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -43,6 +45,31 @@ const serverBookingSchema = z.object({
 
 export async function createBookingServer(bookingData: any) {
   console.log('--- SERVER ACTION START ---');
+
+  // === HONEYPOT CHECK ===
+  // If honeypot field is filled, it's a bot
+  if (bookingData._honeypot && bookingData._honeypot.trim() !== '') {
+    console.log('Honeypot triggered - blocking spam request');
+    return { success: false, error: 'İstek reddedildi.' };
+  }
+
+  // === RATE LIMITING ===
+  const headersList = await headers();
+  const clientIP = headersList.get('x-forwarded-for')?.split(',')[0] ||
+    headersList.get('x-real-ip') ||
+    'unknown';
+
+  const rateLimitResult = checkRateLimit(clientIP);
+  if (!rateLimitResult.allowed) {
+    const minutesLeft = Math.ceil(rateLimitResult.resetIn / 60000);
+    console.log(`Rate limit exceeded for IP: ${clientIP}`);
+    return {
+      success: false,
+      error: `Çok fazla istek gönderdiniz. Lütfen ${minutesLeft} dakika sonra tekrar deneyin.`
+    };
+  }
+
+  console.log(`Rate limit check passed for IP: ${clientIP} (${rateLimitResult.remaining} remaining)`);
   console.log('Received Payload:', JSON.stringify(bookingData, null, 2));
 
   // 1. Zod Validation

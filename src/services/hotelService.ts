@@ -265,6 +265,8 @@ export interface Booking {
   extra_charges?: number;
   damage_report?: string;
   payment_status?: 'pending' | 'paid' | 'refunded';
+  // Security
+  _honeypot?: string; // Hidden spam protection field
 }
 
 export const getBookings = async (): Promise<Booking[]> => {

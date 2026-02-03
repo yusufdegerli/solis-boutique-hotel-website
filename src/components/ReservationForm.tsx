@@ -47,6 +47,7 @@ export default function ReservationForm({
   const [bookingId, setBookingId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [honeypot, setHoneypot] = useState(""); // Hidden spam protection field
 
   // Get today's date in YYYY-MM-DD format for min attributes
   const today = new Date().toLocaleDateString('en-CA');
@@ -170,7 +171,8 @@ export default function ReservationForm({
         num_children: children,
         guest_names: guestNames.filter(n => n.trim() !== ''), // Filter empty names
         total_price: totalPrice || 0,
-        room_status: 'pending'
+        room_status: 'pending',
+        _honeypot: honeypot, // Spam protection
       });
 
       if (!result.success) {
@@ -233,6 +235,25 @@ export default function ReservationForm({
             {error}
           </div>
         )}
+
+        {/* Honeypot field - hidden from real users, filled by bots */}
+        <input
+          type="text"
+          name="website"
+          value={honeypot}
+          onChange={(e) => setHoneypot(e.target.value)}
+          tabIndex={-1}
+          autoComplete="off"
+          style={{
+            position: 'absolute',
+            left: '-9999px',
+            opacity: 0,
+            height: 0,
+            width: 0,
+            pointerEvents: 'none'
+          }}
+          aria-hidden="true"
+        />
 
         {/* Guest Name & Email */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
