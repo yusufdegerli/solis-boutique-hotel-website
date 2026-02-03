@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
 import { Star, MapPin, ArrowRight, Wifi, Coffee, Waves } from "lucide-react";
