@@ -180,8 +180,10 @@ export default function ReservationForm({
       }
 
       // Save the booking ID to display to user
-      if (result.data?.id) {
-        setBookingId(result.data.id);
+      // Server returns data as array: [{ id: bookingId }]
+      const returnedId = result.data?.[0]?.id || result.data?.id;
+      if (returnedId) {
+        setBookingId(returnedId);
       }
       setIsSubmitted(true);
     } catch (err: any) {
