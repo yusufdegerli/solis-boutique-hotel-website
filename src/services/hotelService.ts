@@ -305,45 +305,13 @@ import { createBookingServer, updateBookingStatusServer } from "@/actions/bookin
 
 // ... existing code ...
 
-export const createBooking = async (booking: Partial<Booking>) => {
-  console.log('Creating booking with input:', booking);
-
-  // 1. Validate Basic Inputs (Minimal client-side check)
-  if (!booking.room_id || !booking.check_in || !booking.check_out) {
-    return { success: false, error: "Eksik bilgi: Oda ve tarihler gereklidir." };
-  }
-
-  // 2. Construct Payload
-  const payload = {
-    hotel_id: booking.hotel_id, // Ensure hotel_id is passed
-    room_id: booking.room_id,
-    customer_name: booking.guest_name || booking.customer_name,
-    customer_email: booking.email || booking.customer_email || "no-email@provided.com",
-    customer_phone: booking.phone || booking.customer_phone || "",
-    customer_city: booking.customer_city || "",
-    customer_address: booking.customer_address || "",
-    notes: booking.notes || "",
-    check_in: booking.check_in,
-    check_out: booking.check_out,
-    guests_count: booking.guests_count || 1,
-    num_adults: booking.num_adults || 1,
-    num_children: booking.num_children || 0,
-    guest_names: booking.guest_names || [],
-    total_price: booking.total_price, // NEW: Pass calculated price
-    room_status: 'pending'
+export const createBooking = async (_booking: Partial<Booking>) => {
+  // Harici rezervasyon sistemine yönlendir
+  // Elektra/Rezervasyonal entegrasyonu kullanılıyor
+  return {
+    success: true,
+    redirect: "https://solis-boutique.rezervasyonal.com"
   };
-
-  console.log('Delegating to Server Action with payload:', payload);
-
-  // 3. Call Server Action
-  const result = await createBookingServer(payload);
-
-  if (!result.success) {
-    // Return the error directly instead of throwing
-    return { success: false, error: result.error };
-  }
-
-  return { success: true, data: result.data };
 };
 
 export const updateBookingStatus = async (id: string, status: string, details?: Partial<Booking>) => {

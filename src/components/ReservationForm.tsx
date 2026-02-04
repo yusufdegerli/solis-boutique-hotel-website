@@ -231,9 +231,15 @@ export default function ReservationForm({
         return;
       }
 
+      // Harici rezervasyon sistemine yönlendir
+      if ((result as any).redirect) {
+        window.location.href = (result as any).redirect;
+        return;
+      }
+
       // Save the booking ID to display to user
       // Server returns data as array: [{ id: bookingId }]
-      const dataArray = result.data as any;
+      const dataArray = (result as any).data;
       const returnedId = Array.isArray(dataArray) ? dataArray[0]?.id : dataArray?.id;
       if (returnedId) {
         setBookingId(returnedId);
