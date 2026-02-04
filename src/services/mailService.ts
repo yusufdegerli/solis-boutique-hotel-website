@@ -10,6 +10,14 @@ const GMAIL_PASS = process.env.GMAIL_APP_PASSWORD;
 
 // Generic send email function
 export async function sendEmail(to: string, subject: string, html: string) {
+  // ============================================
+  // EMAIL TEMPORARILY DISABLED - Yusuf
+  // Remove these lines to re-enable email sending
+  // ============================================
+  console.log(`📧 [EMAIL DISABLED] Would have sent to: ${to} | Subject: ${subject}`);
+  return { success: true, data: { disabled: true } };
+  // ============================================
+
   if (EMAIL_PROVIDER === 'gmail') {
     return sendViaGmail(to, subject, html);
   } else {
@@ -94,7 +102,7 @@ function getEmailTemplate(status: string, customerName: string, bookingId?: stri
   // Base URL
   const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
   const domain = process.env.NEXT_PUBLIC_APP_URL || (process.env.NEXT_PUBLIC_VERCEL_URL ? `${protocol}://${process.env.NEXT_PUBLIC_VERCEL_URL}` : 'http://localhost:3000');
-  
+
   const baseUrl = domain.startsWith('http') ? domain : `${protocol}://${domain}`;
   const manageLink = cancellationToken ? `${baseUrl}/tr/reservation/manage/${cancellationToken}` : '#';
 
