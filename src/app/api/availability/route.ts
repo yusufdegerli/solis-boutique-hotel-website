@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAvailabilities } from '@/lib/beds24';
+// [BEDS24 DISABLED] - Elektra kullanılacak
+// import { getAvailabilities } from '@/lib/beds24';
 
 export const dynamic = 'force-dynamic';
 
 /**
  * POST /api/availability
- * Check room availability from Beds24
+ * Check room availability
+ * 
+ * [BEDS24 DISABLED] - Bu endpoint Beds24 API kullanıyordu
+ * Elektra entegrasyonu yapılana kadar devre dışı
  * 
  * Request Body:
  * {
@@ -15,6 +19,18 @@ export const dynamic = 'force-dynamic';
  * }
  */
 export async function POST(request: NextRequest) {
+    // [BEDS24 DISABLED] - Elektra entegrasyonu yapılacak
+    return NextResponse.json(
+        {
+            success: false,
+            error: 'Availability check is temporarily disabled. Channel manager migration in progress.',
+            message: 'Müsaitlik kontrolü geçici olarak devre dışı. Channel manager değişikliği yapılıyor.'
+        },
+        { status: 503 }
+    );
+
+    /*
+    // Original Beds24 implementation
     try {
         const body = await request.json();
         const { checkIn, checkOut, adults } = body;
@@ -58,4 +74,5 @@ export async function POST(request: NextRequest) {
             { status: 500 }
         );
     }
+    */
 }

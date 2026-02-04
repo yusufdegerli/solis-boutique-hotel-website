@@ -4,7 +4,8 @@ import { createClient } from '@supabase/supabase-js';
 import { z } from "zod";
 import { sendBookingNotification } from '@/services/notificationService';
 import { sendConfirmationEmail } from '@/services/mailService'; // Keep for now or remove if unused later
-import { updateAvailability, createBeds24Booking, cancelBeds24Booking, cancelBeds24BookingV1, updateBeds24BookingStatus } from '@/lib/beds24';
+// [BEDS24 DISABLED] - Elektra kullanılacak
+// import { updateAvailability, createBeds24Booking, cancelBeds24Booking, cancelBeds24BookingV1, updateBeds24BookingStatus } from '@/lib/beds24';
 import { eachDayOfInterval, format, subDays } from 'date-fns';
 import { checkRateLimit } from '@/lib/rateLimit';
 import { headers } from 'next/headers';
@@ -135,10 +136,9 @@ export async function createBookingServer(bookingData: any) {
       return { success: false, error: 'Oda bilgisi bulunamadı.' };
     }
 
-    // DEBUG: Log room info to see if beds24_room_id exists
+    // DEBUG: Log room info
     console.log('--- ROOM INFO FROM DATABASE ---');
     console.log('Room ID:', roomInfo.id);
-    console.log('beds24_room_id:', roomInfo.beds24_room_id);
     console.log('Full roomInfo:', JSON.stringify(roomInfo, null, 2));
     console.log('--- END ROOM INFO ---');
 
@@ -202,12 +202,11 @@ export async function createBookingServer(bookingData: any) {
 
     const bookingId = newBooking.id;
 
+    // [BEDS24 DISABLED] - Elektra kullanılacak
     // --- BEDS24 BOOKING CREATE START ---
-    // Create booking in Beds24 channel manager
-    console.log('--- CHECKING BEDS24 ROOM ID ---');
-    console.log('beds24_room_id value:', roomInfo.beds24_room_id);
-    console.log('beds24_room_id truthy?:', !!roomInfo.beds24_room_id);
-
+    // Beds24 channel manager entegrasyonu devre dışı bırakıldı
+    // Elektra entegrasyonu yapılacak
+    /*
     let beds24BookingId = null;
     if (roomInfo.beds24_room_id) {
       console.log('--- BEDS24 BOOKING SYNC START ---');
@@ -244,6 +243,7 @@ export async function createBookingServer(bookingData: any) {
         console.error('Beds24 Booking Creation Failed (Non-blocking):', beds24Result.error);
       }
     }
+    */
     // --- BEDS24 BOOKING CREATE END ---
 
     // --- NOTIFICATION TRIGGER ---
@@ -257,8 +257,10 @@ export async function createBookingServer(bookingData: any) {
 
     sendBookingNotification(notificationPayload, 'pending').catch(err => console.error('Notification Error:', err));
 
+    // [BEDS24 DISABLED] - Elektra kullanılacak
     // --- BEDS24 AVAILABILITY SYNC ---
-    // Sync availability to Beds24 for each night of the booking
+    // Beds24 müsaitlik senkronizasyonu devre dışı bırakıldı
+    /*
     try {
       if (roomInfo.beds24_room_id) {
         const totalRooms = roomInfo.quantity;
@@ -293,6 +295,7 @@ export async function createBookingServer(bookingData: any) {
     } catch (beds24Err) {
       console.error('Beds24 Sync Error:', beds24Err);
     }
+    */
 
     return { success: true, data: [{ id: bookingId }] };
 
@@ -334,6 +337,9 @@ export async function updateBookingStatusServer(id: string, status: string, deta
 
     const booking = data[0];
 
+    // [BEDS24 DISABLED] - Elektra kullanılacak
+    // Beds24 senkronizasyonu devre dışı bırakıldı
+    /*
     // Sync with Beds24 if confirmed
     if (status === 'confirmed') {
       try {
@@ -346,8 +352,6 @@ export async function updateBookingStatusServer(id: string, status: string, deta
 
         if (roomInfo?.beds24_room_id) {
           if (booking.beds24_booking_id) {
-            // Note: Status update disabled - Beds24 rejects status changes via API for this property
-            // Manage booking status directly in Beds24 panel
             console.log(`Beds24 booking exists (ID: ${booking.beds24_booking_id}) - status must be updated in Beds24 panel`);
           } else {
             // Create new booking in Beds24 with Confirmed status
@@ -378,7 +382,6 @@ export async function updateBookingStatusServer(id: string, status: string, deta
                 .update({ beds24_booking_id: beds24Result.data.bookId })
                 .eq('id', booking.id);
 
-              // Note: Status update disabled - Beds24 rejects status changes via API
               console.log(`Beds24 booking created: ${beds24Result.data.bookId} - confirm status in Beds24 panel`);
             } else {
               console.error('Beds24 booking creation failed (non-blocking):', beds24Result.error);
@@ -447,6 +450,7 @@ export async function updateBookingStatusServer(id: string, status: string, deta
         console.error('Availability restore error (non-blocking):', availErr);
       }
     }
+    */
 
     sendBookingNotification(booking, status).catch(err => console.error('Update Notification Error:', err));
 

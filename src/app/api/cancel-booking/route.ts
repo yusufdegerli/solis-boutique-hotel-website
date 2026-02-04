@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
-import { cancelBeds24Booking } from '@/lib/beds24';
+// [BEDS24 DISABLED] - Elektra kullanılacak
+// import { cancelBeds24Booking } from '@/lib/beds24';
 
 export async function POST(request: Request) {
   try {
@@ -45,10 +46,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'Güncelleme hatası: ' + updateError.message }, { status: 500 });
     }
 
+    // [BEDS24 DISABLED] - Elektra entegrasyonu yapılacak
+    // Beds24 senkronizasyonu devre dışı bırakıldı
+    /*
     if (updatedData?.beds24_booking_id) {
       console.log(`Syncing user cancellation to Beds24 for Booking ID: ${updatedData.beds24_booking_id}`);
       await cancelBeds24Booking(updatedData.beds24_booking_id);
     }
+    */
 
     // Optional: Send Notification to Admin
     // await sendAdminNotification(booking.id, 'cancelled');

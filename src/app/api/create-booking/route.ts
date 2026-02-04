@@ -1,19 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createBeds24Booking } from '@/lib/beds24';
+// [BEDS24 DISABLED] - Elektra kullanılacak
+// import { createBeds24Booking } from '@/lib/beds24';
 
 export const dynamic = 'force-dynamic';
 
+// [BEDS24 DISABLED] - Room ID mapping devre dışı
 // Map local database room IDs to Beds24 room IDs
-const roomIdMap: Record<number, string> = {
-    17: "646875", // Family Room
-    18: "646866", // Twinbed
-    19: "646874", // Single Room
-    24: "646877", // Double Room
-};
+// const roomIdMap: Record<number, string> = {
+//     17: "646875", // Family Room
+//     18: "646866", // Twinbed
+//     19: "646874", // Single Room
+//     24: "646877", // Double Room
+// };
 
 /**
  * POST /api/create-booking
- * Create a new booking in Beds24
+ * Create a new booking in channel manager
+ * 
+ * [BEDS24 DISABLED] - Bu endpoint Beds24 API kullanıyordu
+ * Elektra entegrasyonu yapılana kadar devre dışı
  * 
  * Request Body:
  * {
@@ -29,6 +34,18 @@ const roomIdMap: Record<number, string> = {
  * }
  */
 export async function POST(request: NextRequest) {
+    // [BEDS24 DISABLED] - Elektra entegrasyonu yapılacak
+    return NextResponse.json(
+        {
+            success: false,
+            error: 'Direct booking creation is temporarily disabled. Channel manager migration in progress.',
+            message: 'Doğrudan rezervasyon oluşturma geçici olarak devre dışı. Channel manager değişikliği yapılıyor.'
+        },
+        { status: 503 }
+    );
+
+    /*
+    // Original Beds24 implementation
     try {
         const body = await request.json();
         const {
@@ -120,4 +137,5 @@ export async function POST(request: NextRequest) {
             { status: 500 }
         );
     }
+    */
 }
