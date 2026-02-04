@@ -225,7 +225,6 @@ async function processBooking(supabase: any, booking: any, eventType?: string) {
         if (guestPhone) updateData.customer_phone = guestPhone;
         if (guestCity) updateData.customer_city = guestCity;
         if (guestAddress) updateData.customer_address = guestAddress;
-        if (notes) updateData.notes = notes;
 
         result = await supabase
             .from('Reservation_Information')
@@ -250,7 +249,6 @@ async function processBooking(supabase: any, booking: any, eventType?: string) {
             customer_phone: guestPhone,
             customer_city: guestCity,
             customer_address: guestAddress,
-            notes: notes,
             check_in: checkIn,
             check_out: checkOut,
             guests_count: guestCount,
