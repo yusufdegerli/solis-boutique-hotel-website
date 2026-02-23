@@ -10,7 +10,7 @@ export default async function CancellationPage({
 }) {
   const { locale, token } = await params;
   const supabase = await createClient();
-  const t = await getTranslations('MyBookings'); // Reuse existing translations or add new ones
+  const t = await getTranslations({ locale, namespace: 'MyBookings' }); // Reuse existing translations or add new ones
 
   // 1. Validate Token & Fetch Booking
   const { data: booking, error } = await supabase

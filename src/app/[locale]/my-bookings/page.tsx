@@ -5,11 +5,12 @@ import { getTranslations } from 'next-intl/server';
 import UserBookingList from '@/components/UserBookingList';
 
 export default async function MyBookingsPage({
-  params: { locale }
+  params,
 }: {
   params: { locale: string }
 }) {
-  const t = await getTranslations('MyBookings');
+  const locale = params.locale;
+  const t = await getTranslations({ locale, namespace: 'MyBookings' });
   const supabase = await createClient();
 
   const {

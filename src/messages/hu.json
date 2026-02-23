@@ -46,7 +46,8 @@
       "satisfactionDesc": "Az Ön boldogsága a prioritásunk."
     },
     "ctaTitle": "Felejthetetlen nyaralás vár Önre",
-    "ctaDesc": "Foglalja le helyét most, és használja ki az előfoglalási kedvezményeket."
+    "ctaDesc": "Foglalja le helyét most, és használja ki az előfoglalási kedvezményeket.",
+    "checkStatus": "Foglalás ellenőrzése"
   },
   "Footer": {
     "desc": "A kényelem és a luxus találkozási pontja. Várjuk Önt egy felejthetetlen élményre.",

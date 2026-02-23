@@ -124,82 +124,38 @@ export async function createBookingServer(bookingData: any) {
   }
 
   try {
-    // 1. Get Room Info (for validation and hotel_id)
-    const { data: roomInfo, error: roomInfoError } = await supabase
-      .from('Rooms_Information')
-      .select('id, quantity, hotel_id, beds24_room_id')
-      .eq('id', payload.room_id)
-      .single();
+    // === MOCK ROOM VALIDATION (Bypass DB) ===
+    const hotelId = payload.hotel_id;
 
-    if (roomInfoError || !roomInfo) {
-      console.error('Room Fetch Error:', roomInfoError);
-      return { success: false, error: 'Oda bilgisi bulunamadı.' };
-    }
+    // === MOCK AVAILABILITY CHECK ===
+    // We assume the room is always requested, no DB overlapping checks
 
-    // DEBUG: Log room info
-    console.log('--- ROOM INFO FROM DATABASE ---');
-    console.log('Room ID:', roomInfo.id);
-    console.log('Full roomInfo:', JSON.stringify(roomInfo, null, 2));
-    console.log('--- END ROOM INFO ---');
-
-    const roomQuantity = roomInfo.quantity;
-    const hotelId = payload.hotel_id || roomInfo.hotel_id; // Prefer payload, fallback to DB
-
-    // 2. Check Availability (Overlapping bookings)
-    const { count, error: countError } = await supabase
-      .from('Reservation_Information')
-      .select('*', { count: 'exact', head: true })
-      .eq('room_id', payload.room_id)
-      .neq('room_status', 'cancelled')
-      .neq('room_status', 'checked_out')
-      .neq('room_status', 'completed')
-      .lt('check_in', payload.check_out)
-      .gt('check_out', payload.check_in);
-
-    if (countError) {
-      console.error('Availability Check Error:', countError);
-      return { success: false, error: 'Müsaitlik kontrolü başarısız.' };
-    }
-
-    if ((count || 0) >= roomQuantity) {
-      return { success: false, error: 'Seçilen tarihlerde boş oda yok.' };
-    }
-
-    // 3. Create Booking (Supabase)
-    console.log('--- SUPABASE INSERT START ---');
+    // === MOCK BOOKING CREATION ===
+    console.log('--- BYPASSING SUPABASE INSERT ---');
     const cancellationToken = crypto.randomUUID();
+    const mockDbId = Math.floor(Math.random() * 100000); // Random ID for the user's reference
 
-    const { data: newBooking, error: insertError } = await supabase
-      .from('Reservation_Information')
-      .insert({
-        hotel_id: hotelId,
-        room_id: payload.room_id,
-        customer_name: payload.customer_name,
-        customer_email: payload.customer_email,
-        customer_phone: payload.customer_phone || "",
-        customer_city: payload.customer_city,
-        customer_address: payload.customer_address,
-        check_in: payload.check_in,
-        check_out: payload.check_out,
-        guests_count: payload.guests_count,
-        num_adults: payload.num_adults || 1,
-        num_children: payload.num_children || 0,
-        total_price: payload.total_price,
-        room_status: 'pending',
-        cancellation_token: cancellationToken,
-        check_in_notes: payload.notes // Mapping notes to check_in_notes
-      })
-      .select()
-      .single();
+    const newBooking = {
+      id: mockDbId,
+      hotel_id: hotelId,
+      room_id: payload.room_id,
+      customer_name: payload.customer_name,
+      customer_email: payload.customer_email,
+      customer_phone: payload.customer_phone || "",
+      customer_city: payload.customer_city,
+      customer_address: payload.customer_address,
+      check_in: payload.check_in,
+      check_out: payload.check_out,
+      guests_count: payload.guests_count,
+      num_adults: payload.num_adults || 1,
+      num_children: payload.num_children || 0,
+      total_price: payload.total_price,
+      room_status: 'pending',
+      cancellation_token: cancellationToken,
+      check_in_notes: payload.notes
+    };
 
-    if (insertError) {
-      console.error('Insert Error:', insertError);
-      return { success: false, error: 'Rezervasyon oluşturulamadı: ' + insertError.message };
-    }
-
-    console.log('--- SUPABASE INSERT SUCCESS ---');
-    console.log('New Booking ID:', newBooking.id);
-
+    console.log('Mock Booking ID generated:', newBooking.id);
     const bookingId = newBooking.id;
 
     // [BEDS24 DISABLED] - Elektra kullanılacak
@@ -305,157 +261,7 @@ export async function createBookingServer(bookingData: any) {
   }
 }
 
-export async function updateBookingStatusServer(id: string, status: string, details?: any) {
-  const supabase = createClient(supabaseUrl, serviceKey || anonKey);
-
-  const updatePayload: any = { room_status: status };
-
-  if (details) {
-    if (details.guest_id_number !== undefined) updatePayload.guest_id_number = details.guest_id_number;
-    if (details.guest_nationality !== undefined) updatePayload.guest_nationality = details.guest_nationality;
-    if (details.check_in_notes !== undefined) updatePayload.check_in_notes = details.check_in_notes;
-    if (details.extra_charges !== undefined) updatePayload.extra_charges = details.extra_charges;
-    if (details.damage_report !== undefined) updatePayload.damage_report = details.damage_report;
-    if (details.payment_status !== undefined) updatePayload.payment_status = details.payment_status;
-  }
-
-  try {
-    const { data, error } = await supabase
-      .from('Reservation_Information')
-      .update(updatePayload)
-      .eq('id', id)
-      .select();
-
-    if (error) {
-      console.error('Update Error (Server):', error);
-      return { success: false, error: error.message };
-    }
-
-    if (!data || data.length === 0) {
-      return { success: false, error: "Kayıt bulunamadı veya güncellenemedi." };
-    }
-
-    const booking = data[0];
-
-    // [BEDS24 DISABLED] - Elektra kullanılacak
-    // Beds24 senkronizasyonu devre dışı bırakıldı
-    /*
-    // Sync with Beds24 if confirmed
-    if (status === 'confirmed') {
-      try {
-        // Get room info for Beds24 room ID
-        const { data: roomInfo } = await supabase
-          .from('Rooms_Information')
-          .select('beds24_room_id')
-          .eq('id', booking.room_id)
-          .single();
-
-        if (roomInfo?.beds24_room_id) {
-          if (booking.beds24_booking_id) {
-            console.log(`Beds24 booking exists (ID: ${booking.beds24_booking_id}) - status must be updated in Beds24 panel`);
-          } else {
-            // Create new booking in Beds24 with Confirmed status
-            console.log(`Creating Beds24 booking for confirmed reservation ID: ${booking.id}`);
-            const beds24Result = await createBeds24Booking({
-              arrival_date: booking.check_in,
-              departure_date: booking.check_out,
-              room_id: roomInfo.beds24_room_id,
-              num_adults: booking.num_adults || booking.guests_count || 2,
-              num_children: booking.num_children || 0,
-              total_price: booking.total_price || 0,
-              customer: {
-                name: booking.customer_name,
-                email: booking.customer_email,
-                phone: booking.customer_phone || '',
-                country: 'TR',
-                city: booking.customer_city || '',
-                address: booking.customer_address || ''
-              },
-              notes: booking.check_in_notes || '',
-              unique_id: booking.id.toString()
-            });
-
-            if (beds24Result.success && beds24Result.data?.bookId) {
-              // Update Supabase record with Beds24 ID
-              await supabase
-                .from('Reservation_Information')
-                .update({ beds24_booking_id: beds24Result.data.bookId })
-                .eq('id', booking.id);
-
-              console.log(`Beds24 booking created: ${beds24Result.data.bookId} - confirm status in Beds24 panel`);
-            } else {
-              console.error('Beds24 booking creation failed (non-blocking):', beds24Result.error);
-            }
-          }
-        }
-      } catch (beds24Err) {
-        console.error('Beds24 sync error during confirmation (non-blocking):', beds24Err);
-      }
-    }
-
-    // Cancel booking in Beds24 when status is cancelled
-    if (status === 'cancelled' && booking.beds24_booking_id) {
-      try {
-        console.log(`Cancelling Beds24 booking: ${booking.beds24_booking_id}`);
-        const cancelResult = await cancelBeds24BookingV1(booking.beds24_booking_id);
-        if (cancelResult.success) {
-          console.log('Beds24 booking cancelled successfully');
-        } else {
-          console.error('Beds24 cancel failed (non-blocking):', cancelResult.error);
-        }
-      } catch (beds24CancelErr) {
-        console.error('Beds24 cancel error (non-blocking):', beds24CancelErr);
-      }
-    }
-
-    // Restore availability when cancelled
-    if (status === 'cancelled') {
-      try {
-        // Get room info for Beds24 ID
-        const { data: roomInfo } = await supabase
-          .from('Rooms_Information')
-          .select('beds24_room_id, quantity')
-          .eq('id', booking.room_id)
-          .single();
-
-        if (roomInfo?.beds24_room_id) {
-          const startDate = new Date(booking.check_in);
-          const endDate = new Date(booking.check_out);
-          const nights = eachDayOfInterval({
-            start: startDate,
-            end: subDays(endDate, 1)
-          });
-
-          // For each night, recalculate and update availability
-          await Promise.all(nights.map(async (date) => {
-            const dateStr = format(date, 'yyyy-MM-dd');
-
-            // Count active bookings for this date (excluding cancelled/completed)
-            const { count } = await supabase
-              .from('Reservation_Information')
-              .select('*', { count: 'exact', head: true })
-              .eq('room_id', booking.room_id)
-              .neq('room_status', 'cancelled')
-              .neq('room_status', 'checked_out')
-              .neq('room_status', 'completed')
-              .lte('check_in', dateStr)
-              .gt('check_out', dateStr);
-
-            const remaining = Math.max(0, roomInfo.quantity - (count || 0));
-            console.log(`Restoring availability for ${dateStr}: ${remaining} rooms`);
-            await updateAvailability(roomInfo.beds24_room_id, dateStr, remaining);
-          }));
-        }
-      } catch (availErr) {
-        console.error('Availability restore error (non-blocking):', availErr);
-      }
-    }
-    */
-
-    sendBookingNotification(booking, status).catch(err => console.error('Update Notification Error:', err));
-
-    return { success: true, data };
-  } catch (err: any) {
-    return { success: false, error: err.message };
-  }
+export async function updateBookingStatusServer(id: string, status: string, details?: any): Promise<{ success: boolean; data?: any; error?: string }> {
+  // Bypass completely for static mockup
+  return { success: true, data: [] };
 }

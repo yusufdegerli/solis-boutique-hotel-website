@@ -1,14 +1,14 @@
 import { Facebook, Instagram, Twitter, Mail, Phone, MapPin } from "lucide-react";
-import { useTranslations } from 'next-intl';
+import { getTranslations } from 'next-intl/server';
 
-export default function Footer() {
-  const t = useTranslations('Footer');
+export default async function Footer({ locale = 'tr' }: { locale?: string }) {
+  const t = await getTranslations({ locale, namespace: 'Footer' });
 
   return (
     <footer className="bg-[var(--off-black)] text-white pt-16 pb-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
-          
+
           {/* Brand */}
           <div className="space-y-4">
             <h3 className="text-2xl font-bold text-[var(--gold)] font-serif">SOLIS</h3>
@@ -57,9 +57,9 @@ export default function Footer() {
             <h4 className="text-lg font-semibold mb-6 text-white font-serif">{t('newsletter')}</h4>
             <p className="text-gray-400 text-sm mb-4 font-sans">{t('newsletterDesc')}</p>
             <form className="flex flex-col gap-3">
-              <input 
-                type="email" 
-                placeholder={t('placeholder')} 
+              <input
+                type="email"
+                placeholder={t('placeholder')}
                 className="bg-gray-800 text-white px-6 py-3 rounded-full focus:outline-none focus:ring-1 focus:ring-[var(--gold)] font-sans text-sm border border-white/10"
               />
               <button className="bg-[var(--gold)] text-white px-6 py-3 rounded-full font-serif font-bold uppercase tracking-widest text-xs hover:bg-white hover:text-[var(--off-black)] transition-all duration-300 shadow-lg">

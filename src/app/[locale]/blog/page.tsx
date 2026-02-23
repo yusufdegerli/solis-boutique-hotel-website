@@ -10,16 +10,16 @@ export default async function BlogPage({ params }: { params: Promise<{ locale: s
   const { locale } = await params;
   const [blogPosts, t] = await Promise.all([
     getBlogPosts(),
-    getTranslations('Blog')
+    getTranslations({ locale, namespace: 'Blog' })
   ]);
 
   return (
     <main className="min-h-screen bg-[var(--off-white)]">
       <Navbar locale={locale} />
-      
+
       <div className="bg-[var(--off-black)] text-white py-32 text-center relative overflow-hidden">
         <div className="absolute inset-0 bg-black/60 z-0">
-          <Image 
+          <Image
             src="https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=1920&q=80"
             alt="Travel Blog"
             fill
@@ -27,10 +27,10 @@ export default async function BlogPage({ params }: { params: Promise<{ locale: s
           />
         </div>
         <div className="relative z-10">
-            <h1 className="text-5xl font-bold mb-4 font-serif">{t('title')}</h1>
-            <p className="text-gray-300 max-w-2xl mx-auto px-4 font-light font-sans tracking-wide">
-              {t('desc')}
-            </p>
+          <h1 className="text-5xl font-bold mb-4 font-serif">{t('title')}</h1>
+          <p className="text-gray-300 max-w-2xl mx-auto px-4 font-light font-sans tracking-wide">
+            {t('desc')}
+          </p>
         </div>
       </div>
 
@@ -46,29 +46,29 @@ export default async function BlogPage({ params }: { params: Promise<{ locale: s
                   className="object-cover group-hover:scale-110 transition-transform duration-700"
                 />
                 <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded text-xs font-bold uppercase tracking-wider text-[var(--off-black)] flex items-center gap-2">
-                    <Calendar className="w-3 h-3 text-[var(--gold)]" />
-                    {post.date}
+                  <Calendar className="w-3 h-3 text-[var(--gold)]" />
+                  {post.date}
                 </div>
               </div>
               <div className="p-8 flex flex-col flex-grow">
                 <h2 className="text-xl font-serif font-bold text-[var(--off-black)] mb-4 group-hover:text-[var(--gold)] transition-colors line-clamp-2">
-                    {post.title}
+                  {post.title}
                 </h2>
                 <p className="text-gray-600 mb-6 font-sans text-sm leading-relaxed line-clamp-3 flex-grow">
                   {post.excerpt}
                 </p>
-                <Link 
-                    href="#" 
-                    className="inline-flex items-center gap-2 text-[var(--gold)] font-bold text-sm uppercase tracking-wider hover:gap-3 transition-all mt-auto"
+                <Link
+                  href="#"
+                  className="inline-flex items-center gap-2 text-[var(--gold)] font-bold text-sm uppercase tracking-wider hover:gap-3 transition-all mt-auto"
                 >
-                    {t('readMore')} <ArrowRight className="w-4 h-4" />
+                  {t('readMore')} <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
             </article>
           ))}
         </div>
       </div>
-      <Footer />
+      <Footer locale={locale} />
     </main>
   );
 }

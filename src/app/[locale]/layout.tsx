@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Outfit, Plus_Jakarta_Sans } from "next/font/google";
 import "../globals.css";
 import { NextIntlClientProvider } from 'next-intl';
-import { getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import WhatsAppButton from "@/components/WhatsAppButton";
 import LiveChat from "@/components/LiveChat";
@@ -37,14 +36,6 @@ export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://solis-hotels.com'),
   alternates: {
     canonical: '/',
-    languages: {
-      'tr': '/tr',
-      'en': '/en',
-      'ru': '/ru',
-      'ar': '/ar',
-      'ro': '/ro',
-      'hu': '/hu',
-    },
   },
   openGraph: {
     type: 'website',
@@ -98,11 +89,11 @@ export default async function RootLayout({
 }) {
   const { locale } = await params;
 
-  if (!['tr', 'en', 'ru', 'ar', 'ro', 'hu'].includes(locale)) {
+  if (!['tr', 'en', 'ru', 'ar', 'hu'].includes(locale)) {
     notFound();
   }
 
-  const messages = await getMessages();
+  const messages = (await import(`../../messages/${locale}.json`)).default;
   const dir = locale === 'ar' ? 'rtl' : 'ltr';
 
   return (

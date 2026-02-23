@@ -6,7 +6,7 @@ import { Search } from "lucide-react";
 
 export default async function ReservationStatusPage({ params }: { params: Promise<{ locale: string }> }) {
     const { locale } = await params;
-    const t = await getTranslations('ReservationStatus');
+    const t = await getTranslations({ locale, namespace: 'ReservationStatus' });
 
     return (
         <main className="min-h-screen flex flex-col bg-[var(--off-white)]">
@@ -32,7 +32,7 @@ export default async function ReservationStatusPage({ params }: { params: Promis
             </section>
 
             <div className="flex-grow"></div>
-            <Footer />
+            <Footer locale={locale} />
         </main>
     );
 }

@@ -8,8 +8,8 @@ import { getTranslations } from 'next-intl/server';
 
 export default async function Home({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
-  const t = await getTranslations('Home');
-  const tNav = await getTranslations('Navbar');
+  const t = await getTranslations({ locale, namespace: 'Home' });
+  const tNav = await getTranslations({ locale, namespace: 'Navbar' });
   const hotels = await getHotels();
 
   // Icons map for features
@@ -76,14 +76,11 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
             <a href={`/${locale}/reservation`} className="inline-block px-10 py-5 bg-[var(--gold)] text-white font-serif text-lg rounded-full hover:bg-white hover:text-[var(--off-black)] transition-all duration-300 shadow-2xl">
               {tNav('book')}
             </a>
-            <a href={`/${locale}/reservation-status`} className="inline-block px-10 py-5 bg-transparent border-2 border-[var(--gold)] text-[var(--gold)] font-serif text-lg rounded-full hover:bg-[var(--gold)] hover:text-white transition-all duration-300">
-              {t('checkStatus') || 'Rezervasyon Sorgula'}
-            </a>
           </div>
         </div>
       </section>
 
-      <Footer />
+      <Footer locale={locale} />
     </main>
   );
 }

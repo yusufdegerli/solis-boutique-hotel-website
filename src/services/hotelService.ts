@@ -3,36 +3,49 @@ import { Hotel, Room } from "@/lib/data";
 
 // --- HOTELS ---
 
+// --- MOCK DATA FOR STATIC OPERATION ---
+const mockHotels: Hotel[] = [
+  {
+    id: "1",
+    name: "Solis Boutique Hotel",
+    slug: "solis-city",
+    tagline: "Şehrin Kalbinde Lüks",
+    description: "Solis Boutique Hotel, İstanbul'un tarihi yarımadasında lüksü ve konforu bir araya getiriyor.",
+    pricePerNight: 120,
+    rating: 9.2,
+    reviews: 128,
+    image: "/images/hotels/solis-city.jpg",
+    location: "Beyazıt, İstanbul",
+    coordinates: { lat: 41.0082, lng: 28.9784 },
+    stats: { totalRooms: 45, availability: 80, suiteCount: 5 },
+    features: ["Ücretsiz Wi-Fi", "Spa", "Tarihi Manzara", "Restoran"],
+    contact: { phone: "+90 533 793 24 72", email: "info@solisboutiquehotel.com", address: "Mimar Kemalettin Mah. Mithatpaşa Cad. No:14/16 Beyazıt, İstanbul" }
+  } as Hotel,
+  {
+    id: "2",
+    name: "Solis Hotel",
+    slug: "solis-belek",
+    tagline: "Yakında Açılıyor...",
+    description: "Solis Hotel, modern mimarisi ve doğayla bütünleşen tasarımıyla çok yakında kapılarını açıyor. İnşaat devam etmekte.",
+    pricePerNight: 200,
+    rating: 0,
+    reviews: 0,
+    image: "/images/hotels/solis-belek.jpg",
+    location: "Belek, Antalya",
+    coordinates: { lat: 36.8624, lng: 31.0556 },
+    stats: { totalRooms: 120, availability: 0, suiteCount: 15 },
+    features: ["Özel Plaj", "Açık Havuz", "Her Şey Dahil", "Kids Club"],
+    contact: { phone: "+90 533 793 24 72", email: "info@solisboutiquehotel.com", address: "Belek, Antalya" },
+    underConstruction: true
+  } as any
+];
+
 export const getHotels = async (): Promise<Hotel[]> => {
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-    console.error('Supabase env variables missing in getHotels');
-  }
-
-  const { data, error } = await supabase
-    .from('Hotel_Information_Table')
-    .select('*')
-    .order('id', { ascending: true });
-
-  if (error) {
-    console.error('Error fetching hotels:', JSON.stringify(error, null, 2));
-    return [];
-  }
-
-  return (data || []).map((hotel: any) => mapDbHotelToModel(hotel));
+  return mockHotels;
 };
 
 export const getHotelBySlug = async (slug: string): Promise<Hotel | undefined> => {
-  const { data, error } = await supabase
-    .from('Hotel_Information_Table')
-    .select('*')
-    .eq('slug', slug)
-    .single();
-
-  if (error || !data) {
-    return undefined;
-  }
-
-  return mapDbHotelToModel(data);
+  return mockHotels.find(h => h.slug === slug);
 };
 
 export const createHotel = async (hotel: Partial<Hotel>) => {
@@ -103,18 +116,20 @@ export const uploadImage = async (file: File): Promise<string> => {
 
 // --- ROOMS ---
 
-export const getRooms = async (): Promise<Room[]> => {
-  const { data, error } = await supabase
-    .from('Rooms_Information')
-    .select('*')
-    .order('id', { ascending: true });
-
-  if (error) {
-    console.error('Error fetching rooms:', JSON.stringify(error, null, 2));
-    return [];
+const mockRooms: Room[] = [
+  {
+    id: "1", hotelId: "1", name: "Standart Oda", description: "Minimalist tasarıma sahip modern ve konforlu standart odalarımız.", size: "25m²", capacity: "2 Yetişkin", price: 120, quantity: 15, image: "/images/rooms/standard.jpg", images: ["/images/rooms/standard.jpg"], amenities: ["Wi-Fi", "Minibar", "Klima"]
+  },
+  {
+    id: "2", hotelId: "1", name: "Deluxe Oda", description: "Ekstra alan ve daha fazla konfor sunan lüks deluxe odalarımız.", size: "35m²", capacity: "3 Yetişkin", price: 180, quantity: 10, image: "/images/rooms/deluxe.jpg", images: ["/images/rooms/deluxe.jpg"], amenities: ["Wi-Fi", "Deniz Manzarası", "Klima"]
+  },
+  {
+    id: "3", hotelId: "2", name: "Suit Oda", description: "Balkonlu ve ayrı oturma alanına sahip özel suitler.", size: "55m²", capacity: "4 Yetişkin", price: 300, quantity: 5, image: "/images/rooms/suite.jpg", images: ["/images/rooms/suite.jpg"], amenities: ["Wi-Fi", "Özel Teras", "Jakuzi", "Klima"]
   }
+];
 
-  return (data || []).map((room: any) => mapDbRoomToModel(room));
+export const getRooms = async (): Promise<Room[]> => {
+  return mockRooms;
 };
 
 export const createRoom = async (room: Partial<Room>) => {
@@ -321,7 +336,7 @@ export const updateBookingStatus = async (id: string, status: string, details?: 
   const result = await updateBookingStatusServer(id, status, details);
 
   if (!result.success) {
-    throw new Error(result.error || 'Rezervasyon güncellenemedi');
+    throw new Error((result as any).error || 'Rezervasyon güncellenemedi');
   }
 
   return result.data;

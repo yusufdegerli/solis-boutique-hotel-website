@@ -24,7 +24,7 @@ export async function startChatSession(name?: string) {
         .insert({ customer_name: name || 'Ziyaretçi' })
         .select()
         .single();
-    
+
     if (error) throw error;
     return data;
 }
@@ -65,7 +65,7 @@ export async function getMessages(sessionId: string) {
         .select('*')
         .eq('session_id', sessionId)
         .order('created_at', { ascending: true });
-    
+
     if (error) throw error;
     return data as ChatMessage[];
 }
@@ -101,14 +101,14 @@ export async function getActiveSessions() {
 
     // Fetch unread counts for each session
     // Note: This could be optimized with a stored procedure or view, but for small scale this is fine.
-    const sessionsWithUnread = await Promise.all(sessions.map(async (s) => {
+    const sessionsWithUnread = await Promise.all(sessions.map(async (s: any) => {
         const { count } = await supabase
             .from('Chat_Messages')
             .select('*', { count: 'exact', head: true })
             .eq('session_id', s.id)
             .eq('sender', 'user')
             .eq('is_read', false);
-        
+
         return { ...s, unread_count: count || 0 };
     }));
 

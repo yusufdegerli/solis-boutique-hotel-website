@@ -6,10 +6,10 @@ import { getTranslations } from "next-intl/server";
 
 export const dynamic = "force-dynamic";
 
-export default async function ReservationPage({ 
-  searchParams, 
-  params 
-}: { 
+export default async function ReservationPage({
+  searchParams,
+  params
+}: {
   searchParams: Promise<{ hotel?: string }>,
   params: Promise<{ locale: string }>
 }) {
@@ -17,9 +17,9 @@ export default async function ReservationPage({
   const { locale } = await params;
   const hotelId = resolvedSearchParams.hotel;
   const [hotels, rooms, t] = await Promise.all([
-    getHotels(), 
+    getHotels(),
     getRooms(),
-    getTranslations("Reservation")
+    getTranslations({ locale, namespace: 'Reservation' })
   ]);
 
   return (
@@ -30,10 +30,10 @@ export default async function ReservationPage({
           <h1 className="text-4xl font-bold text-[var(--off-black)] mb-2 font-serif">{t('title')}</h1>
           <p className="text-gray-600">{t('subtitle')}</p>
         </div>
-        
+
         <ReservationForm preSelectedHotelId={hotelId} hotels={hotels} allRooms={rooms} />
       </div>
-      <Footer />
+      <Footer locale={locale} />
     </main>
   );
 }

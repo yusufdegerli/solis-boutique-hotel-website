@@ -117,8 +117,10 @@
   "Reservation": {
     "title": "Rezervasyonunuzu Tamamlayın",
     "subtitle": "Solis ayrıcalıklarıyla dolu bir tatil sizi bekliyor.",
-    "successTitle": "Rezervasyon Talebi Alındı!",
-    "successMessage": "Talebiniz başarıyla bize ulaştı. Müşteri temsilcimiz en kısa sürede sizinle iletişime geçecektir.",
+    "successTitle": "Rezervasyon Bekleme Listesinde",
+    "successMessage": "Talebiniz alınmıştır. Rezervasyon işlemlerinizi tamamlamak için en kısa sürede sizinle iletişime geçeceğiz.",
+    "contactUs": "Dilerseniz bize aşağıdaki kanallardan hemen ulaşabilirsiniz:",
+    "phone": "Telefon",
     "newBooking": "Yeni Rezervasyon Yap",
     "detailsTitle": "Rezervasyon Detayları",
     "nameLabel": "Ad Soyad",

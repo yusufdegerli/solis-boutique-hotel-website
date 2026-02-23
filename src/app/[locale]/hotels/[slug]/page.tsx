@@ -30,7 +30,7 @@ export default async function HotelDetail({ params }: { params: Promise<{ slug: 
   return (
     <main className="min-h-screen bg-[var(--off-white)]">
       <Navbar locale={locale} />
-      
+
       {/* Hero Header */}
       <div className="relative h-[70vh] w-full">
         <Image
@@ -52,7 +52,7 @@ export default async function HotelDetail({ params }: { params: Promise<{ slug: 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-24 relative z-10 pb-24">
         <div className="bg-white rounded-xl shadow-2xl overflow-hidden border border-gray-100">
           <div className="grid grid-cols-1 lg:grid-cols-3">
-            
+
             {/* Main Content */}
             <div className="lg:col-span-2 p-8 md:p-12">
               <div className="flex items-center gap-2 text-[var(--gold)] mb-8">
@@ -63,22 +63,22 @@ export default async function HotelDetail({ params }: { params: Promise<{ slug: 
               {/* Stats Bar */}
               <div className="grid grid-cols-3 gap-4 mb-10 border-y border-gray-100 py-6">
                 <div className="text-center border-r border-gray-100">
-                    <BedDouble className="w-6 h-6 text-[var(--gold)] mx-auto mb-2" />
-                    <span className="block text-2xl font-bold text-[var(--off-black)] font-serif">{hotel.stats.totalRooms}</span>
-                    <span className="text-xs text-gray-500 uppercase tracking-wider">Oda Sayısı</span>
+                  <BedDouble className="w-6 h-6 text-[var(--gold)] mx-auto mb-2" />
+                  <span className="block text-2xl font-bold text-[var(--off-black)] font-serif">{hotel.stats.totalRooms}</span>
+                  <span className="text-xs text-gray-500 uppercase tracking-wider">Oda Sayısı</span>
                 </div>
                 <div className="text-center border-r border-gray-100">
-                    <PieChart className="w-6 h-6 text-[var(--gold)] mx-auto mb-2" />
-                    <span className="block text-2xl font-bold text-[var(--off-black)] font-serif">%{hotel.stats.availability}</span>
-                    <span className="text-xs text-gray-500 uppercase tracking-wider">Müsaitlik</span>
+                  <PieChart className="w-6 h-6 text-[var(--gold)] mx-auto mb-2" />
+                  <span className="block text-2xl font-bold text-[var(--off-black)] font-serif">%{hotel.stats.availability}</span>
+                  <span className="text-xs text-gray-500 uppercase tracking-wider">Müsaitlik</span>
                 </div>
-                 <div className="text-center">
-                    <Star className="w-6 h-6 text-[var(--gold)] mx-auto mb-2" />
-                    <span className="block text-2xl font-bold text-[var(--off-black)] font-serif">{hotel.rating}</span>
-                    <span className="text-xs text-gray-500 uppercase tracking-wider">Puan</span>
+                <div className="text-center">
+                  <Star className="w-6 h-6 text-[var(--gold)] mx-auto mb-2" />
+                  <span className="block text-2xl font-bold text-[var(--off-black)] font-serif">{hotel.rating}</span>
+                  <span className="text-xs text-gray-500 uppercase tracking-wider">Puan</span>
                 </div>
               </div>
-              
+
               <h2 className="text-3xl font-bold mb-6 text-[var(--off-black)] font-serif">Otel Hakkında</h2>
               <p className="text-gray-600 leading-relaxed mb-10 text-lg font-sans">
                 {hotel.description}
@@ -97,45 +97,45 @@ export default async function HotelDetail({ params }: { params: Promise<{ slug: 
               {/* Map Section */}
               <div className="mb-12">
                 <h3 className="text-2xl font-bold mb-6 text-[var(--off-black)] font-serif flex items-center gap-2">
-                    <Map className="w-6 h-6 text-[var(--gold)]" /> Lokasyon
+                  <Map className="w-6 h-6 text-[var(--gold)]" /> Lokasyon
                 </h3>
                 <div className="w-full h-[400px] rounded-xl overflow-hidden shadow-md border border-gray-200 bg-gray-100 relative">
-                     <iframe 
-                        width="100%" 
-                        height="100%" 
-                        frameBorder="0" 
-                        scrolling="no" 
-                        marginHeight={0} 
-                        marginWidth={0} 
-                        src={`https://maps.google.com/maps?q=${hotel.coordinates.lat},${hotel.coordinates.lng}&hl=tr&z=14&amp;output=embed`}
-                        className="filter grayscale hover:grayscale-0 transition-all duration-500"
-                     >
-                     </iframe>
+                  <iframe
+                    width="100%"
+                    height="100%"
+                    frameBorder="0"
+                    scrolling="no"
+                    marginHeight={0}
+                    marginWidth={0}
+                    src={`https://maps.google.com/maps?q=${hotel.coordinates.lat},${hotel.coordinates.lng}&hl=tr&z=14&amp;output=embed`}
+                    className="filter grayscale hover:grayscale-0 transition-all duration-500"
+                  >
+                  </iframe>
                 </div>
                 <p className="mt-4 text-sm text-gray-500 flex items-center gap-2">
-                    <Info className="w-4 h-4" /> 
-                    Tam konum bilgisi Google Haritalar üzerinden sağlanmaktadır.
+                  <Info className="w-4 h-4" />
+                  Tam konum bilgisi Google Haritalar üzerinden sağlanmaktadır.
                 </p>
               </div>
-              
-               {/* Contact Info */}
-               <div className="border-t border-gray-100 pt-8">
+
+              {/* Contact Info */}
+              <div className="border-t border-gray-100 pt-8">
                 <h3 className="text-2xl font-bold mb-6 text-[var(--off-black)] font-serif">İletişim Bilgileri</h3>
                 <div className="space-y-4">
-                    <div className="flex items-center gap-4 text-gray-600 bg-gray-50 p-4 rounded-lg">
-                        <Phone className="w-5 h-5 text-[var(--gold)]" />
-                        <span className="font-sans">{hotel.contact.phone}</span>
-                    </div>
-                    <div className="flex items-center gap-4 text-gray-600 bg-gray-50 p-4 rounded-lg">
-                        <Mail className="w-5 h-5 text-[var(--gold)]" />
-                        <span className="font-sans">{hotel.contact.email}</span>
-                    </div>
-                    <div className="flex items-center gap-4 text-gray-600 bg-gray-50 p-4 rounded-lg">
-                        <Map className="w-5 h-5 text-[var(--gold)]" />
-                        <span className="font-sans">{hotel.contact.address}</span>
-                    </div>
+                  <div className="flex items-center gap-4 text-gray-600 bg-gray-50 p-4 rounded-lg">
+                    <Phone className="w-5 h-5 text-[var(--gold)]" />
+                    <span className="font-sans">{hotel.contact.phone}</span>
+                  </div>
+                  <div className="flex items-center gap-4 text-gray-600 bg-gray-50 p-4 rounded-lg">
+                    <Mail className="w-5 h-5 text-[var(--gold)]" />
+                    <span className="font-sans">{hotel.contact.email}</span>
+                  </div>
+                  <div className="flex items-center gap-4 text-gray-600 bg-gray-50 p-4 rounded-lg">
+                    <Map className="w-5 h-5 text-[var(--gold)]" />
+                    <span className="font-sans">{hotel.contact.address}</span>
+                  </div>
                 </div>
-               </div>
+              </div>
             </div>
 
             {/* Sidebar / Booking Card */}
@@ -149,8 +149,8 @@ export default async function HotelDetail({ params }: { params: Promise<{ slug: 
                     </div>
                   </div>
 
-                  <Link 
-                    href={`/${locale}/reservation?hotel=${hotel.id}`} 
+                  <Link
+                    href={`/${locale}/reservation?hotel=${hotel.id}`}
                     className="block w-full py-5 bg-[var(--gold)] text-white text-center font-bold text-lg rounded-sm hover:bg-[var(--off-black)] transition-all shadow-xl hover:shadow-2xl transform hover:-translate-y-1 duration-200 font-serif uppercase tracking-widest"
                   >
                     Hemen Rezervasyon Yap
@@ -161,11 +161,11 @@ export default async function HotelDetail({ params }: { params: Promise<{ slug: 
                 </div>
 
                 <div className="bg-[var(--off-black)] text-white p-8 rounded-xl shadow-lg">
-                    <h4 className="font-serif font-bold text-xl mb-4 text-[var(--gold)]">Özel Fırsat</h4>
-                    <p className="text-gray-300 text-sm font-sans mb-6">
-                        Bu otele yapacağınız 5 gece ve üzeri rezervasyonlarda ücretsiz havaalanı transferi ve Spa indirimi kazanın.
-                    </p>
-                    <Link href={`/${locale}/services`} className="text-white underline text-sm font-sans hover:text-[var(--gold)]">Detayları İncele</Link>
+                  <h4 className="font-serif font-bold text-xl mb-4 text-[var(--gold)]">Özel Fırsat</h4>
+                  <p className="text-gray-300 text-sm font-sans mb-6">
+                    Bu otele yapacağınız 5 gece ve üzeri rezervasyonlarda ücretsiz havaalanı transferi ve Spa indirimi kazanın.
+                  </p>
+                  <Link href={`/${locale}/services`} className="text-white underline text-sm font-sans hover:text-[var(--gold)]">Detayları İncele</Link>
                 </div>
               </div>
             </div>
@@ -173,7 +173,7 @@ export default async function HotelDetail({ params }: { params: Promise<{ slug: 
           </div>
         </div>
       </div>
-      <Footer />
+      <Footer locale={locale} />
     </main>
   );
 }

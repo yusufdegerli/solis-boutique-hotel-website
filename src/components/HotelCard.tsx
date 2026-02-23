@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Star, MapPin, ArrowRight, Wifi, Coffee, Waves } from "lucide-react";
+import { Star, MapPin, ArrowRight, Wifi, Coffee, Waves, HardHat } from "lucide-react";
 import { Hotel } from "@/lib/data";
 import { useState } from "react";
 
@@ -10,15 +10,15 @@ import { useState } from "react";
 const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80";
 
 interface HotelCardProps {
-  hotel: Hotel;
-  locale?: string; // Add locale prop
+  hotel: Hotel & { underConstruction?: boolean };
+  locale?: string;
 }
 
 export default function HotelCard({ hotel, locale = 'tr' }: HotelCardProps) {
   const [imgSrc, setImgSrc] = useState(hotel.image);
   const [imgError, setImgError] = useState(false);
+  const isUnderConstruction = (hotel as any).underConstruction === true;
 
-  // Select a few icons based on features (simple logic for demo)
   const getFeatureIcon = (feature: string) => {
     if (feature.toLowerCase().includes("wi-fi")) return <Wifi className="w-3 h-3" />;
     if (feature.toLowerCase().includes("havuz")) return <Waves className="w-3 h-3" />;
@@ -39,7 +39,7 @@ export default function HotelCard({ hotel, locale = 'tr' }: HotelCardProps) {
           src={imgSrc}
           alt={hotel.name}
           fill
-          className="object-cover group-hover:scale-110 transition-transform duration-1000"
+          className={`object-cover transition-transform duration-1000 ${isUnderConstruction ? 'grayscale group-hover:grayscale' : 'group-hover:scale-110'}`}
           placeholder="blur"
           blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFgABAQEAAAAAAAAAAAAAAAAAAAUH/8QAIhAAAgEDBAMBAAAAAAAAAAAAAQIDAAQRBRIhMQZBURP/xAAVAQEBAAAAAAAAAAAAAAAAAAADBP/EABcRAQEBAQAAAAAAAAAAAAAAAAEAESH/2gAMAwEAAhEDEEA/AJdx5XqNzNBLBbwRNbzLKrF2O7aeM8dHnFLKUoKlIF//2Q=="
           onError={handleImageError}
@@ -48,10 +48,24 @@ export default function HotelCard({ hotel, locale = 'tr' }: HotelCardProps) {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
 
-        <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-sm flex items-center gap-1 shadow-sm border border-gray-100">
-          <Star className="w-3.5 h-3.5 text-[var(--gold)] fill-[var(--gold)]" />
-          <span className="font-bold text-sm text-gray-800 font-serif">{hotel.rating}</span>
-        </div>
+        {/* Under Construction Overlay */}
+        {isUnderConstruction && (
+          <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center gap-3">
+            <div className="bg-yellow-400 text-black px-4 py-2 rounded-sm flex items-center gap-2 font-bold text-sm uppercase tracking-widest shadow-lg">
+              <HardHat className="w-5 h-5" />
+              İnşaat Devam Ediyor
+            </div>
+            <p className="text-white/80 text-xs font-sans">Çok Yakında Açılıyor</p>
+          </div>
+        )}
+
+        {/* Rating badge — hide for under-construction */}
+        {!isUnderConstruction && (
+          <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-sm flex items-center gap-1 shadow-sm border border-gray-100">
+            <Star className="w-3.5 h-3.5 text-[var(--gold)] fill-[var(--gold)]" />
+            <span className="font-bold text-sm text-gray-800 font-serif">{hotel.rating}</span>
+          </div>
+        )}
 
         <div className="absolute bottom-6 left-6 text-white">
           <div className="flex items-center gap-1.5 text-[var(--gold)] mb-2">
@@ -80,18 +94,32 @@ export default function HotelCard({ hotel, locale = 'tr' }: HotelCardProps) {
 
         <div className="flex items-end justify-between mt-auto">
           <div>
-            <span className="block text-xs text-gray-400 uppercase tracking-wider mb-1 font-sans">Başlangıç</span>
-            <div className="text-2xl font-serif font-bold text-[var(--off-black)]">
-              €{hotel.pricePerNight.toLocaleString('en-US')}
-            </div>
+            {isUnderConstruction ? (
+              <span className="block text-xs text-yellow-600 font-bold uppercase tracking-wider bg-yellow-50 px-3 py-1 rounded-sm border border-yellow-200">
+                Yakında Açılıyor
+              </span>
+            ) : (
+              <>
+                <span className="block text-xs text-gray-400 uppercase tracking-wider mb-1 font-sans">Başlangıç</span>
+                <div className="text-2xl font-serif font-bold text-[var(--off-black)]">
+                  €{hotel.pricePerNight.toLocaleString('en-US')}
+                </div>
+              </>
+            )}
           </div>
 
-          <Link
-            href={`/${locale}/hotels/${hotel.slug}`} // Corrected Link structure
-            className="flex items-center justify-center w-12 h-12 rounded-full border border-[var(--gold)] text-[var(--gold)] hover:bg-[var(--gold)] hover:text-white transition-all duration-300 shadow-sm group-hover:scale-110"
-          >
-            <ArrowRight className="w-5 h-5 rtl:rotate-180" />
-          </Link>
+          {isUnderConstruction ? (
+            <div className="flex items-center justify-center w-12 h-12 rounded-full border border-gray-200 text-gray-300 cursor-not-allowed opacity-40">
+              <ArrowRight className="w-5 h-5" />
+            </div>
+          ) : (
+            <Link
+              href={`/${locale}/hotels/${hotel.slug}`}
+              className="flex items-center justify-center w-12 h-12 rounded-full border border-[var(--gold)] text-[var(--gold)] hover:bg-[var(--gold)] hover:text-white transition-all duration-300 shadow-sm group-hover:scale-110"
+            >
+              <ArrowRight className="w-5 h-5 rtl:rotate-180" />
+            </Link>
+          )}
         </div>
       </div>
     </div>

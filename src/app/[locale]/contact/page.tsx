@@ -7,20 +7,20 @@ import { Toaster } from 'react-hot-toast';
 
 export default async function ContactPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
-  const t = await getTranslations('Contact');
+  const t = await getTranslations({ locale, namespace: 'Contact' });
 
   return (
     <main className="min-h-screen bg-white flex flex-col">
       <Navbar locale={locale} />
       <Toaster position="bottom-right" />
-      
+
       <div className="bg-[var(--off-black)] text-white py-32 text-center relative overflow-hidden">
         <div className="absolute inset-0 bg-black/40 z-0"></div>
         <div className="relative z-10">
-            <h1 className="text-5xl font-bold mb-4 font-serif">{t('title')}</h1>
-            <p className="text-gray-300 max-w-2xl mx-auto px-4 font-light font-sans">
-              {t('desc')}
-            </p>
+          <h1 className="text-5xl font-bold mb-4 font-serif">{t('title')}</h1>
+          <p className="text-gray-300 max-w-2xl mx-auto px-4 font-light font-sans">
+            {t('desc')}
+          </p>
         </div>
       </div>
 
@@ -74,7 +74,7 @@ export default async function ContactPage({ params }: { params: Promise<{ locale
           }} />
         </div>
       </div>
-      <Footer />
+      <Footer locale={locale} />
     </main>
   );
 }
