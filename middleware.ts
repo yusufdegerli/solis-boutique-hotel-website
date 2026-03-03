@@ -15,10 +15,20 @@ export default async function middleware(request: NextRequest) {
   }
 
   // Redirect /admin and /login without locale prefix to /tr/...
-  if (path === '/admin' || path === '/login' || path.startsWith('/admin/')) {
+  if (path === '/login') {
     const url = new URL(`/tr${path}`, request.url);
     return NextResponse.redirect(url);
   }
+
+  // =====================================================================
+  // ADMIN PANELİ GEÇİCİ OLARAK ASKIYA ALINDI
+  // Tekrar aktif etmek için bu bloğu silin veya yorum satırına alın.
+  // =====================================================================
+  if (path === '/admin' || path.startsWith('/admin/') ||
+    /^\/[a-z]{2}\/admin(\/|$)/.test(path)) {
+    return new NextResponse(null, { status: 404 });
+  }
+  // =====================================================================
 
   // Run next-intl middleware
   return intlMiddleware(request);

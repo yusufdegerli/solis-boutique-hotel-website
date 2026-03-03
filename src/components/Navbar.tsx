@@ -58,7 +58,8 @@ export default function Navbar({ locale }: { locale: string }) {
               <div className="absolute left-0 mt-0 w-56 bg-white rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform group-hover:translate-y-0 translate-y-2 border-t-2 border-[var(--gold)] overflow-hidden">
                 <div className="py-2">
                   <Link href={`/${locale}/rooms`} className="block px-6 py-3 text-sm text-gray-700 hover:bg-gray-50 hover:text-[var(--gold)] font-serif border-b border-gray-100">{t('roomsSuites')}</Link>
-                  <Link href={`/${locale}/services`} className="block px-6 py-3 text-sm text-gray-700 hover:bg-gray-50 hover:text-[var(--gold)] font-serif border-b border-gray-100">{t('servicesTransfer')}</Link>
+                  {/* HİZMETLER LİNKİ GEÇİCİ OLARAK GİZLENDİ - Tekrar aktif etmek için yorum satırını kaldırın: */}
+                  {/* <Link href={`/${locale}/services`} className="block px-6 py-3 text-sm text-gray-700 hover:bg-gray-50 hover:text-[var(--gold)] font-serif border-b border-gray-100">{t('servicesTransfer')}</Link> */}
                   <Link href={`/${locale}/pages/istanbul-history`} className="block px-6 py-3 text-sm text-gray-700 hover:bg-gray-50 hover:text-[var(--gold)] font-serif border-b border-gray-100">{t('istanbulHistory')}</Link>
                   <Link href={`/${locale}/blog`} className="block px-6 py-3 text-sm text-gray-700 hover:bg-gray-50 hover:text-[var(--gold)] font-serif">{t('blog')}</Link>
                 </div>
@@ -109,7 +110,8 @@ export default function Navbar({ locale }: { locale: string }) {
         <div className="md:hidden bg-black/95 backdrop-blur-xl border-t border-white/10 p-6 space-y-6 h-screen">
           <Link href={`/${locale}`} className="block text-white font-serif text-lg">{t('home')}</Link>
           <Link href={`/${locale}/rooms`} className="block text-white font-serif text-lg">{t('roomsSuites')}</Link>
-          <Link href={`/${locale}/services`} className="block text-white font-serif text-lg">{t('servicesTransfer')}</Link>
+          {/* HİZMETLER LİNKİ GEÇİCİ OLARAK GİZLENDİ - Tekrar aktif etmek için yorum satırını kaldırın: */}
+          {/* <Link href={`/${locale}/services`} className="block text-white font-serif text-lg">{t('servicesTransfer')}</Link> */}
           <Link href={`/${locale}/#hotels`} className="block text-white font-serif text-lg">{t('hotels')}</Link>
           <Link href={`/${locale}/contact`} className="block text-white font-serif text-lg">{t('contact')}</Link>
           {/* Mobile language switcher */}

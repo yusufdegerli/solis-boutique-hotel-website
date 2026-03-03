@@ -31,11 +31,11 @@ const mockHotels: Hotel[] = [
     rating: 0,
     reviews: 0,
     image: "/images/hotels/solis-belek.jpg",
-    location: "Belek, Antalya",
+    location: "Beyazıt, İstanbul",
     coordinates: { lat: 36.8624, lng: 31.0556 },
     stats: { totalRooms: 120, availability: 0, suiteCount: 15 },
     features: ["Özel Plaj", "Açık Havuz", "Her Şey Dahil", "Kids Club"],
-    contact: { phone: "+90 533 793 24 72", email: "info@solisboutiquehotel.com", address: "Belek, Antalya" },
+    contact: { phone: "+90 533 793 24 72", email: "info@solisboutiquehotel.com", address: "Beyazıt, İstanbul" },
     underConstruction: true
   } as any
 ];
