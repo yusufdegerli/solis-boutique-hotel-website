@@ -1,0 +1,37 @@
+{
+  "Standart Oda": {
+    "tr": "Standart odamız, modern tasarımı ve konforlu yatağıyla size rahat bir konaklama sunar.",
+    "en": "Our standard room offers a comfortable stay with its modern design and cozy bed.",
+    "ru": "Наш стандартный номер предлагает комфортное пребывание с современным дизайном и уютной кроватью.",
+    "ar": "توفر غرفتنا القياسية إقامة مريحة بتصميمها الحديث وسريرها المريح.",
+    "hu": "Standard szobánk kényelmes tartózkodást kínál modern dizájnjával és hangulatos ágyával."
+  },
+  "Superior Oda": {
+    "tr": "Geniş yaşam alanı ve lüks detaylarla donatılmış superior odamızda ayrıcalığı hissedin.",
+    "en": "Feel the privilege in our superior room equipped with a spacious living area and luxury details.",
+    "ru": "Почувствуйте привилегию в нашем улучшенном номере, оборудованном просторной гостиной и роскошными деталями.",
+    "ar": "اشعر بالامتياز في غرفتنا السوبيريور المجهزة بمنطقة معيشة واسعة وتفاصيل فاخرة.",
+    "hu": "Érezze a kiváltságot a tágas nappalival és luxus részletekkel felszerelt superior szobánkban."
+  },
+  "Süit Oda": {
+    "tr": "Eşsiz manzarası ve ayrı oturma alanıyla süit odamız, lüksü doruklarda yaşatır.",
+    "en": "With its unique view and separate seating area, our suite room makes you experience luxury at its peak.",
+    "ru": "С уникальным видом и отдельной зоной отдыха наш люкс позволит вам ощутить настоящую роскошь.",
+    "ar": "بإطلالتها الفريدة ومنطقة جلوس منفصلة، تجعلك غرفتنا الجناح تعيش الرفاهية في أوجها.",
+    "hu": "Egyedi kilátásával és külön ülősarokkal rendelkező lakosztályunkban a luxus csúcsát élheti át."
+  },
+  "Aile Odası": {
+    "tr": "Ailenizle birlikte konforlu bir tatil geçirmeniz için özel olarak tasarlanmış geniş odamız.",
+    "en": "Our spacious room specially designed for you to have a comfortable holiday with your family.",
+    "ru": "Наш просторный номер, специально созданный для комфортного отдыха с семьей.",
+    "ar": "غرفتنا الواسعة المصممة خصيصًا لك لقضاء عطلة مريحة مع عائلتك.",
+    "hu": "Tágas szobánk, melyet kifejezetten arra terveztünk, hogy kényelmes családi nyaralásban legyen része."
+  },
+  "Kral Dairesi": {
+    "tr": "VIP misafirlerimiz için en üst düzeyde konfor, güvenlik ve lüks sunan özel dairemiz.",
+    "en": "Our private suite offering the highest level of comfort, security, and luxury for our VIP guests.",
+    "ru": "Наш частный люкс, предлагающий высочайший уровень комфорта, безопасности и роскоши для VIP-гостей.",
+    "ar": "جناحنا الخاص الذي يقدم أعلى مستوى من الراحة والأمان والرفاهية لضيوفنا من كبار الشخصيات.",
+    "hu": "Privát lakosztályunk, amely a legmagasabb szintű kényelmet, biztonságot és luxust kínálja VIP vendégeink számára."
+  }
+}

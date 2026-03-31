@@ -1,5 +1,10 @@
 import { supabase } from "@/lib/supabaseClient";
+import roomDescriptions from '@/data/roomDescriptions.json';
 import { Hotel, Room } from "@/lib/data";
+import { 
+  createHotelServer, updateHotelServer, deleteHotelServer,
+  createRoomServer, updateRoomServer, deleteRoomServer
+} from "@/actions/adminServerActions";
 
 // --- HOTELS ---
 
@@ -41,7 +46,34 @@ const mockHotels: Hotel[] = [
 ];
 
 export const getHotels = async (): Promise<Hotel[]> => {
-  return mockHotels;
+  try {
+    const { data, error } = await supabase.from('Hotel_Information_Table').select('*');
+    if (error) {
+      console.error("Error fetching hotels from DB:", error);
+      return [];
+    }
+    if (!data || data.length === 0) return [];
+    
+    return data.map((db: any) => ({
+      id: db.id.toString(),
+      name: db.name,
+      slug: db.slug,
+      tagline: db.name,
+      description: db.description || "",
+      image: db.image_url || "",
+      location: db.address || "",
+      pricePerNight: 0,
+      rating: 0,
+      reviews: 0,
+      coordinates: { lat: 0, lng: 0 },
+      stats: { totalRooms: 0, availability: 0, suiteCount: 0 },
+      features: [],
+      contact: { phone: "", email: "", address: "" }
+    } as unknown as Hotel));
+  } catch (err) {
+    console.error("Exception fetching hotels:", err);
+    return [];
+  }
 };
 
 export const getHotelBySlug = async (slug: string): Promise<Hotel | undefined> => {
@@ -58,12 +90,7 @@ export const createHotel = async (hotel: Partial<Hotel>) => {
     // Add other fields if DB supports them
   };
 
-  const { data, error } = await supabase
-    .from('Hotel_Information_Table')
-    .insert([dbHotel])
-    .select();
-
-  if (error) throw error;
+  const data = await createHotelServer(dbHotel);
   return data;
 };
 
@@ -75,23 +102,12 @@ export const updateHotel = async (id: string, hotel: Partial<Hotel>) => {
   if (hotel.location) dbHotel.address = hotel.location;
   if (hotel.slug) dbHotel.slug = hotel.slug;
 
-  const { data, error } = await supabase
-    .from('Hotel_Information_Table')
-    .update(dbHotel)
-    .eq('id', id)
-    .select();
-
-  if (error) throw error;
+  const data = await updateHotelServer(id, dbHotel);
   return data;
 };
 
 export const deleteHotel = async (id: string) => {
-  const { error } = await supabase
-    .from('Hotel_Information_Table')
-    .delete()
-    .eq('id', id);
-
-  if (error) throw error;
+  await deleteHotelServer(id);
 };
 
 // --- STORAGE ---
@@ -129,7 +145,20 @@ const mockRooms: Room[] = [
 ];
 
 export const getRooms = async (): Promise<Room[]> => {
-  return mockRooms;
+  try {
+    const { data, error } = await supabase.from('Rooms_Information').select('*');
+    if (error) {
+      console.error("Error fetching rooms from DB:", error);
+      return mockRooms;
+    }
+    if (!data || data.length === 0) {
+      return mockRooms;
+    }
+    return data.map(mapDbRoomToModel);
+  } catch (err) {
+    console.error("Exception fetching rooms:", err);
+    return mockRooms;
+  }
 };
 
 export const createRoom = async (room: Partial<Room>) => {
@@ -137,7 +166,7 @@ export const createRoom = async (room: Partial<Room>) => {
   if ((room.quantity ?? 0) < 0) throw new Error("Stok adedi negatif olamaz.");
 
   const dbRoom = {
-    hotel_id: room.hotelId ? parseInt(room.hotelId) : null,
+    hotel_id: room.hotelId || null,
     type_name: room.name,
     description: room.description,
     base_price: room.price,
@@ -147,15 +176,7 @@ export const createRoom = async (room: Partial<Room>) => {
     amenities: room.amenities // Save amenities
   };
 
-  const { data, error } = await supabase
-    .from('Rooms_Information')
-    .insert([dbRoom])
-    .select();
-
-  if (error) {
-    console.error('Create Room Error:', JSON.stringify(error, null, 2));
-    throw error;
-  }
+  const data = await createRoomServer(dbRoom);
   return data;
 };
 
@@ -164,7 +185,7 @@ export const updateRoom = async (id: string, room: Partial<Room>) => {
   if (room.quantity !== undefined && room.quantity < 0) throw new Error("Stok adedi negatif olamaz.");
 
   const dbRoom: any = {};
-  if (room.hotelId) dbRoom.hotel_id = parseInt(room.hotelId);
+  if (room.hotelId) dbRoom.hotel_id = room.hotelId;
   if (room.name) dbRoom.type_name = room.name;
   if (room.description) dbRoom.description = room.description;
   if (room.price) dbRoom.base_price = room.price;
@@ -173,26 +194,12 @@ export const updateRoom = async (id: string, room: Partial<Room>) => {
   if (room.images) dbRoom.images = room.images;
   if (room.amenities) dbRoom.amenities = room.amenities;
 
-  const { data, error } = await supabase
-    .from('Rooms_Information')
-    .update(dbRoom)
-    .eq('id', id)
-    .select();
-
-  if (error) {
-    console.error('Update Room Error:', JSON.stringify(error, null, 2));
-    throw error;
-  }
+  const data = await updateRoomServer(id, dbRoom);
   return data;
 };
 
 export const deleteRoom = async (id: string) => {
-  const { error } = await supabase
-    .from('Rooms_Information')
-    .delete()
-    .eq('id', id);
-
-  if (error) throw error;
+  await deleteRoomServer(id);
 };
 
 // --- HELPERS ---
@@ -237,7 +244,7 @@ function mapDbRoomToModel(room: any): Room {
     id: room.id.toString(),
     hotelId: room.hotel_id?.toString(), // Map DB hotel_id to model
     name: room.type_name,
-    description: room.description || "Konforlu ve ferah bir oda.",
+    description: (roomDescriptions as any)[room.type_name] ? JSON.stringify((roomDescriptions as any)[room.type_name]) : room.description || "Konforlu ve ferah bir oda.",
     size: room.size || "35m²",
     capacity: `${room.capacity || 2} Yetişkin`,
     price: room.base_price || 0,
