@@ -4,6 +4,8 @@
 /.pnp
 .pnp.js
 
+/photos
+
 # testing
 /coverage
 
@@ -36,4 +38,4 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
-next-env.d.ts
+next-env.d.ts/photos
