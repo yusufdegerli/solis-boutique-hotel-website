@@ -114,7 +114,7 @@ export default function HotelCard({ hotel, locale = 'tr' }: HotelCardProps) {
             </div>
           ) : (
             <Link
-              href={`/${locale}/hotels/${hotel.slug}`}
+              href={`/${locale}/rooms`}
               className="flex items-center justify-center w-12 h-12 rounded-full border border-[var(--gold)] text-[var(--gold)] hover:bg-[var(--gold)] hover:text-white transition-all duration-300 shadow-sm group-hover:scale-110"
             >
               <ArrowRight className="w-5 h-5 rtl:rotate-180" />

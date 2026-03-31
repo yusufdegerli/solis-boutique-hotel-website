@@ -29,10 +29,7 @@ export default function Hero({ locale }: { locale: string }) {
           Solis Hotels & Resorts
         </span>
         
-        <h1 className="text-5xl sm:text-7xl md:text-9xl font-bold text-white tracking-tighter drop-shadow-2xl leading-none font-serif">
-          {t('subtitle')} <br />
-          <span className="text-[var(--gold)] italic pr-2 font-serif">{t('subtitleHighlight')}</span>
-        </h1>
+
         
         <p className="text-lg sm:text-xl text-gray-300 max-w-2xl mx-auto font-light leading-relaxed font-sans opacity-90 tracking-wide">
           {t('description')}
