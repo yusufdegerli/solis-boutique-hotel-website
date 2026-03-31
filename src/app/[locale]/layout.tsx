@@ -4,7 +4,6 @@ import "../globals.css";
 import { NextIntlClientProvider } from 'next-intl';
 import { notFound } from 'next/navigation';
 import WhatsAppButton from "@/components/WhatsAppButton";
-import LiveChat from "@/components/LiveChat";
 
 const outfit = Outfit({
   variable: "--font-heading",
@@ -104,7 +103,6 @@ export default async function RootLayout({
         <NextIntlClientProvider messages={messages}>
           {children}
           <WhatsAppButton />
-          <LiveChat locale={locale} />
         </NextIntlClientProvider>
       </body>
     </html>

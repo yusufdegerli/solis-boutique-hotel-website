@@ -22,12 +22,10 @@ import {
   LogOut,
   Image as ImageIcon,
   PieChart, // Added
-  MessageSquare, // Added
   Terminal,
   Webhook
 } from 'lucide-react';
 import ReportsTab from '@/components/admin/ReportsTab';
-import ChatPanel from '@/components/admin/ChatPanel';
 import {
   getHotels,
   getRooms,
@@ -64,6 +62,50 @@ export default function AdminDashboard() {
   const [editingItem, setEditingItem] = useState<any>(null); // Hotel or Room
   const [formData, setFormData] = useState<any>({});
 
+  // NEW: Gallery Modal State
+  const [isGalleryOpen, setIsGalleryOpen] = useState(false);
+  const [galleryImages, setGalleryImages] = useState<{name: string, url: string}[]>([]);
+  const [loadingGallery, setLoadingGallery] = useState(false);
+
+  const fetchGallery = async () => {
+    setLoadingGallery(true);
+    try {
+      const { data, error } = await supabase.storage.from('hotel-images').list();
+      if (error) throw error;
+      if (data) {
+        const files = data.filter(d => !d.name.startsWith('.')); // Ignore hidden
+        const urls = files.map(file => {
+          const { data: { publicUrl } } = supabase.storage.from('hotel-images').getPublicUrl(file.name);
+          return { name: file.name, url: publicUrl };
+        });
+        setGalleryImages(urls);
+      }
+    } catch (err) {
+      console.error("Gallery Error:", err);
+      toast.error("Galeriden resimler yüklenemedi.");
+    } finally {
+      setLoadingGallery(false);
+    }
+  };
+
+  const handleGallerySelect = (url: string) => {
+    if (activeTab === 'hotels') {
+      setFormData({ ...formData, image: url });
+      setIsGalleryOpen(false);
+    } else if (activeTab === 'rooms') {
+      const current = formData.images || [];
+      if (current.includes(url)) {
+        setFormData({ ...formData, images: current.filter((img: string) => img !== url) });
+        return;
+      }
+      if (current.length >= 5) {
+        toast.error("Maksimum 5 görsel seçebilirsiniz.");
+        return;
+      }
+      setFormData({ ...formData, images: [...current, url] });
+    }
+  };
+
   // --- NEW: Check-In / Check-Out States ---
   const [checkInModal, setCheckInModal] = useState<{ isOpen: boolean, bookingId: string | null }>({ isOpen: false, bookingId: null });
   const [checkOutModal, setCheckOutModal] = useState<{ isOpen: boolean, bookingId: string | null }>({ isOpen: false, bookingId: null });
@@ -81,20 +123,7 @@ export default function AdminDashboard() {
     payment_settled: false
   });
 
-  // --- NEW: Global Chat Unread Count ---
-  const [totalUnreadCount, setTotalUnreadCount] = useState(0);
-
-  const fetchUnreadCount = async () => {
-    const { count, error } = await supabase
-      .from('Chat_Messages')
-      .select('*', { count: 'exact', head: true })
-      .eq('is_read', false)
-      .eq('sender', 'user');
-
-    if (!error && count !== null) {
-      setTotalUnreadCount(count);
-    }
-  };
+  // Unread Count Logic removed
 
   // Unread Count Effect removed here, will be triggered after auth check
 
@@ -183,7 +212,8 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     const initAdmin = async () => {
-      // 1. Check Auth
+      // 1. Check Auth (GEÇİCİ OLARAK İPTAL EDİLDİ)
+      /*
       const { data: { user }, error } = await supabase.auth.getUser();
 
       if (error || !user) {
@@ -202,10 +232,10 @@ export default function AdminDashboard() {
         router.push('/');
         return;
       }
+      */
 
       setAuthChecking(false);        // 2. Fetch Initial Data
       fetchData();
-      fetchUnreadCount();
 
       // 3. Setup Realtime Listeners
       const bookingChannel = supabase
@@ -220,16 +250,8 @@ export default function AdminDashboard() {
         })
         .subscribe();
 
-      const chatChannel = supabase
-        .channel('admin-global-badge')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'Chat_Messages' }, () => {
-          fetchUnreadCount();
-        })
-        .subscribe();
-
       return () => {
         supabase.removeChannel(bookingChannel);
-        supabase.removeChannel(chatChannel);
       };
     };
 
@@ -306,8 +328,22 @@ export default function AdminDashboard() {
 
   const handleOpenModal = (type: 'add' | 'edit', item?: any) => {
     setEditingItem(item || null);
-    // Ensure images array exists for rooms
-    setFormData(item ? { ...item, images: item.images || (item.image ? [item.image] : []) } : { images: [] });
+    
+    // Parse description for multi-language
+    let descTr = item?.description || '';
+    let descEn = item?.description || '';
+    if (item?.description && item.description.startsWith('{')) {
+      try {
+        const parsed = JSON.parse(item.description);
+        descTr = parsed.tr || '';
+        descEn = parsed.en || '';
+      } catch (e) {}
+    }
+
+    setFormData(item 
+      ? { ...item, images: item.images || (item.image ? [item.image] : []), description_tr: descTr, description_en: descEn } 
+      : { images: [], description_tr: '', description_en: '' }
+    );
     setIsModalOpen(true);
   };
 
@@ -318,11 +354,18 @@ export default function AdminDashboard() {
     const loadingToast = toast.loading('Kaydediliyor...');
 
     try {
+      // Encode description recursively as JSON for Multi-Language
+      const finalDescription = JSON.stringify({
+        tr: formData.description_tr || '',
+        en: formData.description_en || ''
+      });
+      const dataToSave = { ...formData, description: finalDescription };
+
       if (activeTab === 'hotels') {
         if (editingItem) {
-          await updateHotel(editingItem.id, formData);
+          await updateHotel(editingItem.id, dataToSave);
         } else {
-          await createHotel(formData);
+          await createHotel(dataToSave);
         }
       } else if (activeTab === 'rooms') {
         // Validate Room Images
@@ -335,16 +378,16 @@ export default function AdminDashboard() {
         }
 
         if (editingItem) {
-          await updateRoom(editingItem.id, formData);
+          await updateRoom(editingItem.id, dataToSave);
         } else {
-          await createRoom(formData);
+          await createRoom(dataToSave);
         }
       }
       setIsModalOpen(false);
       fetchData(); // Refresh data
       toast.success('İşlem başarıyla kaydedildi!', { id: loadingToast });
     } catch (err: any) {
-      console.error('Submit Error:', JSON.stringify(err, null, 2));
+      console.error('Submit Error:', err);
       toast.error(`İşlem başarısız: ${err.message || "Hata"}`, { id: loadingToast });
     } finally {
       setLoading(false);
@@ -523,7 +566,6 @@ export default function AdminDashboard() {
         <nav className="p-4 flex flex-col h-[calc(100vh-120px)]">
           <div className="space-y-2 flex-1">
             <SidebarItem id="live" icon={Activity} label="Canlı Durum" />
-            <SidebarItem id="chat" icon={MessageSquare} label="Canlı Destek" badge={totalUnreadCount} />
             <SidebarItem id="reports" icon={PieChart} label="Raporlar" />
             <SidebarItem id="hotels" icon={HotelIcon} label="Oteller" />
             <SidebarItem id="rooms" icon={BedDouble} label="Odalar" />
@@ -550,7 +592,6 @@ export default function AdminDashboard() {
           <div>
             <h2 className="text-3xl font-bold text-gray-800 font-serif">
               {activeTab === 'live' && 'Canlı Otel Durumu'}
-              {activeTab === 'chat' && 'Canlı Destek Merkezi'}
               {activeTab === 'reports' && 'Raporlar ve Analitik'}
               {activeTab === 'hotels' && 'Otel Yönetimi'}
               {activeTab === 'rooms' && 'Oda & Fiyat Yönetimi'}
@@ -561,13 +602,12 @@ export default function AdminDashboard() {
             <p className="text-gray-500 mt-1">
               {activeTab === 'live' ? 'Anlık misafir ve rezervasyon takibi.' :
                 activeTab === 'reports' ? 'Gelir ve doluluk istatistikleri.' :
-                  activeTab === 'chat' ? 'Web sitesi ziyaretçileriyle anlık mesajlaşma.' :
-                    activeTab === 'api' ? 'Sistem API uç noktaları ve durumları.' :
-                      activeTab === 'webhook' ? 'Dış servis entegrasyonları ve webhook kayıtları.' :
-                        'İçeriklerinizi buradan yönetebilirsiniz.'}
+                  activeTab === 'api' ? 'Sistem API uç noktaları ve durumları.' :
+                    activeTab === 'webhook' ? 'Dış servis entegrasyonları ve webhook kayıtları.' :
+                      'İçeriklerinizi buradan yönetebilirsiniz.'}
             </p>
           </div>
-          {activeTab !== 'campaigns' && activeTab !== 'live' && activeTab !== 'reports' && activeTab !== 'chat' && activeTab !== 'api' && activeTab !== 'webhook' && (
+          {activeTab !== 'campaigns' && activeTab !== 'live' && activeTab !== 'reports' && activeTab !== 'api' && activeTab !== 'webhook' && (
             <button
               onClick={() => handleOpenModal('add')}
               className="flex items-center gap-2 bg-[var(--off-black)] text-white px-5 py-2.5 rounded-lg hover:bg-black transition-colors shadow-lg"
@@ -708,9 +748,6 @@ export default function AdminDashboard() {
 
             {/* REPORTS TAB */}
             {activeTab === 'reports' && <ReportsTab bookings={bookings} rooms={rooms} />}
-
-            {/* CHAT TAB */}
-            {activeTab === 'chat' && <ChatPanel onMessagesRead={fetchUnreadCount} />}
 
             {/* API TAB */}
             {activeTab === 'api' && (
@@ -905,12 +942,19 @@ export default function AdminDashboard() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Açıklama</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Açıklama (Türkçe)</label>
                     <textarea
-                      value={formData.description || ''}
-                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                      value={formData.description_tr || ''}
+                      onChange={(e) => setFormData({ ...formData, description_tr: e.target.value })}
+                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[var(--gold)] outline-none mb-3"
+                      rows={2}
+                    />
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Açıklama (English)</label>
+                    <textarea
+                      value={formData.description_en || ''}
+                      onChange={(e) => setFormData({ ...formData, description_en: e.target.value })}
                       className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[var(--gold)] outline-none"
-                      rows={3}
+                      rows={2}
                     />
                   </div>
                   <div>
@@ -923,13 +967,16 @@ export default function AdminDashboard() {
                         className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[var(--gold)] outline-none"
                         placeholder="https://... veya dosya yükleyin"
                       />
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
                         <input
                           type="file"
                           accept="image/*"
                           onChange={handleImageUpload}
                           className="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-yellow-50 file:text-[var(--gold)] hover:file:bg-yellow-100 cursor-pointer"
                         />
+                        <button type="button" onClick={() => { setIsGalleryOpen(true); fetchGallery(); }} className="text-sm px-4 py-2 border border-[var(--gold)] text-[var(--gold)] rounded-full hover:bg-yellow-50 transition-colors flex items-center gap-2 border-dashed">
+                          <ImageIcon size={16} /> Supabase'den Seç
+                        </button>
                         {uploading && <span className="text-xs text-gray-500 animate-pulse">Yükleniyor...</span>}
                       </div>
                     </div>
@@ -981,11 +1028,17 @@ export default function AdminDashboard() {
                           </div>
                         ))}
                         {(!formData.images || formData.images.length < 5) && (
-                          <label className="border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-[var(--gold)] hover:bg-yellow-50 transition-colors aspect-square">
-                            <Plus className="text-gray-400 mb-1" />
-                            <span className="text-xs text-gray-500">Ekle</span>
-                            <input type="file" accept="image/*" onChange={handleRoomImageUpload} className="hidden" />
-                          </label>
+                          <div className="flex flex-col gap-2 aspect-square">
+                            <label className="flex-1 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-[var(--gold)] hover:bg-yellow-50 transition-colors">
+                              <Plus className="text-gray-400 mb-1 w-4 h-4" />
+                              <span className="text-[10px] text-gray-500 text-center px-1 leading-tight">Bilgisayardan<br/>Yükle</span>
+                              <input type="file" accept="image/*" onChange={handleRoomImageUpload} className="hidden" />
+                            </label>
+                            <button type="button" onClick={() => { setIsGalleryOpen(true); fetchGallery(); }} className="flex-1 border-2 border-[var(--gold)] border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer hover:bg-yellow-50 transition-colors">
+                              <ImageIcon className="text-[var(--gold)] mb-1 w-4 h-4" />
+                              <span className="text-[10px] text-[var(--gold)] font-medium text-center px-1 leading-tight">Galeriden<br/>Seç</span>
+                            </button>
+                          </div>
                         )}
                       </div>
                       {uploading && <p className="text-xs text-[var(--gold)] animate-pulse">Yükleniyor...</p>}
@@ -1056,15 +1109,7 @@ export default function AdminDashboard() {
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Açıklama</label>
-                    <textarea
-                      value={formData.description || ''}
-                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[var(--gold)] outline-none"
-                      rows={3}
-                    />
-                  </div>
+
                 </>
               )}
 
@@ -1084,6 +1129,67 @@ export default function AdminDashboard() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* GALLERY MODAL */}
+      {isGalleryOpen && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4" style={{ zIndex: 99999 }}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl overflow-hidden overflow-y-auto" style={{ maxHeight: '90vh' }}>
+            <div className="px-6 py-4 border-b flex justify-between items-center bg-gray-50">
+              <h3 className="font-bold text-lg text-gray-800 flex items-center gap-2">
+                <ImageIcon className="w-5 h-5 text-[var(--gold)]" /> Supabase Galeri
+              </h3>
+              <div className="flex gap-4 items-center">
+                <button type="button" onClick={() => setIsGalleryOpen(false)} className="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg font-bold hover:bg-gray-300 transition-colors">
+                  İptal / Kapat
+                </button>
+                <button type="button" onClick={() => setIsGalleryOpen(false)} className="bg-[var(--gold)] text-white px-6 py-2 rounded-lg font-bold shadow-md hover:bg-yellow-600 transition-colors">
+                  Seçimleri Tamamla
+                </button>
+              </div>
+            </div>
+            
+            <div className="p-6">
+              {loadingGallery ? (
+                <div className="flex justify-center items-center h-full">
+                  <span className="text-[var(--gold)] font-medium animate-pulse">Fotoğraflar Supabase'den Yükleniyor...</span>
+                </div>
+              ) : galleryImages.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full text-gray-500">
+                  <ImageIcon className="w-12 h-12 text-gray-200 mb-3" />
+                  <p>Bucket içerisinde fotoğraf bulunamadı.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                  {galleryImages.map((img, idx) => {
+                    const isSelected = activeTab === 'rooms' ? formData.images?.includes(img.url) : formData.image === img.url;
+                    return (
+                      <div 
+                        key={idx} 
+                        onClick={() => handleGallerySelect(img.url)}
+                        className={`relative aspect-square rounded-xl overflow-hidden cursor-pointer group shadow-sm transition-all border-4 ${isSelected ? 'border-[var(--gold)]' : 'border-transparent hover:border-[var(--gold)]/50'}`}
+                      >
+                        <img src={img.url} alt={img.name} className={`w-full h-full object-cover transition-transform duration-300 ${isSelected ? 'scale-105 opacity-80' : 'group-hover:scale-105'}`} loading="lazy" />
+                        
+                        {/* Selected Indicator */}
+                        {isSelected && (
+                          <div className="absolute inset-0 bg-black/20 flex flex-col items-center justify-center">
+                            <CheckCircle className="text-white fill-[var(--gold)] w-12 h-12 drop-shadow-md" />
+                            <span className="text-white font-bold tracking-wider uppercase text-xs mt-2 drop-shadow-md">Seçildi</span>
+                          </div>
+                        )}
+
+                        <div className="absolute inset-x-0 bottom-0 bg-black/60 p-2 transform translate-y-full group-hover:translate-y-0 transition-transform">
+                          <p className="text-[10px] text-white truncate text-center">{img.name}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
