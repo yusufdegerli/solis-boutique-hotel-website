@@ -19,7 +19,7 @@ export default function Hero({ locale }: { locale: string }) {
       <div className="absolute inset-0 z-0 bg-gradient-to-b from-black/40 via-transparent to-black/80 pointer-events-none" />
 
       {/* Content */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 1, delay: 0.5 }}
@@ -28,17 +28,32 @@ export default function Hero({ locale }: { locale: string }) {
         <span className="inline-block py-2 px-4 rounded-full bg-white/5 backdrop-blur-md border border-[var(--gold)]/30 text-[var(--gold)] text-xs tracking-[0.2em] uppercase font-sans mb-4">
           Solis Hotels & Resorts
         </span>
-        
 
-        
+        {/* Animated Logo Video */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 1.2, ease: "easeOut" }}
+          className="flex justify-center my-6"
+        >
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="w-[400px] max-w-full h-auto object-contain mix-blend-screen"
+          >
+            <source src="/logo_animation.mp4" type="video/mp4" />
+          </video>
+        </motion.div>
         <p className="text-lg sm:text-xl text-gray-300 max-w-2xl mx-auto font-light leading-relaxed font-sans opacity-90 tracking-wide">
           {t('description')}
         </p>
-        
+
         <div className="flex flex-col sm:flex-row gap-6 justify-center items-center pt-12">
           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-            <Link 
-              href={`/${locale}/#hotels`} 
+            <Link
+              href={`/${locale}/#hotels`}
               className="group px-10 py-4 bg-[var(--gold)] text-white font-serif text-lg rounded-full hover:bg-white hover:text-[var(--off-black)] transition-all duration-300 shadow-[0_0_30px_rgba(212,175,55,0.3)] flex items-center gap-3 uppercase tracking-widest"
             >
               {t('explore')}
@@ -46,7 +61,7 @@ export default function Hero({ locale }: { locale: string }) {
             </Link>
           </motion.div>
           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-            <Link 
+            <Link
               href={`/${locale}/reservation`}
               className="px-10 py-4 bg-transparent border border-white/30 text-white font-serif text-lg rounded-full hover:bg-white/10 transition-all hover:border-white/60 uppercase tracking-widest backdrop-blur-sm"
             >
@@ -55,9 +70,9 @@ export default function Hero({ locale }: { locale: string }) {
           </motion.div>
         </div>
       </motion.div>
-      
+
       {/* Scroll Indicator */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 2, duration: 1 }}
