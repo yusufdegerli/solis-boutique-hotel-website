@@ -11,7 +11,7 @@ export default async function Footer({ locale = 'tr' }: { locale?: string }) {
 
           {/* Brand */}
           <div className="space-y-4">
-            <h3 className="text-2xl font-bold text-[var(--gold)] font-serif">SOLIS</h3>
+            <img src="https://gjgiykewaxmylnwdvikz.supabase.co/storage/v1/object/public/hotel-images/logo3.png" alt="Solis Hotels" className="h-10 w-auto object-contain" />
             <p className="text-gray-400 text-sm leading-relaxed font-sans">
               {t('desc')}
             </p>

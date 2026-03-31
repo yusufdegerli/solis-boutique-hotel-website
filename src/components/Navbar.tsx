@@ -35,13 +35,11 @@ export default function Navbar({ locale }: { locale: string }) {
           {/* Logo */}
           <div className="flex-shrink-0 flex items-center">
             <Link href={`/${locale}`} className="flex items-center gap-3 group">
-              <div className="bg-[var(--gold)] p-2 rounded-full text-white group-hover:bg-white group-hover:text-[var(--gold)] transition-colors duration-300">
-                <Hotel className="h-6 w-6" />
-              </div>
-              <div className="flex flex-col">
-                <span className="font-serif font-bold text-2xl tracking-widest text-white group-hover:text-[var(--gold)] transition-colors">SOLIS</span>
-                <span className="text-[10px] uppercase tracking-[0.3em] text-white/60 group-hover:text-white transition-colors">Hotels &amp; Resorts</span>
-              </div>
+              <img 
+                src="https://gjgiykewaxmylnwdvikz.supabase.co/storage/v1/object/public/hotel-images/logo3.png" 
+                alt="Solis Hotels" 
+                className="h-10 sm:h-12 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
+              />
             </Link>
           </div>
 

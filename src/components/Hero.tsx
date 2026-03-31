@@ -1,14 +1,16 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { useTranslations } from 'next-intl';
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import ParticleBackground from "./ParticleBackground";
 
 export default function Hero({ locale }: { locale: string }) {
   const t = useTranslations('Hero');
   const tNav = useTranslations('Navbar');
+  const [videoEnded, setVideoEnded] = useState(false);
 
   return (
     <div className="relative h-screen w-full flex items-center justify-center overflow-hidden bg-black">
@@ -34,17 +36,35 @@ export default function Hero({ locale }: { locale: string }) {
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 1.2, ease: "easeOut" }}
-          className="flex justify-center my-6"
+          className="flex justify-center my-6 relative min-h-[100px] w-full"
         >
-          <video
-            autoPlay
-            loop
-            muted
-            playsInline
-            className="w-[400px] max-w-full h-auto object-contain mix-blend-screen"
-          >
-            <source src="/logo_animation.mp4" type="video/mp4" />
-          </video>
+          <AnimatePresence mode="wait">
+            {!videoEnded ? (
+              <motion.video
+                key="video"
+                autoPlay
+                muted
+                playsInline
+                onEnded={() => setVideoEnded(true)}
+                initial={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.5 }}
+                className="w-[400px] max-w-full h-auto object-contain mix-blend-screen"
+              >
+                <source src="/logo_animation.mp4?v=3" type="video/mp4" />
+              </motion.video>
+            ) : (
+              <motion.img
+                key="image"
+                src="https://gjgiykewaxmylnwdvikz.supabase.co/storage/v1/object/public/hotel-images/logo3.png"
+                alt="Solis Hotels"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.8 }}
+                className="w-[400px] max-w-full h-auto object-contain mix-blend-screen"
+              />
+            )}
+          </AnimatePresence>
         </motion.div>
         <p className="text-lg sm:text-xl text-gray-300 max-w-2xl mx-auto font-light leading-relaxed font-sans opacity-90 tracking-wide">
           {t('description')}
