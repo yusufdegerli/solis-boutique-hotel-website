@@ -1,0 +1,51 @@
+{
+  "Deluxe Çift Kişilik Oda": {
+    "tr": "Deluxe Çift Kişilik Oda",
+    "en": "Deluxe Double Room",
+    "ru": "Номер Делюкс с двуспальной кроватью",
+    "ar": "غرفة ديلوكس مزدوجة",
+    "hu": "Deluxe kétágyas szoba"
+  },
+  "Deluxe Queen Oda": {
+    "tr": "Deluxe Queen Oda",
+    "en": "Deluxe Queen Room",
+    "ru": "Номер Делюкс с кроватью Queen",
+    "ar": "غرفة ديلوكس كوين",
+    "hu": "Deluxe Queen szoba"
+  },
+  "Standart Oda": {
+    "tr": "Standart Oda",
+    "en": "Standard Room",
+    "ru": "Стандартный номер",
+    "ar": "غرفة قياسية",
+    "hu": "Standard szoba"
+  },
+  "Superior Oda": {
+    "tr": "Superior Oda",
+    "en": "Superior Room",
+    "ru": "Улучшенный номер",
+    "ar": "غرفة سوبيريور",
+    "hu": "Superior szoba"
+  },
+  "Süit Oda": {
+    "tr": "Süit Oda",
+    "en": "Suite Room",
+    "ru": "Люкс",
+    "ar": "جناح",
+    "hu": "Lakosztály"
+  },
+  "Aile Odası": {
+    "tr": "Aile Odası",
+    "en": "Family Room",
+    "ru": "Семейный номер",
+    "ar": "غرفة عائلية",
+    "hu": "Családi szoba"
+  },
+  "Kral Dairesi": {
+    "tr": "Kral Dairesi",
+    "en": "Royal Suite",
+    "ru": "Королевский люкс",
+    "ar": "الجناح الملكي",
+    "hu": "Királyi lakosztály"
+  }
+}

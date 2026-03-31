@@ -6,6 +6,7 @@ import { Users, Maximize2 } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import RoomImageSlider from "@/components/RoomImageSlider";
 import { getAmenityIcon, getAmenityLabel } from "@/lib/amenityOptions";
+import { getLocalizedText } from "@/lib/localize";
 import BookButton from "@/components/BookButton";
 
 export default async function RoomsPage({ params }: { params: Promise<{ locale: string }> }) {
@@ -45,7 +46,7 @@ export default async function RoomsPage({ params }: { params: Promise<{ locale: 
               </div>
               <div className="p-6 flex flex-col flex-grow">
                 <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-4">
-                  <h3 className="text-2xl font-serif font-bold text-[var(--off-black)]">{room.name}</h3>
+                  <h3 className="text-2xl font-serif font-bold text-[var(--off-black)]">{getLocalizedText(room.name, locale)}</h3>
                   <div className="flex items-center gap-4 text-gray-600 bg-gray-50 px-3 py-1.5 rounded-lg shrink-0">
                     <div className="flex items-center gap-1.5">
                       <Maximize2 className="w-3.5 h-3.5 text-[var(--gold)]" />
@@ -60,7 +61,7 @@ export default async function RoomsPage({ params }: { params: Promise<{ locale: 
                 </div>
 
                 <p className="text-gray-600 mb-6 font-sans leading-relaxed text-sm line-clamp-3">
-                  {room.description}
+                  {getLocalizedText(room.description, locale)}
                 </p>
 
                 <div className="mt-auto border-t border-gray-100 pt-6">

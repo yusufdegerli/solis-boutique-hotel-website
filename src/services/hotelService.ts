@@ -1,5 +1,7 @@
 import { supabase } from "@/lib/supabaseClient";
 import roomDescriptions from '@/data/roomDescriptions.json';
+import hotelDescriptions from '@/data/hotelDescriptions.json';
+import roomNames from '@/data/roomNames.json';
 import { Hotel, Room } from "@/lib/data";
 import { 
   createHotelServer, updateHotelServer, deleteHotelServer,
@@ -54,22 +56,7 @@ export const getHotels = async (): Promise<Hotel[]> => {
     }
     if (!data || data.length === 0) return [];
     
-    return data.map((db: any) => ({
-      id: db.id.toString(),
-      name: db.name,
-      slug: db.slug,
-      tagline: db.name,
-      description: db.description || "",
-      image: db.image_url || "",
-      location: db.address || "",
-      pricePerNight: 0,
-      rating: 0,
-      reviews: 0,
-      coordinates: { lat: 0, lng: 0 },
-      stats: { totalRooms: 0, availability: 0, suiteCount: 0 },
-      features: [],
-      contact: { phone: "", email: "", address: "" }
-    } as unknown as Hotel));
+    return data.map(mapDbHotelToModel);
   } catch (err) {
     console.error("Exception fetching hotels:", err);
     return [];
@@ -210,7 +197,7 @@ function mapDbHotelToModel(hotel: any): Hotel {
     name: hotel.name,
     slug: hotel.slug,
     tagline: hotel.tagline || "Unutulmaz Bir Konaklama Deneyimi",
-    description: hotel.description,
+    description: (hotelDescriptions as any)[hotel.name] ? JSON.stringify((hotelDescriptions as any)[hotel.name]) : hotel.description,
     pricePerNight: hotel.stats?.min_price || 120, // Use stats if available, else default
     rating: Number(hotel.rating) || 9.0,
     reviews: hotel.reviews_count || 0,
@@ -243,7 +230,7 @@ function mapDbRoomToModel(room: any): Room {
   return {
     id: room.id.toString(),
     hotelId: room.hotel_id?.toString(), // Map DB hotel_id to model
-    name: room.type_name,
+    name: (roomNames as any)[room.type_name] ? JSON.stringify((roomNames as any)[room.type_name]) : room.type_name,
     description: (roomDescriptions as any)[room.type_name] ? JSON.stringify((roomDescriptions as any)[room.type_name]) : room.description || "Konforlu ve ferah bir oda.",
     size: room.size || "35m²",
     capacity: `${room.capacity || 2} Yetişkin`,

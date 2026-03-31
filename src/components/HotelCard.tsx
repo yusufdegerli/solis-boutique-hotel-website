@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Star, MapPin, ArrowRight, Wifi, Coffee, Waves, HardHat } from "lucide-react";
 import { Hotel } from "@/lib/data";
+import { getLocalizedText } from "@/lib/localize";
 import { useState } from "react";
 
 // Default fallback image
@@ -80,7 +81,7 @@ export default function HotelCard({ hotel, locale = 'tr' }: HotelCardProps) {
 
       <div className="p-8 flex flex-col flex-grow relative bg-white">
         <p className="text-gray-500 mb-8 line-clamp-2 text-sm leading-relaxed font-sans font-light">
-          {hotel.description}
+          {getLocalizedText(hotel.description, locale)}
         </p>
 
         {/* Mini features preview */}
