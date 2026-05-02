@@ -40,10 +40,10 @@ export default async function IstanbulHistoryPage({ params }: { params: Promise<
             </p>
             <div className="grid grid-cols-2 gap-4 my-8">
               <div className="relative h-64 rounded-lg overflow-hidden">
-                <Image src="https://images.unsplash.com/photo-1545459720-aacfb50908ea?auto=format&fit=crop&w=800&q=80" alt="Hagia Sophia" fill className="object-cover" />
+                <Image src="https://images.unsplash.com/photo-1541432901042-2d8bd64b4a9b?auto=format&fit=crop&w=800&q=80" alt="Sultanahmet" fill className="object-cover" />
               </div>
               <div className="relative h-64 rounded-lg overflow-hidden">
-                <Image src="https://images.unsplash.com/photo-1598402507817-48f1082d6349?auto=format&fit=crop&w=800&q=80" alt="Galata" fill className="object-cover" />
+                <Image src="https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?auto=format&fit=crop&w=800&q=80" alt="Bosphorus" fill className="object-cover" />
               </div>
             </div>
             <p>
@@ -51,7 +51,25 @@ export default async function IstanbulHistoryPage({ params }: { params: Promise<
             </p>
           </div>
 
-          <div className="bg-[var(--off-white)] p-10 rounded-2xl border-l-4 border-[var(--gold)] mb-16">
+          <div className="space-y-16">
+            <section>
+              <h2 className="text-3xl font-serif font-bold text-[var(--off-black)] mb-6">Sultanahmet'ten Kapalıçarşı'ya: Yaya Turu Rehberi</h2>
+              <div className="relative h-96 rounded-2xl overflow-hidden mb-6">
+                <Image src="https://images.unsplash.com/photo-1541432901042-2d8bd64b4a9b?auto=format&fit=crop&w=1200&q=80" alt="Old City Walk" fill className="object-cover" />
+              </div>
+              <p>Tarihi yarımadayı keşfetmek için hazırladığımız yürüyüş rotası, sizi yüzyıllar öncesine götürecek. Ayasofya'dan başlayıp dar sokaklardan geçerek Kapalıçarşı'nın mistik atmosferine ulaşacağınız bu yolculukta her köşe başında bir hikaye bulacaksınız.</p>
+            </section>
+
+            <section>
+              <h2 className="text-3xl font-serif font-bold text-[var(--off-black)] mb-6">Boğaz'da Gün Batımı: Unutulmaz Tekne Turu Deneyimi</h2>
+              <div className="relative h-96 rounded-2xl overflow-hidden mb-6">
+                <Image src="https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?auto=format&fit=crop&w=1200&q=80" alt="Bosphorus Sunset" fill className="object-cover" />
+              </div>
+              <p>Boğaz'ın iki yakasını birbirine bağlayan bu eşsiz suda, gün batımının pembe ve altın rengi tonlarını izleyin. İstanbul'un siluetini denizden seyretmek, şehre bambaşka bir perspektiften bakmanızı sağlayacak.</p>
+            </section>
+          </div>
+
+          <div className="bg-[var(--off-white)] p-10 rounded-2xl border-l-4 border-[var(--gold)] my-16">
             <h3 className="text-2xl font-serif font-bold text-[var(--off-black)] mb-4">{t('section2Title')}</h3>
             <p className="mb-0">
               {t('section2Desc')}

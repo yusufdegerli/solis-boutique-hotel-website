@@ -4,7 +4,7 @@ import Footer from "@/components/Footer";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { MapPin, Star, CheckCircle, Phone, Mail, Map, BedDouble, PieChart, Info } from "lucide-react";
+import { MapPin, Star, CheckCircle, Phone, Mail, Map, BedDouble, PieChart, Info, HardHat, ArrowLeft } from "lucide-react";
 
 export async function generateStaticParams() {
   const locales = ['en', 'tr', 'ar', 'hu', 'ro'];
@@ -25,6 +25,48 @@ export default async function HotelDetail({ params }: { params: Promise<{ slug: 
 
   if (!hotel) {
     notFound();
+  }
+
+  // Handle Under Construction state
+  if ((hotel as any).underConstruction) {
+    return (
+      <main className="min-h-screen bg-black flex flex-col">
+        <Navbar locale={locale} />
+        <div className="flex-grow flex items-center justify-center relative overflow-hidden pt-24">
+          <div className="absolute inset-0 z-0">
+            <Image
+              src={hotel.image}
+              alt="Construction"
+              fill
+              className="object-cover opacity-30 grayscale"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent" />
+          </div>
+          
+          <div className="relative z-10 max-w-2xl mx-auto px-4 text-center">
+            <div className="w-24 h-24 bg-[var(--gold)]/10 border border-[var(--gold)]/30 rounded-full flex items-center justify-center mx-auto mb-8 backdrop-blur-sm animate-pulse">
+              <HardHat className="w-12 h-12 text-[var(--gold)]" />
+            </div>
+            <h1 className="text-4xl md:text-6xl font-serif font-bold text-white mb-6 uppercase tracking-widest">{hotel.name}</h1>
+            <div className="inline-block px-6 py-2 bg-[var(--gold)] text-black font-bold text-sm uppercase tracking-[0.2em] mb-8 rounded-sm">
+              İnşaat Devam Ediyor
+            </div>
+            <p className="text-gray-300 text-lg md:text-xl font-light leading-relaxed mb-12">
+              Sizlere en iyi deneyimi sunabilmek için otelimizde inşaat ve hazırlık süreci devam etmektedir. Çok yakında kapılarımızı açacağız.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-6 justify-center">
+              <Link 
+                href={`/${locale}`} 
+                className="flex items-center justify-center gap-2 px-8 py-4 bg-white text-black font-serif uppercase tracking-widest hover:bg-[var(--gold)] hover:text-white transition-all duration-300"
+              >
+                <ArrowLeft className="w-4 h-4" /> Ana Sayfaya Dön
+              </Link>
+            </div>
+          </div>
+        </div>
+        <Footer locale={locale} />
+      </main>
+    );
   }
 
   return (

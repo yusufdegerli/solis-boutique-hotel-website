@@ -37,12 +37,12 @@ const mockHotels: Hotel[] = [
     pricePerNight: 200,
     rating: 0,
     reviews: 0,
-    image: "/images/hotels/solis-belek.jpg",
+    image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80",
     location: "Beyazıt, İstanbul",
     coordinates: { lat: 36.8624, lng: 31.0556 },
     stats: { totalRooms: 120, availability: 0, suiteCount: 15 },
     features: ["Özel Plaj", "Açık Havuz", "Her Şey Dahil", "Kids Club"],
-    contact: { phone: "+90 533 793 24 72", email: "info@solisboutiquehotel.com", address: "Beyazıt, İstanbul" },
+    contact: { phone: "+90 533 793 24 72", email: "info@solisboutiquehotel.com", address: "Mimar Kemalettin Mah. Mithatpaşa Cad. No:14/16 Beyazıt, İstanbul" },
     underConstruction: true
   } as any
 ];
@@ -51,15 +51,23 @@ export const getHotels = async (): Promise<Hotel[]> => {
   try {
     const { data, error } = await supabase.from('Hotel_Information_Table').select('*');
     if (error) {
-      console.error("Error fetching hotels from DB:", error);
-      return [];
+      console.error("Error fetching hotels from DB:", {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint
+      });
+      return mockHotels;
     }
-    if (!data || data.length === 0) return [];
+    if (!data || data.length === 0) {
+      console.warn("No data in DB, using mock fallback.");
+      return mockHotels;
+    }
     
     return data.map(mapDbHotelToModel);
   } catch (err) {
     console.error("Exception fetching hotels:", err);
-    return [];
+    return mockHotels;
   }
 };
 
@@ -135,7 +143,12 @@ export const getRooms = async (): Promise<Room[]> => {
   try {
     const { data, error } = await supabase.from('Rooms_Information').select('*');
     if (error) {
-      console.error("Error fetching rooms from DB:", error);
+      console.error("Error fetching rooms from DB:", {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint
+      });
       return mockRooms;
     }
     if (!data || data.length === 0) {
@@ -285,7 +298,12 @@ export const getBookings = async (): Promise<Booking[]> => {
     .order('check_in', { ascending: false });
 
   if (error) {
-    console.error('Error fetching bookings:', error);
+    console.error('Error fetching bookings:', {
+      message: error.message,
+      code: error.code,
+      details: error.details,
+      hint: error.hint
+    });
     return [];
   }
 
@@ -301,7 +319,12 @@ export const getUserBookings = async (email: string): Promise<Booking[]> => {
     .order('check_in', { ascending: false });
 
   if (error) {
-    console.error('Error fetching user bookings:', error);
+    console.error('Error fetching user bookings:', {
+      message: error.message,
+      code: error.code,
+      details: error.details,
+      hint: error.hint
+    });
     return [];
   }
 

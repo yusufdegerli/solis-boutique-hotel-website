@@ -40,7 +40,7 @@ const mockBlogPosts: BlogPost[] = [
     title: "Sultanahmet'ten Kapalıçarşı'ya: Yaya Turu Rehberi",
     excerpt: "Tarihi yarımadayı keşfetmek için hazırladığımız yürüyüş rotası, sizi yüzyıllar öncesine götürecek.",
     date: "10 Ocak 2025",
-    image: "https://images.unsplash.com/photo-1545459720-aacfb50908ea?auto=format&fit=crop&w=800&q=80",
+    image: "https://images.unsplash.com/photo-1541432901042-2d8bd64b4a9b?auto=format&fit=crop&w=800&q=80",
     slug: "sultanahmet-kapalicarsi-tur",
   },
   {
@@ -48,7 +48,7 @@ const mockBlogPosts: BlogPost[] = [
     title: "VIP Transfer Hizmetimiz: Havalimanından Otele Sorunsuz Yolculuk",
     excerpt: "Solis'in VIP transfer hizmetiyle İstanbul'a ilk adımınızdan itibaren lüksü hissedebilirsiniz.",
     date: "5 Aralık 2024",
-    image: "https://images.unsplash.com/photo-1566552881560-0be862a7c445?auto=format&fit=crop&w=800&q=80",
+    image: "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=800&q=80",
     slug: "vip-transfer-hizmeti",
   },
   {
@@ -56,7 +56,7 @@ const mockBlogPosts: BlogPost[] = [
     title: "Boğaz'da Gün Batımı: Unutulmaz Tekne Turu Deneyimi",
     excerpt: "Boğaz'ın iki yakasını birbirine bağlayan bu eşsiz suda, gün batımının pembe ve altın rengi tonlarını izleyin.",
     date: "20 Kasım 2024",
-    image: "https://images.unsplash.com/photo-1598402507817-48f1082d6349?auto=format&fit=crop&w=800&q=80",
+    image: "https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?auto=format&fit=crop&w=800&q=80",
     slug: "bogaz-gun-batimi-tekne",
   },
   {
