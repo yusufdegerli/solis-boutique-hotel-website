@@ -49,19 +49,20 @@ export default function Hero({ locale }: { locale: string }) {
                 initial={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.5 }}
-                className="w-[400px] max-w-full h-auto object-contain mix-blend-screen"
+                className="w-[400px] max-w-full h-auto object-contain mix-blend-screen transform-gpu"
               >
                 <source src="/logo_animation.mp4?v=3" type="video/mp4" />
               </motion.video>
             ) : (
               <motion.img
                 key="image"
-                src="https://gjgiykewaxmylnwdvikz.supabase.co/storage/v1/object/public/hotel-images/logo3.png"
+                src="/logo3.png"
                 alt="Solis Hotels"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.8 }}
-                className="w-[400px] max-w-full h-auto object-contain mix-blend-screen"
+                className="max-w-full h-auto object-contain"
+                style={{ width: '260px', maxHeight: '120px' }}
               />
             )}
           </AnimatePresence>
@@ -81,12 +82,14 @@ export default function Hero({ locale }: { locale: string }) {
             </Link>
           </motion.div>
           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-            <Link
-              href={`/${locale}/reservation`}
+            <a
+              href="https://tr.hotels.com/ho3406787680/?semcid=HCOM-TR.UB.GOOGLE.PT-DSA-c-TR.HOTEL&semdtl=a113476951092.b1124944680393.g1aud-2141179518447:dsa-977487782636.e1c.m1EAIaIQobChMI9pqz7faalAMVMJGDBx0OuSHeEAAYASAAEgIKmfD_BwE.r1.c1.j19199051.k19199120.d1660336623510.h1.i1290283925904.l1.n1.o1.p1.q1.s1.t1.x1.f1.u1.v1.w1&gad_source=1&gad_campaignid=13476951092&gbraid=0AAAAACTxZ9aqJKDc7BRD1l2afq77K6U9T&gclid=EAIaIQobChMI9pqz7faalAMVMJGDBx0OuSHeEAAYASAAEgIKmfD_BwE"
+              target="_blank"
+              rel="noopener noreferrer"
               className="px-10 py-4 bg-transparent border border-white/30 text-white font-serif text-lg rounded-full hover:bg-white/10 transition-all hover:border-white/60 uppercase tracking-widest backdrop-blur-sm"
             >
               {tNav('book')}
-            </Link>
+            </a>
           </motion.div>
         </div>
       </motion.div>
