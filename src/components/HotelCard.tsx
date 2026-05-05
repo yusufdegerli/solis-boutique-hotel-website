@@ -35,7 +35,7 @@ export default function HotelCard({ hotel, locale = 'tr' }: HotelCardProps) {
 
   return (
     <div className="group bg-white rounded-sm overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 border border-gray-100 flex flex-col h-full transform hover:-translate-y-2">
-      <div className="relative h-80 w-full overflow-hidden bg-gray-200">
+      <Link href={`/${locale}/hotels/${hotel.slug}`} className="relative h-80 w-full overflow-hidden bg-gray-200 block">
         <Image
           src={imgSrc}
           alt={hotel.name}
@@ -77,12 +77,14 @@ export default function HotelCard({ hotel, locale = 'tr' }: HotelCardProps) {
             {hotel.name}
           </h3>
         </div>
-      </div>
+      </Link>
 
       <div className="p-8 flex flex-col flex-grow relative bg-white">
-        <p className="text-gray-500 mb-8 line-clamp-2 text-sm leading-relaxed font-sans font-light">
-          {getLocalizedText(hotel.description, locale)}
-        </p>
+        <Link href={`/${locale}/hotels/${hotel.slug}`} className="block">
+          <p className="text-gray-500 mb-8 line-clamp-2 text-sm leading-relaxed font-sans font-light hover:text-[var(--gold)] transition-colors">
+            {getLocalizedText(hotel.description, locale)}
+          </p>
+        </Link>
 
         {/* Mini features preview */}
         <div className="flex gap-2 mb-8 border-b border-gray-100 pb-8">
@@ -115,7 +117,7 @@ export default function HotelCard({ hotel, locale = 'tr' }: HotelCardProps) {
             </div>
           ) : (
             <Link
-              href={`/${locale}/rooms`}
+              href={`/${locale}/hotels/${hotel.slug}/book`}
               className="flex items-center justify-center w-12 h-12 rounded-full border border-[var(--gold)] text-[var(--gold)] hover:bg-[var(--gold)] hover:text-white transition-all duration-300 shadow-sm group-hover:scale-110"
             >
               <ArrowRight className="w-5 h-5 rtl:rotate-180" />
