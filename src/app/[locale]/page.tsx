@@ -2,6 +2,7 @@ import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
 import HotelCard from "@/components/HotelCard";
 import Footer from "@/components/Footer";
+import Link from "next/link";
 import { getHotels } from "@/services/hotelService";
 import { Star, Award, ShieldCheck, HeartHandshake } from "lucide-react";
 import { getTranslations } from 'next-intl/server';
@@ -73,9 +74,9 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
           <h2 className="text-3xl md:text-5xl font-serif text-white mb-8">{t('ctaTitle')}</h2>
           <p className="text-gray-400 mb-10 text-lg font-light">{t('ctaDesc')}</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <a href="https://tr.hotels.com/ho3406787680/?semcid=HCOM-TR.UB.GOOGLE.PT-DSA-c-TR.HOTEL&semdtl=a113476951092.b1124944680393.g1aud-2141179518447:dsa-977487782636.e1c.m1EAIaIQobChMI9pqz7faalAMVMJGDBx0OuSHeEAAYASAAEgIKmfD_BwE.r1.c1.j19199051.k19199120.d1660336623510.h1.i1290283925904.l1.n1.o1.p1.q1.s1.t1.x1.f1.u1.v1.w1&gad_source=1&gad_campaignid=13476951092&gbraid=0AAAAACTxZ9aqJKDc7BRD1l2afq77K6U9T&gclid=EAIaIQobChMI9pqz7faalAMVMJGDBx0OuSHeEAAYASAAEgIKmfD_BwE" target="_blank" rel="noopener noreferrer" className="inline-block px-10 py-5 bg-[var(--gold)] text-white font-serif text-lg rounded-full hover:bg-white hover:text-[var(--off-black)] transition-all duration-300 shadow-2xl">
+            <Link href={`/${locale}/reservation`} className="inline-block px-10 py-5 bg-[var(--gold)] text-white font-serif text-lg rounded-full hover:bg-white hover:text-[var(--off-black)] transition-all duration-300 shadow-2xl">
               {tNav('book')}
-            </a>
+            </Link>
           </div>
         </div>
       </section>

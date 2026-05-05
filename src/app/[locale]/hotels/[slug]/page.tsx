@@ -4,7 +4,7 @@ import Footer from "@/components/Footer";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { MapPin, Star, CheckCircle, Phone, Mail, Map, BedDouble, PieChart, Info, HardHat, ArrowLeft } from "lucide-react";
+import { MapPin, Star, CheckCircle, Phone, Mail, Map, BedDouble, PieChart, Info, HardHat, ArrowLeft, ExternalLink } from "lucide-react";
 
 export async function generateStaticParams() {
   const locales = ['en', 'tr', 'ar', 'hu', 'ro'];
@@ -14,6 +14,7 @@ export async function generateStaticParams() {
   for (const locale of locales) {
     for (const hotel of hotels) {
       params.push({ locale, slug: hotel.slug });
+      params.push({ locale, slug: hotel.slug + '/book' }); // This is handled by a separate page.tsx, but good for context
     }
   }
   return params;
@@ -192,7 +193,7 @@ export default async function HotelDetail({ params }: { params: Promise<{ slug: 
                   </div>
 
                   <Link
-                    href={`/${locale}/reservation?hotel=${hotel.id}`}
+                    href={`/${locale}/hotels/${hotel.slug}/book`}
                     className="block w-full py-5 bg-[var(--gold)] text-white text-center font-bold text-lg rounded-sm hover:bg-[var(--off-black)] transition-all shadow-xl hover:shadow-2xl transform hover:-translate-y-1 duration-200 font-serif uppercase tracking-widest"
                   >
                     Hemen Rezervasyon Yap
@@ -201,6 +202,58 @@ export default async function HotelDetail({ params }: { params: Promise<{ slug: 
                     Rezervasyonunuzu şimdi yapın, ödemeyi otelde gerçekleştirin. Ücretsiz iptal seçeneği son 24 saate kadar geçerlidir.
                   </p>
                 </div>
+
+                {hotel.bookingLinks && Object.keys(hotel.bookingLinks).length > 0 && (
+                  <div className="bg-white p-8 rounded-xl shadow-lg border-l-4 border-[var(--gold)]">
+                    <h4 className="font-serif font-bold text-xl mb-6 text-[var(--off-black)]">Online Kanallar</h4>
+                    <div className="space-y-3">
+                      {hotel.bookingLinks.expedia && (
+                        <a 
+                          href={hotel.bookingLinks.expedia} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-[var(--gold)] hover:text-white transition-all group"
+                        >
+                          <span className="font-bold">Expedia</span>
+                          <ExternalLink className="w-4 h-4 opacity-50 group-hover:opacity-100" />
+                        </a>
+                      )}
+                      {hotel.bookingLinks.booking && (
+                        <a 
+                          href={hotel.bookingLinks.booking} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-[var(--gold)] hover:text-white transition-all group"
+                        >
+                          <span className="font-bold">Booking.com</span>
+                          <ExternalLink className="w-4 h-4 opacity-50 group-hover:opacity-100" />
+                        </a>
+                      )}
+                      {hotel.bookingLinks.hotels_com && (
+                        <a 
+                          href={hotel.bookingLinks.hotels_com} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-[var(--gold)] hover:text-white transition-all group"
+                        >
+                          <span className="font-bold">Hotels.com</span>
+                          <ExternalLink className="w-4 h-4 opacity-50 group-hover:opacity-100" />
+                        </a>
+                      )}
+                      {hotel.bookingLinks.agoda && (
+                        <a 
+                          href={hotel.bookingLinks.agoda} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-[var(--gold)] hover:text-white transition-all group"
+                        >
+                          <span className="font-bold">Agoda</span>
+                          <ExternalLink className="w-4 h-4 opacity-50 group-hover:opacity-100" />
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 <div className="bg-[var(--off-black)] text-white p-8 rounded-xl shadow-lg">
                   <h4 className="font-serif font-bold text-xl mb-4 text-[var(--gold)]">Özel Fırsat</h4>
