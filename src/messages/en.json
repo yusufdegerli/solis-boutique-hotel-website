@@ -145,7 +145,13 @@
     "errorDatePast": "Check-in date cannot be in the past.",
     "errorDateOrder": "Check-out date must be after check-in date.",
     "errorGuestsMin": "There must be at least 1 guest.",
-    "errorGuestsMax": "Maximum 10 guests are accepted."
+    "errorGuestsMax": "Maximum 10 guests are accepted.",
+    "whatsappMessage": "You can contact us via WhatsApp for reservations.",
+    "selectionTitle": "Reservation",
+    "selectionSubtitle": "Select a platform for fast and secure booking.",
+    "whichHotel": "Which one would you like to book?",
+    "selectHotelDesc": "Please select the hotel you would like to book.",
+    "backToHotel": "Back to Hotel Details"
   },
   "ReservationStatus": {
     "title": "Check Reservation Status",

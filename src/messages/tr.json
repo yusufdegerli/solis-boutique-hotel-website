@@ -147,7 +147,13 @@
     "errorDatePast": "Giriş tarihi geçmişte olamaz.",
     "errorDateOrder": "Çıkış tarihi giriş tarihinden sonra olmalıdır.",
     "errorGuestsMin": "En az 1 misafir olmalıdır.",
-    "errorGuestsMax": "En fazla 10 misafir kabul edilmektedir."
+    "errorGuestsMax": "En fazla 10 misafir kabul edilmektedir.",
+    "whatsappMessage": "Rezervasyon için WhatsApp üzerinden iletişime geçebilirsiniz.",
+    "selectionTitle": "Rezervasyon",
+    "selectionSubtitle": "Hızlı ve güvenli rezervasyon için bir platform seçin.",
+    "whichHotel": "Hangisinden rezervasyon almak istiyorsun?",
+    "selectHotelDesc": "Lütfen rezervasyon yapmak istediğiniz oteli seçiniz.",
+    "backToHotel": "Otel Detaylarına Geri Dön"
   },
   "ReservationStatus": {
     "title": "Rezervasyon Durumu Sorgula",
@@ -175,7 +181,7 @@
     "guestNames": "Misafir İsimleri",
     "phone": "Telefon",
     "email": "E-posta",
-    "address": "Adres",
+    "address": "Address",
     "city": "Şehir",
     "notes": "Notlar",
     "statusPending": "Beklemede",

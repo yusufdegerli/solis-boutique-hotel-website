@@ -7,7 +7,7 @@
     "myBookings": "Foglalásaim",
     "discover": "Felfedezés",
     "roomsSuites": "Szobák és lakosztályok",
-    "servicesTransfer": "Szolgáltatások és transzfer",
+    "servicesTransfer": "Szolgáltatások ve transzfer",
     "istanbulHistory": "Isztambul történelme",
     "blog": "Blog"
   },
@@ -28,7 +28,7 @@
   "Hero": {
     "subtitle": "Fedezze fel újra",
     "subtitleHighlight": "a luxust",
-    "description": "Felejthetetlen emlékek, hibátlan szolgáltatás és egyedülálló helyszínek. Álmai nyaralása itt kezdődik.",
+    "description": "Felejthetetlen emlékek, hibátlan szolgáltatás ve egyedülálló helyszínek. Álmai nyaralása itt kezdődik.",
     "explore": "Szállodák megtekintése"
   },
   "Home": {
@@ -39,18 +39,18 @@
       "service": "5 csillagos szolgáltatás",
       "serviceDesc": "Világszínvonalú szállás.",
       "architecture": "Díjnyertes építészet",
-      "architectureDesc": "Az esztétika és a kényelem találkozása.",
+      "architectureDesc": "Az esztétika ve a kényelem találkozása.",
       "security": "Biztonságos nyaralás",
       "securityDesc": "Magas szintű higiéniai előírások.",
       "satisfaction": "100% elégedettség",
       "satisfactionDesc": "Az Ön boldogsága a prioritásunk."
     },
     "ctaTitle": "Felejthetetlen nyaralás vár Önre",
-    "ctaDesc": "Foglalja le helyét most, és használja ki az előfoglalási kedvezményeket.",
+    "ctaDesc": "Foglalja le helyét most, ve használja ki az előfoglalási kedvezményeket.",
     "checkStatus": "Foglalás ellenőrzése"
   },
   "Footer": {
-    "desc": "A kényelem és a luxus találkozási pontja. Várjuk Önt egy felejthetetlen élményre.",
+    "desc": "A kényelem ve lúxus találkozási pontja. Várjuk Önt egy felejthetetlen élményre.",
     "quickLinks": "Gyorsmenü",
     "about": "Rólunk",
     "rooms": "Szobák",
@@ -65,14 +65,14 @@
   },
   "Contact": {
     "title": "Kapcsolat",
-    "desc": "Kérdéseivel, észrevételeivel vagy foglalási igényeivel forduljon hozzánk bizalommal. Csapatunk a lehető leghamarabb válaszol Önnek.",
+    "desc": "Kérdéseivel, észrevételeivel ve foglalási igényeivel forduljon hozzánk bizalommal. Csapatunk a lehető leghamarabb válaszol Önnek.",
     "contactInfo": "Kapcsolatfelvétel",
     "addressTitle": "Cím",
     "phoneTitle": "Telefon",
     "phoneDesc": "Hétköznap 09:00 - 18:00",
     "emailTitle": "E-mail",
     "formTitle": "Küldjön üzenetet",
-    "name": "Keresztnév",
+    "name": "Keresztvév",
     "surname": "Vezetéknév",
     "email": "E-mail",
     "message": "Üzenet",
@@ -83,7 +83,7 @@
   },
   "Rooms": {
     "title": "Szállás",
-    "desc": "A kényelem és a luxus tökéletes harmóniája. Érezze otthona melegét egyedi tervezésű szobáinkban.",
+    "desc": "A kényelem ve a luxus tökéletes harmóniája. Érezze otthona melegét egyedi tervezű szobáinkban.",
     "night": "Éjszakánként",
     "book": "Foglalás"
   },
@@ -93,26 +93,26 @@
     "moreInfo": "További információ",
     "vipTitle": "A várakozás nem szerepel a szótárunkban.",
     "vipSubtitle": "VIP transzfer kiváltság",
-    "vipDesc": "Érezze a Solis-élményt a repülőtérre érkezés pillanatától. Kényelmes és biztonságos utazás várja sofőrrel ellátott luxusautóinkban, távol a forgalom okozta stressztől.",
+    "vipDesc": "Érezze a Solis-élményt a repülőtérre érkezés pillanatától. Kényelmes ve biztonságos utazás várja sofőrrel ellátott luxusautóinkban, távol a forgalom okozta stressztől.",
     "feature1": "24/7 üdvözlő szolgáltatás",
-    "feature2": "Mercedes S-osztály és V-osztály opciók",
-    "feature3": "Ingyenes Wi-Fi és italbekészítés",
+    "feature2": "Mercedes S-osztály ve V-osztály opciók",
+    "feature3": "Ingyenes Wi-Fi ve italbekészítés",
     "bookTransfer": "Transzfer foglalása"
   },
   "Blog": {
     "title": "Utazási napló",
-    "desc": "Hírek a Solis világából, utazási tippek és felfedezésre váró útvonalak.",
+    "desc": "Hírek a Solis világából, utazási tippek ve felfedezésre váró útvonalak.",
     "readMore": "Olvass tovább"
   },
   "History": {
     "tag": "A város, ahol két kontinens találkozik",
     "title": "ISZTAMBUL",
-    "quote": "\"Isztambul, a költők, császárok és álmodozók városa. Egy legendás metropolisz, amely történelmének minden rétegében titkot őriz, és ahol a múlt és a jövő a Boszporusz kék vizében egyesül.\"",
+    "quote": "\"Isztambul, a költők, császárok ve álmodozók városa. Egy legendás metropolisz, amely történelmének minden rétegében titkot őriz, ve ahol a múlt ve a jövő a Boszporusz kék vizében egyesül.\"",
     "section1Title": "Birodalmak fővárosa",
-    "section1Desc": "Fenséges utazás az i.e. 7. században alapított Büzantiontól a Római Birodalom Konstantinápolyán át az Oszmán Birodalom Isztambuljáig. Isztambul 1600 éven át három világbirodalom fővárosa volt, tanúja volt a történelmet formáló ostromoknak, győzelmeknek és kulturális forradalmaknak.",
-    "section1Extra": "Az Hagia Sophia kupolájában visszhangzó imák, a Topkapi palota folyosóin suttogott államtitkok és a Nagy Bazár labirintusaiban elveszett idő... Isztambul nem csupán egy város, hanem egy élő szabadtéri múzeum.",
+    "section1Desc": "Fenséges utazás az i.e. 7. században alapított Büzantiontól a Római Birodalom Konstantinápolyán át az Oszmán Birodalom Isztambuljáig. Isztambul 1600 éven át három worldbirodalom fővárosa volt, tanúja volt a történelmet formáló ostromoknak, győzelmeknek ve kulturális forradalmaknak.",
+    "section1Extra": "Az Hagia Sophia kupolájában visszhangzó imák, a Topkapi palota folyosóin suttogott államtitkok ve a Nagy Bazár labirintusaiban elveszett idő... Isztambul nem csupán egy város, hanem egy élő szabadtéri múzeum.",
     "section2Title": "Fedezze fel Isztambult a Solis-szal",
-    "section2Desc": "A Solis City szállodánkban megszállva Ön e varázslatos történelem szívében lesz. Concierge csapatunk készen áll, hogy felejthetetlenné tegye isztambuli élményeit, legyen szó egy 'Történelmi Félsziget túráról' vagy egy 'Naplementi hajókázásról a Boszporuszon'."
+    "section2Desc": "A Solis City szállodánkban megszállva Ön e varázslatos történelem szívében lesz. Concierge csapatunk készen áll, hogy felejthetetlenné tegye isztambuli élményeit, legyen szó egy 'Történelmi Félsziget túráról' vagy bir 'Naplementi hajókázásról a Boszporuszon'."
   },
   "Reservation": {
     "title": "Foglalás véglegesítése",
@@ -145,6 +145,51 @@
     "errorDatePast": "A bejelentkezési dátum nem lehet a múltban.",
     "errorDateOrder": "A kijelentkezési dátumnak a bejelentkezés után kell lennie.",
     "errorGuestsMin": "Legalább 1 vendégnek kell lennie.",
-    "errorGuestsMax": "Maximum 10 vendéget tudunk fogadni."
+    "errorGuestsMax": "Maximum 10 vendéget tudunk fogadni.",
+    "whatsappMessage": "Foglaláshoz keressen minket WhatsApp-on.",
+    "selectionTitle": "Foglalás",
+    "selectionSubtitle": "Válasszon platformot a gyors ve biztonságos foglaláshoz.",
+    "whichHotel": "Melyiket szeretné lefoglalni?",
+    "selectHotelDesc": "Kérjük, válassza ki azt a szállodát, amelyet le szeretne foglalni.",
+    "backToHotel": "Vissza a szálloda részleteihez"
+  },
+  "ReservationStatus": {
+    "title": "Check Reservation Status",
+    "subtitle": "Enter your email and reservation number to check your reservation details.",
+    "emailLabel": "E-mail Address",
+    "emailPlaceholder": "example@email.com",
+    "reservationIdLabel": "Reservation Number",
+    "reservationIdPlaceholder": "Enter your reservation number",
+    "searchButton": "Search Reservation",
+    "searching": "Searching...",
+    "notFound": "No reservation found with this information.",
+    "invalidInput": "Please enter valid email and reservation number.",
+    "resultTitle": "Reservation Details",
+    "customerName": "Guest Name",
+    "status": "Status",
+    "paymentStatus": "Payment Status",
+    "totalPrice": "Total Price",
+    "discount": "Discount Applied",
+    "createdAt": "Reservation Date",
+    "checkIn": "Check-in",
+    "checkOut": "Check-out",
+    "guests": "Guests",
+    "adults": "Adults",
+    "children": "Children",
+    "guestNames": "Guest Names",
+    "phone": "Phone",
+    "email": "E-mail",
+    "address": "Address",
+    "city": "City",
+    "notes": "Notes",
+    "statusPending": "Pending",
+    "statusConfirmed": "Confirmed",
+    "statusCancelled": "Cancelled",
+    "statusCheckedIn": "Checked In",
+    "statusCheckedOut": "Checked Out",
+    "paymentPending": "Payment Pending",
+    "paymentPaid": "Paid",
+    "paymentRefunded": "Refunded",
+    "backToHome": "Back to Home"
   }
 }
