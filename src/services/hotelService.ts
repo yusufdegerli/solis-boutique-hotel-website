@@ -15,7 +15,7 @@ const mockHotels: Hotel[] = [
   {
     id: "1",
     name: "Solis Boutique Hotel",
-    slug: "solis-city",
+    slug: "solis-hotel-istanbul",
     tagline: "Şehrin Kalbinde Lüks",
     description: "Solis Boutique Hotel, İstanbul'un tarihi yarımadasında lüksü ve konforu bir araya getiriyor.",
     pricePerNight: 120,
@@ -26,7 +26,12 @@ const mockHotels: Hotel[] = [
     coordinates: { lat: 41.0082, lng: 28.9784 },
     stats: { totalRooms: 45, availability: 80, suiteCount: 5 },
     features: ["Ücretsiz Wi-Fi", "Spa", "Tarihi Manzara", "Restoran"],
-    contact: { phone: "+90 533 793 24 72", email: "info@solisboutiquehotel.com", address: "Mimar Kemalettin Mah. Mithatpaşa Cad. No:14/16 Beyazıt, İstanbul" }
+    contact: { phone: "+90 533 793 24 72", email: "info@solisboutiquehotel.com", address: "Mimar Kemalettin Mah. Mithatpaşa Cad. No:14/16 Beyazıt, İstanbul" },
+    bookingLinks: {
+      expedia: "https://expe.onelink.me/hnLd/qaoed69m",
+      booking: "https://www.booking.com/Share-eSoBspi",
+      hotels_com: "https://tr.hotels.com/ho3406787680/"
+    }
   } as Hotel,
   {
     id: "2",
@@ -43,20 +48,26 @@ const mockHotels: Hotel[] = [
     stats: { totalRooms: 120, availability: 0, suiteCount: 15 },
     features: ["Özel Plaj", "Açık Havuz", "Her Şey Dahil", "Kids Club"],
     contact: { phone: "+90 533 793 24 72", email: "info@solisboutiquehotel.com", address: "Mimar Kemalettin Mah. Mithatpaşa Cad. No:14/16 Beyazıt, İstanbul" },
-    underConstruction: true
+    underConstruction: true,
+    bookingLinks: {}
   } as any
 ];
 
 export const getHotels = async (): Promise<Hotel[]> => {
   try {
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      console.error("Supabase environment variables are missing in getHotels!");
+    }
+
     const { data, error } = await supabase.from('Hotel_Information_Table').select('*');
     if (error) {
-      console.error("Error fetching hotels from DB:", {
-        message: error.message,
-        code: error.code,
-        details: error.details,
-        hint: error.hint
-      });
+      console.error("Error fetching hotels from DB:", error);
+      // Also log details if it's a PostgrestError
+      if (error.message) {
+        console.error("Error Message:", error.message);
+        console.error("Error Code:", error.code);
+        console.error("Error Details:", error.details);
+      }
       return mockHotels;
     }
     if (!data || data.length === 0) {
@@ -72,7 +83,8 @@ export const getHotels = async (): Promise<Hotel[]> => {
 };
 
 export const getHotelBySlug = async (slug: string): Promise<Hotel | undefined> => {
-  return mockHotels.find(h => h.slug === slug);
+  const hotels = await getHotels();
+  return hotels.find(h => h.slug === slug);
 };
 
 export const createHotel = async (hotel: Partial<Hotel>) => {
@@ -143,12 +155,11 @@ export const getRooms = async (): Promise<Room[]> => {
   try {
     const { data, error } = await supabase.from('Rooms_Information').select('*');
     if (error) {
-      console.error("Error fetching rooms from DB:", {
-        message: error.message,
-        code: error.code,
-        details: error.details,
-        hint: error.hint
-      });
+      console.error("Error fetching rooms from DB:", error);
+      if (error.message) {
+        console.error("Error Message:", error.message);
+        console.error("Error Code:", error.code);
+      }
       return mockRooms;
     }
     if (!data || data.length === 0) {
@@ -230,7 +241,8 @@ function mapDbHotelToModel(hotel: any): Hotel {
       phone: hotel.phone || "+90 212 555 0123",
       email: hotel.email || "info@solis.com",
       address: hotel.address
-    }
+    },
+    bookingLinks: hotel.booking_links || {}
   };
 }
 
