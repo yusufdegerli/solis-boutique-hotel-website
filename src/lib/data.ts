@@ -27,6 +27,12 @@ export interface Hotel {
     email: string;
     address: string;
   };
+  bookingLinks?: {
+    expedia?: string;
+    booking?: string;
+    hotels_com?: string;
+    agoda?: string;
+  };
 }
 
 export interface Room {
