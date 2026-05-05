@@ -18,7 +18,7 @@
     "en": "With its unique view and separate seating area, our suite room makes you experience luxury at its peak.",
     "ru": "С уникальным видом и отдельной зоной отдыха наш люкс позволит вам ощутить настоящую роскошь.",
     "ar": "بإطلالتها الفريدة ومنطقة جلوس منفصلة، تجعلك غرفتنا الجناح تعيش الرفاهية في أوجها.",
-    "hu": "Egyedi kilátásával és külön ülősarokkal rendelkező lakosztályunkban a luxus csúcsát élheti át."
+    "hu": "Egyedi kilátásával ve külön ülősarokkal rendelkező lakosztályunkban a luxus csúcsát élheti át."
   },
   "Aile Odası": {
     "tr": "Ailenizle birlikte konforlu bir tatil geçirmeniz için özel olarak tasarlanmış geniş odamız.",
@@ -39,13 +39,41 @@
     "en": "With its elegant design and spacious double bed, our Deluxe room is ideal for a romantic getaway or a comfortable business trip.",
     "ru": "Благодаря элегантному дизайну и просторной двуспальной кровати наш номер Делюкс идеально подходит для романтического отдыха или комфортной деловой поездки.",
     "ar": "بتصميمها الأنيق وسريرها المزدوج الواسع، تعتبر غرفتنا الديلوكس مثالية لقضاء إجازة رومانسية أو رحلة عمل مريحة.",
-    "hu": "Elegáns kialakításával és tágas franciaágyával Deluxe szobánk ideális egy romantikus kiruccanáshoz vagy kényelmes üzleti úthoz."
+    "hu": "Elegáns kialakításával és tágas franciaágyával Deluxe szobánk ideális bir romantikus kiruccanáshoz vagy kényelmes üzleti úthoz."
   },
   "Deluxe Queen Oda": {
-    "tr": "Queen yatak konforu ve modern donanımlarıyla Deluxe Queen odamız, şehrin merkezinde lüks bir konaklama deneyimi sunar.",
+    "tr": "Queen yatak konforu ve modern donanımlarıyla Deluxe Queen odamız, şehrin merkezinde lüks un konaklama deneyimi sunar.",
     "en": "With the comfort of a Queen bed and modern amenities, our Deluxe Queen room offers a luxurious accommodation experience in the heart of the city.",
-    "ru": "С комфортом кровати Queen и современными удобствами наш номер Делюкс Квин предлагает роскошное проживание в самом сердце города.",
-    "ar": "مع راحة سرير كوين والمرافق الحديثة، توفر غرفتنا ديلوكس كوين تجربة إقامة فاخرة في قلب المدينة.",
+    "ru": "С комфортом кровати Queen и modern удобствами наш номер Делюкс Квин предлагает роскошное проживание в самом сердце города.",
+    "ar": "مع راحة سرير كوين والمرافق الحديثة, توفر غرفتنا ديلوكس كوين تجربة إقامة فاخرة في قلب المدينة.",
     "hu": "A Queen ágy kényelmével és modern felszereltségével Deluxe Queen szobánk luxus szállásolást kínál a város szívében."
+  },
+  "Quattro": {
+    "tr": "Dört kişilik geniş konaklama alanı sunan Quattro odamız, aileler ve arkadaş grupları için konforu ve şıklığı bir araya getiriyor.",
+    "en": "Offering a spacious accommodation area for four people, our Quattro room combines comfort and style for families and groups of friends.",
+    "ru": "Наш номер Quattro, предлагающий просторную зону для проживания четырех человек, сочетает в себе комфорт и стиль для семей и групп друзей.",
+    "ar": "توفر غرفتنا كواترو مساحة إقامة واسعة لأربعة أشخاص، وتجمع بين الراحة والأناقة للعائلات ومجموعات الأصدقاء.",
+    "hu": "Négy személy számára tágas szállást kínáló Quattro szobánk a kényelmet és a stílust ötvözi családok és baráti társaságok számára."
+  },
+  "Double Suit": {
+    "tr": "Geniş yaşam alanı, lüks mobilyaları ve ayrıcalıklı hizmetleriyle Double Suit, unutulmaz bir konaklama deneyimi vadediyor.",
+    "en": "With its spacious living area, luxury furniture, and privileged services, the Double Suite promises an unforgettable accommodation experience.",
+    "ru": "Double Suit с просторной гостиной, роскошной мебелью и эксклюзивным сервисом обещает незабываемые впечатления от проживания.",
+    "ar": "بمنطقة معيشة واسعة وأثاث فاخر وخدمات متميزة، يعد جناح Double Suite بتجربة إقامة لا تُنسى.",
+    "hu": "Tágas nappalijával, luxus bútoraival és kiváltságos szolgáltatásaival a Double Suit felejthetetlen szállásélményt ígér."
+  },
+  "Double": {
+    "tr": "Modern ve sade tasarımıyla Double odamız, çiftler için huzurlu ve konforlu bir dinlenme alanı sunar.",
+    "en": "With its modern and simple design, our Double room offers a peaceful and comfortable resting area for couples.",
+    "ru": "Наш номер Double с современным и лаконичным дизайном предлагает парам спокойную и комфортную зону отдыха.",
+    "ar": "بفضل تصميمها العصري والبسيط، توفر غرفتنا المزدوجة مساحة استراحة هادئة ومريحة للأزواج.",
+    "hu": "Modern és egyszerű kialakításával Double szobánk békés és kényelmes pihenőhelyet kínál párok számára."
+  },
+  "Twinbed": {
+    "tr": "Ayrı yatak konforu ve ferah atmosferiyle Twinbed odamız, hem iş hem de tatil amaçlı konaklamalar için ideal bir seçenektir.",
+    "en": "With the comfort of separate beds and a spacious atmosphere, our Twinbed room is an ideal choice for both business and leisure stays.",
+    "ru": "Наш номер Twinbed с комфортом раздельных кроватей и просторной атмосферой является идеальным выбором как для деловых, так и для туристических поездок.",
+    "ar": "مع راحة الأسرّة المنفصلة والأجواء الفسيحة، تعد غرفتنا التوين خيارًا مثاليًا للإقامة بغرض العمل أو الترفيه.",
+    "hu": "A külön ágyak kényelmével ve tágas légkörével Twinbed szobánk ideális választás üzleti ve szabadidős tartózkodáshoz egyaránt."
   }
 }

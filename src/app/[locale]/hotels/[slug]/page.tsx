@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { MapPin, Star, CheckCircle, Phone, Mail, Map, BedDouble, PieChart, Info, HardHat, ArrowLeft, ExternalLink } from "lucide-react";
+import { getLocalizedText } from "@/lib/localize";
 
 export async function generateStaticParams() {
   const locales = ['en', 'tr', 'ar', 'hu', 'ro'];
@@ -50,10 +51,10 @@ export default async function HotelDetail({ params }: { params: Promise<{ slug: 
             </div>
             <h1 className="text-4xl md:text-6xl font-serif font-bold text-white mb-6 uppercase tracking-widest">{hotel.name}</h1>
             <div className="inline-block px-6 py-2 bg-[var(--gold)] text-black font-bold text-sm uppercase tracking-[0.2em] mb-8 rounded-sm">
-              İnşaat Devam Ediyor
+              {locale === 'tr' ? 'İnşaat Devam Ediyor' : 'Under Construction'}
             </div>
             <p className="text-gray-300 text-lg md:text-xl font-light leading-relaxed mb-12">
-              Sizlere en iyi deneyimi sunabilmek için otelimizde inşaat ve hazırlık süreci devam etmektedir. Çok yakında kapılarımızı açacağız.
+              {getLocalizedText(hotel.description, locale)}
             </p>
             <div className="flex flex-col sm:flex-row gap-6 justify-center">
               <Link 
@@ -124,7 +125,7 @@ export default async function HotelDetail({ params }: { params: Promise<{ slug: 
 
               <h2 className="text-3xl font-bold mb-6 text-[var(--off-black)] font-serif">Otel Hakkında</h2>
               <p className="text-gray-600 leading-relaxed mb-10 text-lg font-sans">
-                {hotel.description}
+                {getLocalizedText(hotel.description, locale)}
               </p>
 
               <h3 className="text-2xl font-bold mb-6 text-[var(--off-black)] font-serif">Öne Çıkan Özellikler</h3>

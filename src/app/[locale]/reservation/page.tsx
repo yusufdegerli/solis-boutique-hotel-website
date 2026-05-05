@@ -14,14 +14,14 @@ export default async function ReservationPage({ params }: { params: Promise<{ lo
       id: "solis-boutique",
       name: "Solis Boutique Hotel",
       slug: "solis-hotel-istanbul",
-      image: "/images/hotels/solis-city.jpg",
+      image: "https://gjgiykewaxmylnwdvikz.supabase.co/storage/v1/object/public/hotel-images/IMG_5806.jpg",
       location: "Beyazıt, İstanbul"
     },
     {
       id: "solis-hotel",
       name: "Solis Hotel",
       slug: "hotel2",
-      image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80",
+      image: "https://gjgiykewaxmylnwdvikz.supabase.co/storage/v1/object/public/hotel-images/solishotelmain.jpeg",
       location: "Beyazıt, İstanbul"
     }
   ];

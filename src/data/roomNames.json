@@ -45,7 +45,35 @@
     "tr": "Kral Dairesi",
     "en": "Royal Suite",
     "ru": "Королевский люкс",
-    "ar": "الجناح الملكي",
+    "ar": "الجناح الملكi",
     "hu": "Királyi lakosztály"
+  },
+  "Quattro": {
+    "tr": "Quattro Oda",
+    "en": "Quattro Room",
+    "ru": "Четырехместный номер",
+    "ar": "غرفة كواترو",
+    "hu": "Quattro szoba"
+  },
+  "Double Suit": {
+    "tr": "Double Suit",
+    "en": "Double Suite",
+    "ru": "Двухместный люкс",
+    "ar": "جناح مزدوج",
+    "hu": "Double lakosztály"
+  },
+  "Double": {
+    "tr": "Double Oda",
+    "en": "Double Room",
+    "ru": "Двухместный номер",
+    "ar": "غرفة مزدوجة",
+    "hu": "Double szoba"
+  },
+  "Twinbed": {
+    "tr": "Twinbed Oda",
+    "en": "Twinbed Room",
+    "ru": "Номер с двумя кроватями",
+    "ar": "غرفة توين",
+    "hu": "Twinbed szoba"
   }
 }

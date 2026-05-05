@@ -16,28 +16,30 @@ export default async function HotelBookingSelection({ params }: { params: Promis
     notFound();
   }
 
-  const bookingPlatforms = [
+  const isSolisBoutique = slug === 'solis-hotel-istanbul';
+
+  const bookingPlatforms = isSolisBoutique ? [
     {
       id: 'booking',
       name: 'Booking.com',
-      url: hotel.bookingLinks?.booking || "https://www.booking.com/Share-eSoBspi",
+      url: "https://www.booking.com/Share-eSoBspi",
       logo: 'https://www.logo.wine/a/logo/Booking.com/Booking.com-Logo.wine.svg'
     },
     {
       id: 'expedia',
       name: 'Expedia',
-      url: hotel.bookingLinks?.expedia || "https://expe.onelink.me/hnLd/qaoed69m",
+      url: "https://expe.onelink.me/hnLd/qaoed69m",
       logo: 'https://www.logo.wine/a/logo/Expedia/Expedia-Logo.wine.svg'
     },
     {
       id: 'hotels_com',
       name: 'Hotels.com',
-      url: hotel.bookingLinks?.hotels_com || "https://tr.hotels.com/ho3406787680/",
+      url: "https://tr.hotels.com/ho3406787680/?chkin=2026-05-19&chkout=2026-05-20&x_pwa=1&rfrr=HSR&pwa_ts=1778009180659&referrerUrl=aHR0cHM6Ly90ci5ob3RlbHMuY29tL0hvdGVsLVNlYXJjaA%3D%3D&useRewards=false&rm1=a2&regionId=1639&destination=İstanbul%2C+Istanbul%2C+Türkiye&destType=MARKET&neighborhoodId=6272783&selected=106430865&latLong=41.01357%2C28.96352&sort=RECOMMENDED&top_dp=5024&top_cur=TRY&gclid=CjwKCAjwqubPBhBOEiwAzgZX2gVHbUhbqLUcHLcmGkKFrkxeg3X7TN3wxbwRz_TkERXVti0_kMeirBoCiXcQAvD_BwE&semcid=HCOM-TR.UB.GOOGLE.PT-c-TR.HOTEL&semdtl=a115308987003.b1192332174390.g1kwd-2371467561061.e1c.m1CjwKCAjwqubPBhBOEiwAzgZX2gVHbUhbqLUcHLcmGkKFrkxeg3X7TN3wxbwRz_TkERXVti0_kMeirBoCiXcQAvD_BwE.r1.c1.j19198944.k19199120.d1784327484831.h1e.i1.l1.n1.o1.p1.q1.s1solis+boutique+hotel.t1.x1.f1.u1.v1.w1&userIntent=&selectedRoomType=327612372&selectedRatePlan=405661457&expediaPropertyId=106430865&searchId=e8f5735a-e104-4217-ac63-eaee7f93ef35",
       logo: 'https://www.logo.wine/a/logo/Hotels.com/Hotels.com-Logo.wine.svg'
     }
-  ];
+  ] : [];
 
-  const whatsappNumber = hotel.contact.phone.replace(/[^0-9]/g, '');
+  const whatsappNumber = "905334127275";
 
   return (
     <main className="min-h-screen bg-[var(--off-white)] flex flex-col">
@@ -98,13 +100,12 @@ export default async function HotelBookingSelection({ params }: { params: Promis
                         referrerPolicy="no-referrer"
                       />
                     </div>
-                    {/* Shimmer Animation */}
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-gray-100/20 to-transparent -translate-x-full group-hover:animate-shimmer z-0" />
                   </a>
                 ))}
 
                 {/* WhatsApp Option */}
-                <div className="mt-6 pt-6 border-t border-gray-50 flex flex-col items-center">
+                <div className={`flex flex-col items-center ${isSolisBoutique ? 'mt-6 pt-6 border-t border-gray-50' : ''}`}>
                   <a 
                     href={`https://wa.me/${whatsappNumber}`}
                     target="_blank"
