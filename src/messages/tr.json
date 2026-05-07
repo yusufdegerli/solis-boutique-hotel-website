@@ -153,7 +153,8 @@
     "selectionSubtitle": "Hızlı ve güvenli rezervasyon için bir platform seçin.",
     "whichHotel": "Hangisinden rezervasyon almak istiyorsun?",
     "selectHotelDesc": "Lütfen rezervasyon yapmak istediğiniz oteli seçiniz.",
-    "backToHotel": "Otel Detaylarına Geri Dön"
+    "backToHotel": "Otel Detaylarına Geri Dön",
+    "officialWebsite": "Resmi Web Sitesi"
   },
   "ReservationStatus": {
     "title": "Rezervasyon Durumu Sorgula",

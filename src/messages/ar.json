@@ -151,7 +151,8 @@
     "selectionSubtitle": "اختر منصة للحجز السريع والآمن.",
     "whichHotel": "أي واحد تود حجزه؟",
     "selectHotelDesc": "يرجى اختيار الفندق الذي ترغب في حجزه.",
-    "backToHotel": "العودة إلى تفاصيل الفندق"
+    "backToHotel": "العودة إلى تفاصيل الفندق",
+    "officialWebsite": "الموقع الرسمي"
   },
   "ReservationStatus": {
     "title": "Check Reservation Status",

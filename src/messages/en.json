@@ -151,7 +151,8 @@
     "selectionSubtitle": "Select a platform for fast and secure booking.",
     "whichHotel": "Which one would you like to book?",
     "selectHotelDesc": "Please select the hotel you would like to book.",
-    "backToHotel": "Back to Hotel Details"
+    "backToHotel": "Back to Hotel Details",
+    "officialWebsite": "Official Website"
   },
   "ReservationStatus": {
     "title": "Check Reservation Status",

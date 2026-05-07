@@ -28,6 +28,7 @@ const mockHotels: Hotel[] = [
     features: ["Ücretsiz Wi-Fi", "Spa", "Tarihi Manzara", "Restoran"],
     contact: { phone: "+90 533 793 24 72", email: "info@solisboutiquehotel.com", address: "Mimar Kemalettin Mah. Mithatpaşa Cad. No:14/16 Beyazıt, İstanbul" },
     bookingLinks: {
+      official: "https://solisboutiquehotel.com",
       expedia: "https://expe.onelink.me/hnLd/qaoed69m",
       booking: "https://www.booking.com/Share-eSoBspi",
       hotels_com: "https://tr.hotels.com/ho3406787680/"

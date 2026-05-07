@@ -151,7 +151,8 @@
     "selectionSubtitle": "Выберите платформу для быстрого и безопасного бронирования.",
     "whichHotel": "Какой из них вы хотите забронировать?",
     "selectHotelDesc": "Пожалуйста, выберите отель, который вы хотите забронировать.",
-    "backToHotel": "Вернуться к деталям отеля"
+    "backToHotel": "Вернуться к деталям отеля",
+    "officialWebsite": "Официальный сайт"
   },
   "ReservationStatus": {
     "title": "Check Reservation Status",

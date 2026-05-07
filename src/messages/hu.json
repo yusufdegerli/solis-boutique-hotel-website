@@ -151,7 +151,8 @@
     "selectionSubtitle": "Válasszon platformot a gyors ve biztonságos foglaláshoz.",
     "whichHotel": "Melyiket szeretné lefoglalni?",
     "selectHotelDesc": "Kérjük, válassza ki azt a szállodát, amelyet le szeretne foglalni.",
-    "backToHotel": "Vissza a szálloda részleteihez"
+    "backToHotel": "Vissza a szálloda részleteihez",
+    "officialWebsite": "Hivatalos weboldal"
   },
   "ReservationStatus": {
     "title": "Check Reservation Status",

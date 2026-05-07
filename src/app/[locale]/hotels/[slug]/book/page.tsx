@@ -20,6 +20,12 @@ export default async function HotelBookingSelection({ params }: { params: Promis
 
   const bookingPlatforms = isSolisBoutique ? [
     {
+      id: 'official',
+      name: t('officialWebsite'),
+      url: "https://solisboutiquehotel.com",
+      logo: '/logo3.png'
+    },
+    {
       id: 'booking',
       name: 'Booking.com',
       url: "https://www.booking.com/Share-eSoBspi",
@@ -90,13 +96,13 @@ export default async function HotelBookingSelection({ params }: { params: Promis
                     href={platform.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="relative flex items-center justify-center p-1 h-16 rounded-xl border border-gray-100 hover:border-[var(--gold)] hover:shadow-lg transition-all duration-300 group bg-white shadow-sm overflow-hidden"
+                    className={`relative flex items-center justify-center p-1 h-16 rounded-xl border border-gray-100 hover:border-[var(--gold)] hover:shadow-lg transition-all duration-300 group shadow-sm overflow-hidden ${platform.id === 'official' ? 'bg-[#0a0a0a]' : 'bg-white'}`}
                   >
                     <div className="relative w-full h-full flex items-center justify-center z-10 px-2">
                       <img 
                         src={platform.logo} 
                         alt={platform.name}
-                        className="h-full w-auto object-contain transition-all duration-500 scale-[1.5] group-hover:scale-[1.6]"
+                        className={`h-full w-auto object-contain transition-all duration-500 group-hover:scale-[1.1] ${platform.id === 'official' ? 'p-2' : 'scale-[1.5] group-hover:scale-[1.6]'}`}
                         referrerPolicy="no-referrer"
                       />
                     </div>

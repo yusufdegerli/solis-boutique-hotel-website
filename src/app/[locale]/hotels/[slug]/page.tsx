@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { MapPin, Star, CheckCircle, Phone, Mail, Map, BedDouble, PieChart, Info, HardHat, ArrowLeft, ExternalLink } from "lucide-react";
 import { getLocalizedText } from "@/lib/localize";
+import { getTranslations } from "next-intl/server";
 
 export async function generateStaticParams() {
   const locales = ['en', 'tr', 'ar', 'hu', 'ro'];
@@ -23,6 +24,7 @@ export async function generateStaticParams() {
 
 export default async function HotelDetail({ params }: { params: Promise<{ slug: string, locale: string }> }) {
   const { slug, locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'Reservation' });
   const hotel = await getHotelBySlug(slug);
 
   if (!hotel) {
@@ -208,6 +210,17 @@ export default async function HotelDetail({ params }: { params: Promise<{ slug: 
                   <div className="bg-white p-8 rounded-xl shadow-lg border-l-4 border-[var(--gold)]">
                     <h4 className="font-serif font-bold text-xl mb-6 text-[var(--off-black)]">Online Kanallar</h4>
                     <div className="space-y-3">
+                      {(hotel.bookingLinks as any).official && (
+                        <a 
+                          href={(hotel.bookingLinks as any).official} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-between p-4 bg-[var(--off-black)] text-white rounded-lg hover:bg-[var(--gold)] transition-all group"
+                        >
+                          <span className="font-bold">{t('officialWebsite')}</span>
+                          <ExternalLink className="w-4 h-4 opacity-50 group-hover:opacity-100" />
+                        </a>
+                      )}
                       {hotel.bookingLinks.expedia && (
                         <a 
                           href={hotel.bookingLinks.expedia} 
